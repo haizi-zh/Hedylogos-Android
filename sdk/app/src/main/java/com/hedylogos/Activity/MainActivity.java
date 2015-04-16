@@ -1,8 +1,9 @@
-package com.hedylogos;
+package com.hedylogos.Activity;
 
 import android.app.Activity;
 import android.content.ContentResolver;
 import android.content.Intent;
+import android.database.sqlite.SQLiteDatabase;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.net.Uri;
@@ -12,11 +13,18 @@ import android.view.View;
 import android.widget.Button;
 import android.widget.ImageView;
 
+import com.hedylogos.R;
+import com.hedylogos.bean.Message;
+import com.hedylogos.dao.DaoMaster;
+import com.hedylogos.dao.DaoSession;
+import com.hedylogos.dao.MessageDao;
+import com.hedylogos.data.THDevOpenHelper;
 import com.hedylogos.net.UploadUtils;
+import com.igexin.sdk.PushManager;
 
 
 public class MainActivity extends Activity implements View.OnClickListener{
-    Button btn;
+    public static Button btn;
     ImageView img;
 
     @Override
@@ -26,6 +34,23 @@ public class MainActivity extends Activity implements View.OnClickListener{
         btn = (Button) findViewById(R.id.btn);
         img = (ImageView) findViewById(R.id.img);
         btn.setOnClickListener(this);
+        Log.d("GetuiSdkDemo", "initializing sdk...");
+        PushManager.getInstance().initialize(this.getApplicationContext());
+
+
+//        THDevOpenHelper helper = new THDevOpenHelper(MainActivity.this, "my-db", null);
+//        SQLiteDatabase db =
+//        DaoMaster daoMaster = new DaoMaster(db);
+//      DaoSession daoSession = daoMaster.newSession();
+       // daoSession.
+        THDevOpenHelper helper = new THDevOpenHelper(MainActivity.this, "notes-db", null);
+        SQLiteDatabase db = helper.getWritableDatabase();
+       DaoMaster daoMaster = new DaoMaster(db);
+        DaoSession daoSession = daoMaster.newSession();
+        MessageDao messageDao  = daoSession.getMessageDao();
+        Message msg =new Message();
+        messageDao.insertOrReplace(msg);
+
 
     }
 

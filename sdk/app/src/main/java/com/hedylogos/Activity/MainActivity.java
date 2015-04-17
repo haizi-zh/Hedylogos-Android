@@ -12,6 +12,7 @@ import android.view.View;
 import android.widget.Button;
 import android.widget.ImageView;
 
+import com.alibaba.fastjson.JSON;
 import com.hedylogos.R;
 import com.hedylogos.bean.Message;
 import com.hedylogos.dao.MessageBeanDaoHelper;
@@ -19,10 +20,11 @@ import com.hedylogos.net.UploadUtils;
 import com.igexin.sdk.PushManager;
 
 
-public class MainActivity extends Activity implements View.OnClickListener{
+public class MainActivity extends Activity implements View.OnClickListener {
     public static Button btn;
     ImageView img;
     MessageBeanDaoHelper helper;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -32,39 +34,29 @@ public class MainActivity extends Activity implements View.OnClickListener{
         btn.setOnClickListener(this);
         Log.d("GetuiSdkDemo", "initializing sdk...");
         PushManager.getInstance().initialize(this.getApplicationContext());
-
-
-//        THDevOpenHelper helper = new THDevOpenHelper(MainActivity.this, "my-db", null);
-//        SQLiteDatabase db =
-//        DaoMaster daoMaster = new DaoMaster(db);
-//      DaoSession daoSession = daoMaster.newSession();
-       // daoSession.
-//        THDevOpenHelper helper = new THDevOpenHelper(MainActivity.this, "notes-db", null);
-//        SQLiteDatabase db = helper.getWritableDatabase();
-//       DaoMaster daoMaster = new DaoMaster(db);
-//        DaoSession daoSession = daoMaster.newSession();
-//        MessageDao messageDao  = daoSession.getMessageDao();
-//        Message msg =new Message();
-//        messageDao.insertOrReplace(msg);
-          helper=MessageBeanDaoHelper.getInstance(MainActivity.this);
-        Message msg =new Message("1","2","23131313131","4","5","6","-1");
-        helper.addData(msg);
-
-
+/**
+ * {"content":"1231","conversationId":"0",
+ * "from":"0","id":"14","messageId":"0",
+ * "timestamp":"0","type":"0"}
+ */
+        Message message = new Message("10", "1231");
+        System.out.print(JSON.toJSON(message).toString());
+        helper = MessageBeanDaoHelper.getInstance(MainActivity.this);
     }
 
     @Override
     public void onClick(View v) {
-       long num= helper.getTotalCount();
-       String content= helper.getDataById("1").getContent();
-        System.out.println("num:"+num+"content:"+content);
+        long num = helper.getTotalCount();
+        String content = helper.getDataById("1").getContent();
+        System.out.println("num:" + num + "content:" + content);
         Intent intent = new Intent();
-       // intent.setType("image/*");
-       // intent.setAction(Intent.ACTION_GET_CONTENT);
+        // intent.setType("image/*");
+        // intent.setAction(Intent.ACTION_GET_CONTENT);
         //startActivityForResult(intent, 1);
-        intent.setClass(MainActivity.this,PrivateConversationActivity.class);
+        intent.setClass(MainActivity.this, PrivateConversationActivity.class);
         startActivity(intent);
     }
+
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         if (resultCode == RESULT_OK && requestCode == 1) {

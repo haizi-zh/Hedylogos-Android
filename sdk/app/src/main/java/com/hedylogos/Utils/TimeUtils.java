@@ -3,10 +3,10 @@ package com.hedylogos.Utils;
 import java.sql.Timestamp;
 
 public class TimeUtils {
-	
+
     /**
      * 把毫秒，转换成 ：。如：03:10
-     * 
+     *
      * @param millisencond
      * @return
      */
@@ -16,10 +16,10 @@ public class TimeUtils {
         int sencond = (millisencond - minutes * oneMinute) / 1000;
         return getNum(minutes) + ":" + getNum(sencond);
     }
-    
+
     /**
      * 把秒，转换成 ：。如：03:10
-     * 
+     *
      * @param seconds
      * @return
      */
@@ -29,7 +29,7 @@ public class TimeUtils {
         int mSecond = seconds - minutes * oneMinute;
         return getNum(minutes) + ":" + getNum(mSecond);
     }
-    
+
     public static String getNum(int num) {
         if (num >= 10) {
             return "" + num;
@@ -37,7 +37,7 @@ public class TimeUtils {
             return "0" + num;
         }
     }
-    
+
     public static String getTimestamp() {
         Timestamp ts = new Timestamp(System.currentTimeMillis());
         return String.valueOf(ts.getTime());

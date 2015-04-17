@@ -119,12 +119,17 @@
 
         <!-- 个推SDK配置结束 -->
         <receiver
-            android:name="com.hedylogos.im.MessageReceiver"
+            android:name="com.hedylogos.Activity.IMMessageReceiver"
             android:exported="false" >
             <intent-filter>
                 <action android:name="com.igexin.sdk.action.GiZGT1lA4oAcKbQYJR89F2" />
             </intent-filter>
         </receiver>
+        <activity
+            android:name="com.hedylogos.Activity.PrivateConversationActivity"
+            android:launchMode="singleTask"
+          >
+        </activity>
     </application>
 
 </manifest>

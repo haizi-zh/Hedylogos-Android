@@ -58,6 +58,7 @@ public class UploadUtils {
         saveBitmapToJpegFile(bitmap, tempJpeg);
         upload(tempJpeg, listener);
     }
+
     public void uploadFile(File file, QiniuUploadUitlsListener listener) {
         upload(file.getAbsolutePath(), listener);
     }
@@ -123,22 +124,22 @@ public class UploadUtils {
      */
     private String getToken() {
         /**
-        HttpClient client = new DefaultHttpClient();
-        StringBuilder builder = new StringBuilder();
+         HttpClient client = new DefaultHttpClient();
+         StringBuilder builder = new StringBuilder();
 
-        HttpGet myget = new HttpGet(URL);
-        try {
-            HttpResponse response = client.execute(myget);
-            BufferedReader reader = new BufferedReader(new InputStreamReader(
-                    response.getEntity().getContent()));
-            for (String s = reader.readLine(); s != null; s = reader.readLine()) {
-                builder.append(s);
-            }
-            return builder.toString();
-        } catch (Exception e) {
-            Log.i("url response", "false");
-            e.printStackTrace();
-            return null;
+         HttpGet myget = new HttpGet(URL);
+         try {
+         HttpResponse response = client.execute(myget);
+         BufferedReader reader = new BufferedReader(new InputStreamReader(
+         response.getEntity().getContent()));
+         for (String s = reader.readLine(); s != null; s = reader.readLine()) {
+         builder.append(s);
+         }
+         return builder.toString();
+         } catch (Exception e) {
+         Log.i("url response", "false");
+         e.printStackTrace();
+         return null;
          **/
         Mac mac = new Mac("dNKSfnMLIBlWHQnmhre6nzL60QnTGuKK4U5aLjKU", "fPM-8HTDz1xRlOtgEqyhfBSeDlB3dixG9oP0dTfp");
 
@@ -154,7 +155,7 @@ public class UploadUtils {
             e.printStackTrace();
         }
         return null;
-      }
     }
+}
 
 

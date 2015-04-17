@@ -22,11 +22,8 @@ public class ChatDataAdapter extends BaseAdapter {
         this.mContext = context;
     }
 
-    ;
-
     @Override
     public int getCount() {
-
         return messages.size();
     }
 
@@ -47,8 +44,8 @@ public class ChatDataAdapter extends BaseAdapter {
 
     @Override
     public int getItemViewType(int position) {
-        int i=Integer.parseInt(messages.get(position).getType());
-        System.out.println("getItemViewType:"+i);
+        int i = Integer.parseInt(messages.get(position).getType());
+        System.out.println("getItemViewType:" + i);
         return i;
     }
 

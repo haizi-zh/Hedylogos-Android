@@ -35,6 +35,7 @@ public class PictureUtil {
     public static final String IMAGE_UNSPECIFIED = "image/*";
     private static int maxWidth = 720;
     private static int maxHeight = 1080;
+
     /**
      * 将图片存储至SD卡，需判断是否装有SD卡、是否可读写、是否有空间，否则提示出错
      *
@@ -213,13 +214,14 @@ public class PictureUtil {
 
     /**
      * 压缩图片大小，避免图片过大，保持比例不变，宽或高不超过XX个像素
+     *
      * @param newName    新的文件名称
      * @param filePath   原文件全路径，包含文件名
      * @param attachPath 处理过后，文件存放的位置
      * @param attachPath 新的文件全路径
      */
     public static String compressPixelPhotos(final Context ctx, final String newName, final String filePath,
-                                             final String attachPath,int simplesize) {
+                                             final String attachPath, int simplesize) {
         BitmapFactory.Options op = new BitmapFactory.Options();
         op.inJustDecodeBounds = true;
         BitmapFactory.decodeFile(filePath, op);
@@ -228,8 +230,8 @@ public class PictureUtil {
         int jpgHeight = op.outHeight;
 
         if (jpgWidth > simplesize || jpgHeight > simplesize) {
-            int wSendRatio = (int) Math.ceil(jpgWidth / (float)simplesize);
-            int hSendRatio = (int) Math.ceil(jpgHeight / (float)simplesize);
+            int wSendRatio = (int) Math.ceil(jpgWidth / (float) simplesize);
+            int hSendRatio = (int) Math.ceil(jpgHeight / (float) simplesize);
             if (wSendRatio > 1 && hSendRatio > 1) {
                 op.inSampleSize = wSendRatio > hSendRatio ? wSendRatio : hSendRatio;
             }
@@ -257,7 +259,7 @@ public class PictureUtil {
      * @param filePath
      * @return
      */
-    public static boolean compressPixelPhotosCheck(final Context ctx, final String filePath,int simplesize) {
+    public static boolean compressPixelPhotosCheck(final Context ctx, final String filePath, int simplesize) {
         BitmapFactory.Options op = new BitmapFactory.Options();
         op.inJustDecodeBounds = true;
         BitmapFactory.decodeFile(filePath, op);
@@ -297,6 +299,7 @@ public class PictureUtil {
         }
         return b;
     }
+
     public static void copyFile(String oldPath, String newPath) {
         try {
             int bytesum = 0;
@@ -306,20 +309,20 @@ public class PictureUtil {
                 InputStream inStream = new FileInputStream(oldPath); //读入原文件
                 FileOutputStream fs = new FileOutputStream(newPath);
                 byte[] buffer = new byte[1024];
-                while ( (byteread = inStream.read(buffer)) != -1) {
+                while ((byteread = inStream.read(buffer)) != -1) {
                     bytesum += byteread; //字节数 文件大小
                     System.out.println(bytesum);
                     fs.write(buffer, 0, byteread);
                 }
                 inStream.close();
             }
-        }
-        catch (Exception e) {
+        } catch (Exception e) {
             System.out.println("复制单个文件操作出错");
             e.printStackTrace();
         }
     }
-    public  static Bitmap drawable2Bitmap(Drawable drawable) {
+
+    public static Bitmap drawable2Bitmap(Drawable drawable) {
         if (drawable instanceof BitmapDrawable) {
             return ((BitmapDrawable) drawable).getBitmap();
         } else if (drawable instanceof NinePatchDrawable) {
@@ -338,6 +341,7 @@ public class PictureUtil {
             return null;
         }
     }
+
     public static boolean saveBitmapToJpegFile(Bitmap bitmap, String filePath, int quality) {
         try {
             FileOutputStream fileOutStr = new FileOutputStream(filePath);
@@ -350,6 +354,7 @@ public class PictureUtil {
         }
         return true;
     }
+
     public static Bitmap resizeBitmap(Bitmap bitmap) {
         if (bitmap != null) {
             int width = bitmap.getWidth();

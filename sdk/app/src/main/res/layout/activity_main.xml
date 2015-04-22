@@ -8,7 +8,8 @@
     <Button
         android:id="@+id/btn"
         android:layout_width="wrap_content"
-        android:layout_height="wrap_content" />
+        android:layout_height="wrap_content"
+        android:text="SingleConversation测试"/>
 
     <ImageView
         android:layout_below="@id/btn"
@@ -16,4 +17,16 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:src="@mipmap/ic_launcher"/>
+    <Button
+        android:id="@+id/btn_test"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_below="@id/img"
+        android:text="加密测试"/>
+    <ListView
+        android:id="@+id/listview"
+        android:layout_below="@id/btn_test"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent">
+        </ListView>
 </RelativeLayout>

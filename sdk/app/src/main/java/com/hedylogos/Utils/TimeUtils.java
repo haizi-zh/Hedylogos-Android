@@ -1,14 +1,14 @@
 package com.hedylogos.Utils;
 
-import java.sql.Timestamp;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 
 public class TimeUtils {
 
     /**
      * 把毫秒，转换成 ：。如：03:10
-     *
-     * @param millisencond
-     * @return
+     * @param  millisencond
+     * @return String
      */
     public static String convertMilliSecondToMinute2(int millisencond) {
         int oneMinute = 1000 * 60;
@@ -18,8 +18,7 @@ public class TimeUtils {
     }
 
     /**
-     * 把秒，转换成 ：。如：03:10
-     *
+     * 把秒，转换成 ：03:10
      * @param seconds
      * @return
      */
@@ -37,9 +36,13 @@ public class TimeUtils {
             return "0" + num;
         }
     }
-
-    public static String getTimestamp() {
-        Timestamp ts = new Timestamp(System.currentTimeMillis());
-        return String.valueOf(ts.getTime());
+    public static String TimeStamp2Date(Long timestamp){
+        //Long timestamp = Long.parseLong(timestampString)*1000;
+        String date = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(new Date(timestamp));
+        return date;
+    }
+    public static long getTimestamp() {
+       // Timestamp ts = new Timestamp(System.currentTimeMillis());
+        return System.currentTimeMillis();
     }
 }

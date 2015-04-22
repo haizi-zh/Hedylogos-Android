@@ -10,7 +10,7 @@ public class MediaRecordFunc {
 
     private static MediaRecordFunc mInstance;
     private boolean isRecord = false;
-
+public String tempPath;
     private MediaRecorder mMediaRecorder;
 
     private MediaRecordFunc() {
@@ -67,14 +67,17 @@ public class MediaRecordFunc {
         mMediaRecorder.setAudioEncodingBitRate(AudioFormat.ENCODING_PCM_8BIT);
 		/* 设置输出文件的路径 */
         File file = new File(AudioFileFunc.getAMRFilePath());
+
         if (file.exists()) {
             file.delete();
         }
-        mMediaRecorder.setOutputFile(AudioFileFunc.getAMRFilePath());
-    }
+        tempPath=AudioFileFunc.getAMRFilePath();
+        mMediaRecorder.setOutputFile(tempPath);
 
-    public void stopRecordAndFile() {
+    }
+    public String stopRecordAndFile() {
         close();
+        return  tempPath;
     }
 
     public long getRecordFileSize() {

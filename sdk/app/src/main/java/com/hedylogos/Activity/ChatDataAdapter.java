@@ -8,6 +8,7 @@ import android.widget.BaseAdapter;
 import android.widget.TextView;
 
 import com.hedylogos.R;
+import com.hedylogos.Utils.TimeUtils;
 import com.hedylogos.bean.Message;
 
 import java.util.List;
@@ -44,8 +45,7 @@ public class ChatDataAdapter extends BaseAdapter {
 
     @Override
     public int getItemViewType(int position) {
-        int i = Integer.parseInt(messages.get(position).getType());
-        System.out.println("getItemViewType:" + i);
+        int i =messages.get(position).getType();
         return i;
     }
 
@@ -56,13 +56,18 @@ public class ChatDataAdapter extends BaseAdapter {
         switch (getItemViewType(position)) {
             case -1:
                 if (convertView == null) {
-                    convertView = LayoutInflater.from(mContext).inflate(R.layout.item_info, null);
+                    convertView = LayoutInflater.from(mContext).inflate(R.layout.item_message_send, null);
                     holder = new ViewHolder();
-                    holder.message = (TextView) convertView.findViewById(R.id.avoscloud_chat_demo_info);
+                    holder.message = (TextView) convertView.findViewById(R.id.tv_send_message);
+                    holder.username = (TextView) convertView.findViewById(R.id.tv_send_id);
+                    holder.time = (TextView) convertView.findViewById(R.id.tv_send_timestamp);
                     convertView.setTag(holder);
                 } else {
                     holder = (ViewHolder) convertView.getTag();
                 }
+                holder.username.setText(m.getSender()+"");
+                holder.time.setText(TimeUtils.TimeStamp2Date(m.getTimestamp()));
+                holder.message.setText(m.getContents());
                 break;
             case 0:
                 if (convertView == null) {
@@ -70,20 +75,23 @@ public class ChatDataAdapter extends BaseAdapter {
                     holder = new ViewHolder();
                     holder.message = (TextView) convertView.findViewById(R.id.avoscloud_chat_demo_message);
                     holder.username = (TextView) convertView.findViewById(R.id.avoscloud_chat_demo_user_id);
+                    holder.time = (TextView) convertView.findViewById(R.id.avoscloud_feedback_timestamp);
                     convertView.setTag(holder);
                 } else {
                     holder = (ViewHolder) convertView.getTag();
                 }
-                holder.username.setText(m.getId());
+                holder.username.setText(m.getSender()+"");
+                holder.time.setText(TimeUtils.TimeStamp2Date(m.getTimestamp()));
+                holder.message.setText(m.getContents());
                 break;
         }
-        holder.message.setText(m.getContent());
+
         return convertView;
     }
-
     public class ViewHolder {
         TextView message;
         TextView username;
+        TextView time;
     }
 
 }

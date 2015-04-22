@@ -40,23 +40,23 @@ public class MessageBeanDaoHelper implements THDaoHelperInterface {
         }
     }
 
-    public boolean isSaved(int Id) {
+    public boolean isSaved(long Id) {
         QueryBuilder<Message> qb = userBeanDao.queryBuilder();
-        qb.where(MessageDao.Properties.Id.eq(Id));
+        qb.where(MessageDao.Properties.MsgId.eq(Id));
         qb.buildCount().count();
         return qb.buildCount().count() > 0;
     }
 
     @Override
-    public void deleteData(String id) {
-        if (userBeanDao != null && !TextUtils.isEmpty(id)) {
+    public void deleteData(long id) {
+        if (userBeanDao != null && !TextUtils.isEmpty(id+"")) {
             userBeanDao.deleteByKey(id);
         }
     }
 
     @Override
-    public Message getDataById(String id) {
-        if (userBeanDao != null && !TextUtils.isEmpty(id)) {
+    public Message getDataById(long id) {
+        if (userBeanDao != null ) {
             return userBeanDao.load(id);
         }
         return null;
@@ -71,13 +71,13 @@ public class MessageBeanDaoHelper implements THDaoHelperInterface {
     }
 
     @Override
-    public boolean hasKey(String id) {
-        if (userBeanDao == null || TextUtils.isEmpty(id)) {
+    public boolean hasKey(long msgid) {
+        if (userBeanDao == null ) {
             return false;
         }
 
         QueryBuilder<Message> qb = userBeanDao.queryBuilder();
-        qb.where(MessageDao.Properties.Id.eq(id));
+        qb.where(MessageDao.Properties.MsgId.eq(msgid));
         long count = qb.buildCount().count();
         return count > 0;
     }
@@ -99,24 +99,24 @@ public class MessageBeanDaoHelper implements THDaoHelperInterface {
         }
     }
 
-    public void testQueryBy() {
-        List joes = userBeanDao.queryBuilder()
-                .where(MessageDao.Properties.Content.eq("Joe"))
-                .orderAsc(MessageDao.Properties.Content)
-                .list();
-
-        QueryBuilder<Message> qb = userBeanDao.queryBuilder();
-        qb.where(qb.or(MessageDao.Properties.Content.gt(10698.85),
-                qb.and(MessageDao.Properties.Content.eq("id"),
-                        MessageDao.Properties.Content.eq("xx"))));
-        qb.orderAsc(MessageDao.Properties.Id);// 排序依据
-
-        qb.list();
-    }
+//    public void testQueryBy() {
+//        List joes = userBeanDao.queryBuilder()
+//                .where(MessageDao.Properties.Content.eq("Joe"))
+//                .orderAsc(MessageDao.Properties.Content)
+//                .list();
+//
+//        QueryBuilder<Message> qb = userBeanDao.queryBuilder();
+//        qb.where(qb.or(MessageDao.Properties.Content.gt(10698.85),
+//                qb.and(MessageDao.Properties.Content.eq("id"),
+//                        MessageDao.Properties.Content.eq("xx"))));
+//        qb.orderAsc(MessageDao.Properties.Id);// 排序依据
+//
+//        qb.list();
+//    }
 
     public Message getLatest() {
         QueryBuilder<Message> qb = userBeanDao.queryBuilder();
-        qb.orderDesc(MessageDao.Properties.MessageId);
+        qb.orderDesc(MessageDao.Properties.MsgId);
         Message msg = qb.limit(1).list().get(0);
         return msg;
     }

@@ -9,6 +9,7 @@ import android.graphics.BitmapFactory;
 import android.support.v4.app.NotificationCompat;
 import android.util.Log;
 
+import com.alibaba.fastjson.JSON;
 import com.hedylogos.R;
 import com.hedylogos.bean.Message;
 import com.hedylogos.im.MessageReceiver;
@@ -26,17 +27,15 @@ public class IMMessageReceiver extends MessageReceiver {
     public void onMessageReceive(Context context, Message msg) {
         OnActivityMessageListener listener =
                 sessionMessageDispatchers.get(PrivateConversationActivity.Activityid);
-
+            msg.setType(0);
         if (listener == null) {
             Log.d("IMMessageReceiver", "Activity inactive, about to send notification.");
             NotificationManager nm =
                     (NotificationManager) context.getSystemService(Context.NOTIFICATION_SERVICE);
-
-            String ctnt = msg.getContent();
             Intent resultIntent = new Intent(context, PrivateConversationActivity.class);
             resultIntent.putExtra(PrivateConversationActivity.DATA_EXTRA_SINGLE_DIALOG_TARGET,
-                    ctnt);
-            // resultIntent.putExtra(Session.AV_SESSION_INTENT_DATA_KEY, JSON.toJSONString(message));
+                    JSON.toJSONString(msg));
+           // resultIntent.putExtra(Session.AV_SESSION_INTENT_DATA_KEY, JSON.toJSONString(message));
             resultIntent.addFlags(Intent.FLAG_ACTIVITY_BROUGHT_TO_FRONT);
 
             PendingIntent pi =
@@ -45,7 +44,7 @@ public class IMMessageReceiver extends MessageReceiver {
             Notification notification =
                     new NotificationCompat.Builder(context)
                             .setContentTitle("新消息")
-                            .setContentText(ctnt)
+                            .setContentText(msg.getContents())
                             .setContentIntent(pi)
                             .setSmallIcon(R.drawable.ic_launcher)
                             .setLargeIcon(
@@ -60,6 +59,14 @@ public class IMMessageReceiver extends MessageReceiver {
 
     @Override
     public void onMessageReceive(Context context, String msg) {
+//        ActivityManager am = (ActivityManager) context.getSystemService(Context.ACTIVITY_SERVICE);
+//        List<ActivityManager.RunningTaskInfo> tasks = am.getRunningTasks(1);
+//        if (!tasks.isEmpty()) {
+//            ComponentName topActivity = tasks.get(0).topActivity;
+//            if (!topActivity.getPackageName().equals(context.getPackageName())) {
+//
+//            }
+
         OnActivityMessageListener listener =
                 sessionMessageDispatchers.get(PrivateConversationActivity.Activityid);
 

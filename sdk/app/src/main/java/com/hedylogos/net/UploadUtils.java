@@ -113,7 +113,7 @@ public class UploadUtils {
     }
 
     private String getRealUrl(String fileUrlUUID) {
-        String filePath = "http://xxx.qiniudn.com/" + fileUrlUUID;
+        String filePath = "http://7xiktj.com1.z0.glb.clouddn.com/" + fileUrlUUID;
         return filePath;
     }
 

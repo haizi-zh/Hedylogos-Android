@@ -14,7 +14,7 @@ public class THDatabaseLoader {
     public static DaoMaster getDaoMaster(Context c) {
 
         if (daoMaster == null) {
-            THDevOpenHelper helper = new THDevOpenHelper(c, "my-db", null);
+            THDevOpenHelper helper = new THDevOpenHelper(c, "msgdb.db", null);
             daoMaster = new DaoMaster(helper.getWritableDatabase());
         }
         return daoMaster;

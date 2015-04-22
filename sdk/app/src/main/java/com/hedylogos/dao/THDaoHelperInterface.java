@@ -9,13 +9,13 @@ public interface THDaoHelperInterface {
 
     public <T> void addData(T t);
 
-    public void deleteData(String id);
+    public void deleteData(long msgId);
 
-    public <T> T getDataById(String id);
+    public <T> T getDataById(long msgId);
 
     public List getAllData();
 
-    public boolean hasKey(String id);
+    public boolean hasKey(long msgId);
 
     public long getTotalCount();
 

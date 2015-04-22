@@ -22,7 +22,15 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_gravity="bottom"
+
             android:src="@android:drawable/ic_menu_send" />
+        <Button
+            android:id="@+id/Btn_AudioMsg"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="bottom"
+            android:text="语音消息"
+            android:src="@mipmap/record_audio_play" />
     </LinearLayout>
 
     <ListView
@@ -33,5 +41,12 @@
         android:divider="#fff"
         android:dividerHeight="0dp" >
     </ListView>
-
+    <ImageButton
+        android:layout_below="@id/avoscloud_chat_list"
+        android:id="@+id/record"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center"
+        android:visibility="gone"
+        android:src="@mipmap/btn_speak_normal" />
 </RelativeLayout>

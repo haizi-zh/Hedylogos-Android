@@ -33,58 +33,39 @@ public class MainActivity extends Activity implements View.OnClickListener {
     Button test;
     ListView lv;
     List<HashMap<String, Object>> data;
-    MessageDB messageDB = new MessageDB("2");
+    MessageDB messageDB ;
     int i=0;
     SimpleAdapter adapter =null;
     List<ConversationBean> list;
+    private String currentuser;
+    private SDKApplication application;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         btn = (Button) findViewById(R.id.btn);
         img = (ImageView) findViewById(R.id.img);
-        test= (Button) findViewById(R.id.btn_test);
+        test = (Button) findViewById(R.id.btn_test);
         lv = (ListView) findViewById(R.id.listview);
         test.setOnClickListener(this);
         btn.setOnClickListener(this);
+        application=(SDKApplication) getApplication();
+        currentuser = (application.getCurrentUser());
+        messageDB = new MessageDB(currentuser);
+        System.out.println("CurrentUser " + ((SDKApplication) getApplication()).getCurrentUser());
         Log.d("GetuiSdkDemo", "initializing sdk...");
         PushManager.getInstance().initialize(this.getApplicationContext());
         lv.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-                Intent intent =new Intent();
-                intent.setClass(MainActivity.this,PrivateConversationActivity.class);
-                intent.putExtra("friend_id",data.get(position).get("Friend_Id").toString());
-                System.out.println("M fid"+data.get(position).get("Friend_Id").toString());
+                Intent intent = new Intent();
+                intent.setClass(MainActivity.this, PrivateConversationActivity.class);
+                intent.putExtra("friend_id", data.get(position).get("Friend_Id").toString());
+                System.out.println("M fid" + data.get(position).get("Friend_Id").toString());
                 startActivity(intent);
             }
         });
-        /*
-        new Thread(new Runnable() {
-            @Override
-            public void run() {
-                long start=System.currentTimeMillis();
-//                for (int i=50;i<150;i++) {
-//                    for (int j = 0; j <100; j++) {
-//                        messageDB.saveMsg(i+"", new MessageBean("hhh" + (j++),j));
-//                    }
-//                }
-             //  messageDB.test_Insert();
-                Long stop=System.currentTimeMillis();
-                System.out.println("insert time:"+(stop-start));
-                long istart=System.currentTimeMillis();
-                List<ConversationBean> list= messageDB.getConversationList();
-                Long istop=System.currentTimeMillis();
-                System.out.println(" c time:"+(istop-istart)+"  list:"+list.size());
-            }
-        }).start();
-*/
-        /*
-        MessageBean msg =new MessageBean(0,0,0,"hhh99",1429608664009l,0,null,0,104);
-        messageDB.saveMsg("458",msg);
-        */
     }
-
     @Override
     protected void onResume() {
         super.onResume();
@@ -97,6 +78,7 @@ public class MainActivity extends Activity implements View.OnClickListener {
             hashMap.put("Friend_Id", list.get(n).getFriendId());
             hashMap.put("lastTime", TimeUtils.TimeStamp2Date( list.get(n).getLastChatTime()));
             hashMap.put("HASH", list.get(n).getHASH());
+            application.setLastMsg(list.get(n).getFriendId()+"",list.get(n).getLast_rev_msgId());
             data.add(hashMap);
         }
         adapter=new SimpleAdapter(this,data,R.layout.test_list_item,new String[]{"Friend_Id","lastTime","HASH"},new int[]{R.id.tv1,R.id.tv2,R.id.tv3});

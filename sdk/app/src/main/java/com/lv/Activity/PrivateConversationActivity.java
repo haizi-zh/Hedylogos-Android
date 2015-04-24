@@ -52,16 +52,26 @@ public class PrivateConversationActivity extends Activity
     List<Message> messages = new LinkedList<Message>();
     List<MessageBean> msgs = new LinkedList<MessageBean>();
     private String CurrentFriend;
+    private String CurrentUser;
+    SDKApplication application;
     long i = 2;
-MessageDB db=new MessageDB("2");
+    MessageDB db ;
+
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         this.setContentView(R.layout.heartbeat);
+        application=(SDKApplication) getApplication();
+        CurrentUser=application.getCurrentUser();
+        db = new MessageDB(CurrentUser);
         initview();
-        CurrentFriend=getIntent().getStringExtra("friend_id");
-        tv.setText("好友："+CurrentFriend);
-
+        CurrentFriend = getIntent().getStringExtra("friend_id");
+        tv.setText("好友：" + CurrentFriend);
+    }
+    private void initview() {
+        chatList = (ListView) this.findViewById(R.id.avoscloud_chat_list);
+        input = (LinearLayout) findViewById(R.id.chat_input_wrapper);
+        tv = (TextView) findViewById(R.id.top);
         sendBtn = (ImageButton) this.findViewById(R.id.sendBtn);
         Audiomsg = (Button) this.findViewById(R.id.Btn_AudioMsg);
         record = (ImageButton) this.findViewById(R.id.record);
@@ -78,12 +88,6 @@ MessageDB db=new MessageDB("2");
 
     }
 
-    private void initview() {
-        chatList = (ListView) this.findViewById(R.id.avoscloud_chat_list);
-        input = (LinearLayout) findViewById(R.id.chat_input_wrapper);
-        tv= (TextView) findViewById(R.id.top);
-    }
-
     @Override
     public void onClick(View v) {
         switch (v.getId()) {
@@ -93,14 +97,14 @@ MessageDB db=new MessageDB("2");
                     return;
                 }
                 composeZone.getEditableText().clear();
-                IMessage message = new IMessage(2,1,1, text);
-                MessageBean messageBean=imessage2Bean(message);
+                IMessage message = new IMessage(2, 1, 1, text);
+                MessageBean messageBean = imessage2Bean(message);
                 System.out.println(message.toString());
-              SendMsgAsyncTask.sendMessage(PrivateConversationActivity.this,message);
-                SendMsgAsyncTask.sendMsg(PrivateConversationActivity.this,message);
-               // MessageBean msg = new MessageBean(text);
+                SendMsgAsyncTask.sendMessage(CurrentUser,CurrentFriend, message);
+               // SendMsgAsyncTask.sendMsg(PrivateConversationActivity.this, message);
+                // MessageBean msg = new MessageBean(text);
                 msgs.add(messageBean);
-                db.saveMsg(CurrentFriend,messageBean);
+                db.saveMsg(CurrentFriend, messageBean);
                 adapter.notifyDataSetChanged();
                 break;
             case R.id.Btn_AudioMsg:
@@ -112,13 +116,14 @@ MessageDB db=new MessageDB("2");
 
     private MessageBean imessage2Bean(IMessage message) {
 
-        return new MessageBean(0,0,message.getMsgType(),message.getContents(), TimeUtils.getTimestamp(),0,null,2);
+        return new MessageBean(0, 0, message.getMsgType(), message.getContents(), TimeUtils.getTimestamp(), 0, null, 2);
     }
 
     private Message IMessagetoMessage(IMessage msg) {
         //return new Message(i++, msg.getSender(), msg.getReceiver(), msg.getContents());
         return null;
     }
+
     @Override
     public void onBackPressed() {
         super.onBackPressed();
@@ -128,18 +133,18 @@ MessageDB db=new MessageDB("2");
     @Override
     public void onResume() {
         super.onResume();
-        msgs=db.getAllMsg(CurrentFriend,0);
+        msgs = db.getAllMsg(CurrentFriend, 0);
         adapter = new ChatDataAdapter(this, msgs);
         chatList.setAdapter(adapter);
         chatList.setSelection(adapter.getCount() - 1);
         String targetPeerId = this.getIntent().getStringExtra(DATA_EXTRA_SINGLE_DIALOG_TARGET);
         if (targetPeerId != null) {
             Message notify = JSON.parseObject(targetPeerId, Message.class);
-            MessageBean messageBean=Msg2Bean(notify);
+            MessageBean messageBean = Msg2Bean(notify);
             msgs.add(messageBean);
-            db.saveMsg(CurrentFriend,messageBean);
+            db.saveMsg(CurrentFriend, messageBean);
             adapter.notifyDataSetChanged();
-            chatList.setSelection(adapter.getCount()-1);
+            chatList.setSelection(adapter.getCount() - 1);
             messages.add(notify);
             adapter.notifyDataSetChanged();
         }
@@ -151,31 +156,40 @@ MessageDB db=new MessageDB("2");
         super.onPause();
         IMMessageReceiver.unregisterSessionListener(Activityid);
     }
+
     @Override
     public void onMessage(Message msg) {
-        if (!CurrentFriend.equals(msg.getSenderId()+"")){
-            MessageBean messageBean=Msg2Bean(msg);
-            messageBean.setSendType(1);
-            db.saveMsg(messageBean.getSenderId()+"",messageBean);
-            Toast.makeText(PrivateConversationActivity.this,"有新消息！",Toast.LENGTH_SHORT).show();
+        application.add2ackLit(msg.getId());
+        if (application.getLastMsg(CurrentFriend)!=msg.getMsgId())application.setBLOCK(true);
+
+        if (application.getackListsize()>=20){
+            SendMsgAsyncTask.postack(application.getackList(),CurrentUser);
         }
-       else {
-            MessageBean messageBean=Msg2Bean(msg);
+
+        if (!CurrentFriend.equals(msg.getSenderId() + "")) {
+            MessageBean messageBean = Msg2Bean(msg);
+            messageBean.setSendType(1);
+            db.saveMsg(messageBean.getSenderId() + "", messageBean);
+            Toast.makeText(PrivateConversationActivity.this, "有新消息！", Toast.LENGTH_SHORT).show();
+        } else {
+            MessageBean messageBean = Msg2Bean(msg);
             messageBean.setSendType(1);
             msgs.add(messageBean);
-            db.saveMsg(CurrentFriend,messageBean);
+            db.saveMsg(CurrentFriend, messageBean);
             adapter.notifyDataSetChanged();
-            chatList.setSelection(adapter.getCount()-1);
+            chatList.setSelection(adapter.getCount() - 1);
         }
     }
 
     private MessageBean Msg2Bean(Message msg) {
-       return new MessageBean(msg.getMsgId(),0,0,msg.getContents(),msg.getTimestamp(),msg.getSendType(),null,msg.getSenderId());
+        return new MessageBean(msg.getMsgId(), 0, 0, msg.getContents(), msg.getTimestamp(), msg.getSendType(), null, msg.getSenderId());
     }
+
     @Override
     public void onMessage(String msg) {
-        Toast.makeText(PrivateConversationActivity.this,"有新消息:"+msg ,Toast.LENGTH_SHORT).show();
+        Toast.makeText(PrivateConversationActivity.this, "有新消息:" + msg, Toast.LENGTH_SHORT).show();
     }
+
     class MyClickListener implements View.OnTouchListener {
         public boolean onTouch(View v, MotionEvent event) {
             switch (event.getAction()) {
@@ -183,19 +197,19 @@ MessageDB db=new MessageDB("2");
                     MediaRecordFunc.getInstance().startRecordAndFile();
                     break;
                 case MotionEvent.ACTION_UP:
-                  final String path= MediaRecordFunc.getInstance().stopRecordAndFile();
+                    final String path = MediaRecordFunc.getInstance().stopRecordAndFile();
                     record.setVisibility(View.GONE);
                     input.setVisibility(View.VISIBLE);
-                    UploadUtils.getInstance().upload(path,new UploadUtils.QiniuUploadUitlsListener() {
+                    UploadUtils.getInstance().upload(path, new UploadUtils.QiniuUploadUitlsListener() {
                         @Override
                         public void onSucess(String fileUrl) {
-                            Long time=0l;
+                            Long time = 0l;
                             try {
-                              time= CommonUtils.getAmrDuration(new File(path));
+                                time = CommonUtils.getAmrDuration(new File(path));
                             } catch (IOException e) {
                                 e.printStackTrace();
                             }
-                            MessageBean messageBean=new MessageBean("时长："+time+"ms");
+                            MessageBean messageBean = new MessageBean("时长：" + time + "ms");
                             messageBean.setMetadata(path);
                             messageBean.setType(2);
                             messageBean.setSendType(0);
@@ -204,9 +218,11 @@ MessageDB db=new MessageDB("2");
                             adapter.notifyDataSetChanged();
                             System.out.println("上传成功！");
                         }
+
                         @Override
                         public void onError(int errorCode, String msg) {
                         }
+
                         @Override
                         public void onProgress(int progress) {
                         }

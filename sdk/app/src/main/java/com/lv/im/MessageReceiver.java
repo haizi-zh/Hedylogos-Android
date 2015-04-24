@@ -7,15 +7,16 @@ import android.os.Bundle;
 import android.util.Log;
 
 import com.alibaba.fastjson.JSON;
-import com.lv.Utils.JsonValidator;
-import com.lv.bean.Message;
 import com.igexin.sdk.PushConsts;
 import com.igexin.sdk.PushManager;
+import com.lv.Utils.JsonValidator;
+import com.lv.bean.Message;
 
 /**
  * Created by q on 2015/4/16.
  */
 public abstract class MessageReceiver extends BroadcastReceiver implements MessageListener {
+
     @Override
     public void onReceive(Context context, Intent intent) {
         Bundle bundle = intent.getExtras();

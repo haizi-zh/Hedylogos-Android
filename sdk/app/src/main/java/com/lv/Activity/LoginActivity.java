@@ -30,6 +30,7 @@ public class LoginActivity extends Activity implements View.OnClickListener{
     private Button user_login_button;
     private Button user_register_button;
     private ProgressDialog dialog;
+    private SDKApplication sdkApplication;
     private static final String url="http://hedy.zephyre.me/users/login";
     Handler handler =new Handler(){
         @Override
@@ -39,6 +40,8 @@ public class LoginActivity extends Activity implements View.OnClickListener{
                     Intent intent =new Intent();
                     intent.setClass(LoginActivity.this,MainActivity.class);
                     startActivity(intent);
+                    sdkApplication= (SDKApplication) getApplication();
+                    sdkApplication.setCurrentUser(msg.obj.toString());
                     LoginActivity.this.finish();
                     break;
             }
@@ -125,7 +128,10 @@ public class LoginActivity extends Activity implements View.OnClickListener{
                    System.out.println("Status code:"+code);
                     if (code==200){
                         System.out.println("登陆成功！");
-                        handler.sendEmptyMessage(1);
+                        Message message=Message.obtain();
+                        message.obj=username;
+                        message.what=1;
+                        handler.sendMessage(message);
                     }
                     else {
                         handler.post(new Runnable() {

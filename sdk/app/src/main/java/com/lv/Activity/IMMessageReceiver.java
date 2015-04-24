@@ -22,7 +22,6 @@ import java.util.HashMap;
  */
 public class IMMessageReceiver extends MessageReceiver {
     private static final String TAG = "IMMessageReceiver";
-
     @Override
     public void onMessageReceive(Context context, Message msg) {
         OnActivityMessageListener listener =

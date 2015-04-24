@@ -7,11 +7,13 @@ public class ConversationBean {
    private int FriendId;
    private long LastChatTime;
    private String HASH;
+   private int last_rev_msgId;
 
-    public ConversationBean( int friendId,long lastChatTime, String HASH) {
+    public ConversationBean( int friendId,long lastChatTime, String HASH,int Last_rev_msgId) {
         LastChatTime = lastChatTime;
         this.HASH = HASH;
         FriendId = friendId;
+        last_rev_msgId=Last_rev_msgId;
     }
 
     public int getFriendId() {
@@ -36,5 +38,13 @@ public class ConversationBean {
 
     public void setHASH(String HASH) {
         this.HASH = HASH;
+    }
+
+    public int getLast_rev_msgId() {
+        return last_rev_msgId;
+    }
+
+    public void setLast_rev_msgId(int last_rev_msgId) {
+        this.last_rev_msgId = last_rev_msgId;
     }
 }

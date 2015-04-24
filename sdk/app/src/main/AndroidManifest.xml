@@ -1,10 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-    package="com.hedylogos"
+    package="com.lv"
     android:versionCode="1"
     android:versionName="1.0">
     <uses-sdk
-        android:minSdkVersion="9"
+        android:minSdkVersion="11"
         android:targetSdkVersion="19" />
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.READ_PHONE_STATE" />
@@ -28,7 +28,7 @@
         android:label="@string/app_name"
         android:theme="@style/AppTheme" >
         <activity
-            android:name="com.hedylogos.Activity.LoginActivity"
+            android:name="com.lv.Activity.LoginActivity"
             android:label="@string/app_name"
             android:launchMode="singleInstance">
             <intent-filter>
@@ -99,7 +99,7 @@
         <provider
             android:process=":pushservice"
             android:name="com.igexin.download.DownloadProvider"
-            android:authorities="downloads.com.hedylogos"	/>
+            android:authorities="downloads.com.lv"	/>
         <!-- android:authorities="downloads.第三方包名" -->
 
         <activity android:name="com.igexin.getuiext.activity.GetuiExtActivity"
@@ -123,23 +123,23 @@
 
         <!-- 个推SDK配置结束 -->
         <receiver
-            android:name="com.hedylogos.Activity.IMMessageReceiver"
+            android:name="com.lv.Activity.IMMessageReceiver"
             android:exported="false" >
             <intent-filter>
                 <action android:name="com.igexin.sdk.action.GiZGT1lA4oAcKbQYJR89F2" />
             </intent-filter>
         </receiver>
         <activity
-            android:name="com.hedylogos.Activity.PrivateConversationActivity"
+            android:name="com.lv.Activity.PrivateConversationActivity"
             android:launchMode="singleTask"
-          >
-        </activity>
-        <activity
-            android:name="com.hedylogos.Activity.AEStest"
             >
         </activity>
         <activity
-            android:name="com.hedylogos.Activity.MainActivity"
+            android:name="com.lv.Activity.AEStest"
+            >
+        </activity>
+        <activity
+            android:name="com.lv.Activity.MainActivity"
             >
         </activity>
     </application>

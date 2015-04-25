@@ -41,13 +41,13 @@
         <!-- 配置的第三方参数属性 -->
         <meta-data
             android:name="PUSH_APPID"
-            android:value="GiZGT1lA4oAcKbQYJR89F2" />
+            android:value="PSrYJWRPN765o211bIkFM3" />
         <meta-data
             android:name="PUSH_APPKEY"
-            android:value="vFYAPNNkz9653Akzxe3zd8" />
+            android:value="2FaPekdgKz9QULo2X4iEq5" />
         <meta-data
             android:name="PUSH_APPSECRET"
-            android:value="izddty80Ch5OVlzmnSqYa6" />
+            android:value="Zvl1NOaajv5KkByR8iolgA" />
         <meta-data
             android:name="PUSH_GROUPID"
             android:value="" />
@@ -116,7 +116,7 @@
                 <!-- 这个com.igexin.sdk.action.7fjUl2Z3LH6xYy7NQK4ni4固定，不能修改  -->
                 <action android:name="com.igexin.sdk.action.7fjUl2Z3LH6xYy7NQK4ni4" />
                 <!-- android:name="com.igexin.sdk.action.第三方的appId" -->
-                <action android:name="com.igexin.sdk.action.GiZGT1lA4oAcKbQYJR89F2" />
+                <action android:name="com.igexin.sdk.action.PSrYJWRPN765o211bIkFM3" />
             </intent-filter>
         </receiver>
 
@@ -127,7 +127,7 @@
             android:name="com.lv.Activity.IMMessageReceiver"
             android:exported="false" >
             <intent-filter>
-                <action android:name="com.igexin.sdk.action.GiZGT1lA4oAcKbQYJR89F2" />
+                <action android:name="com.igexin.sdk.action.PSrYJWRPN765o211bIkFM3" />
             </intent-filter>
         </receiver>
         <activity

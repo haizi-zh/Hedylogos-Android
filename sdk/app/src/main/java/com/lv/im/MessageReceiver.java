@@ -16,9 +16,9 @@ import com.lv.bean.Message;
  * Created by q on 2015/4/16.
  */
 public abstract class MessageReceiver extends BroadcastReceiver implements MessageListener {
-
+LazyQueue queue;
     @Override
-    public void onReceive(Context context, Intent intent) {
+    public void onReceive(final Context context, Intent intent) {
         Bundle bundle = intent.getExtras();
         Log.d("GetuiSdkDemo", "onReceive() action=" + bundle.getInt("action"));
         System.out.println(" messageid:" + bundle.getString("messageid"));
@@ -40,9 +40,17 @@ public abstract class MessageReceiver extends BroadcastReceiver implements Messa
                     System.out.println("data:"+data);
                     JsonValidator jsonValidator =new JsonValidator();
                     if (jsonValidator.validate(data)){
-                        Message newmsg = JSON.parseObject(data, Message.class);
+                        final Message newmsg = JSON.parseObject(data, Message.class);
                         newmsg.setSendType(1);
-                        onMessageReceive(context, newmsg);
+                        queue = new LazyQueue(10000,10,new DequeueListenr() {
+                            @Override
+                            public void onDequeueMsg(Message messageBean) {
+
+                                onMessageReceive(context, messageBean);
+                                System.out.println("dequeue调用");
+                            }
+                        });
+                         queue.addMsg(newmsg);
                     }
                   else {
                         System.out.println("非json格式");

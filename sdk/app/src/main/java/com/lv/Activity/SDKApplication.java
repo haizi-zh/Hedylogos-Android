@@ -11,20 +11,33 @@ import java.util.HashMap;
  * Created by q on 2015/4/16.
  */
 public class SDKApplication extends Application {
+    public SDKApplication() {
+    }
+
+    public SDKApplication application;
     static SharedPreferences sharedPreferences;
     static SharedPreferences.Editor editor;
     private String CurrentUser;
     private ArrayList<String> acklist;
     private HashMap<String,Integer> lastMsgMap;
+    private HashMap<String,Integer> CacheMsgMap;
     private boolean isBLOCK ;
     @Override
     public void onCreate() {
         super.onCreate();
+        lastMsgMap=new HashMap<String, Integer>();
+        CacheMsgMap=new HashMap<String, Integer>();
         acklist = new ArrayList<String>();
         sharedPreferences = getSharedPreferences("userInfo", Context.MODE_PRIVATE);
         editor = sharedPreferences.edit();
         editor.putString("username", "qyb");
         editor.commit();
+    }
+    public SDKApplication getInstance(){
+        if (application==null){
+            application=new SDKApplication();
+        }
+         return application;
     }
 
     public static SharedPreferences.Editor getSPeditor() {
@@ -57,7 +70,7 @@ public class SDKApplication extends Application {
         return acklist.size();
     }
 
-    public void add2ackLit(String id) {
+    public void add2ackList(String id) {
         acklist.add(id);
     }
 

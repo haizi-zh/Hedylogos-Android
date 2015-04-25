@@ -159,10 +159,11 @@ public class PrivateConversationActivity extends Activity
 
     @Override
     public void onMessage(Message msg) {
-        application.add2ackLit(msg.getId());
+        application.add2ackList(msg.getId());
         if (application.getLastMsg(CurrentFriend)!=msg.getMsgId())application.setBLOCK(true);
 
         if (application.getackListsize()>=20){
+            System.out.println("ackListsize:"+application.getackListsize());
             SendMsgAsyncTask.postack(application.getackList(),CurrentUser);
         }
 

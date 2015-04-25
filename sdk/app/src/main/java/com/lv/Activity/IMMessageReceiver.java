@@ -51,6 +51,7 @@ public class IMMessageReceiver extends MessageReceiver {
             nm.notify(233, notification);
             Log.d(TAG, "notification sent");
         } else {
+            System.out.println("imM调用");
             listener.onMessage(msg);
         }
     }

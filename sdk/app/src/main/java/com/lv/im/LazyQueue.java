@@ -2,7 +2,6 @@ package com.lv.im;
 
 import com.lv.bean.Message;
 
-import java.util.Date;
 import java.util.Timer;
 import java.util.TimerTask;
 
@@ -14,16 +13,15 @@ public class LazyQueue {
     long max_size;
     long current_time;
     static SortList list = new SortList();
-    boolean status;
+    boolean isRunning;
     DequeueListenr listenr;
     Thread executeThread;
     Timer timer;
 
 
-    public LazyQueue(final long max_time, final long max_size, final DequeueListenr listenr) {
+    public LazyQueue(final long max_time, final long max_size) {
         this.max_time = max_time;
         this.max_size = max_size;
-        this.listenr = listenr;
 //        executeThread = new Thread(new Runnable() {
 //            @Override
 //            public void run() {
@@ -51,21 +49,38 @@ public class LazyQueue {
 //        });
 //        this.executeThread.start();
 
+
+    }
+    public void setDequeueListenr(DequeueListenr listenr){
+        this.listenr=listenr;
+
+    }
+    public void start(){
+
+    }
+    public void begin(){
+      if (isRunning){
+          return;
+       }
+        isRunning=true;
         timer = new Timer(true);
-        TimerTask task = new TimerTask() {
+        timer.schedule(new TimerTask() {
             @Override
             public void run() {
-                for (int i = 0; i < list.size(); i++) {
-                    try {
-                        listenr.onDequeueMsg(list.deleteFirst());
-                    } catch (Exception e) {
-                        e.printStackTrace();
-                    }
-                }
+                Dequeue();
+                timer.cancel();
+                isRunning=false;
             }
-
-        };
-        timer.schedule(task,new Date(System.currentTimeMillis()),max_time);
+        },max_time,max_time);
+    }
+    private void Dequeue(){
+        for (int i = 0; i < list.size(); i++) {
+            try {
+                listenr.onDequeueMsg(list.deleteFirst());
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }
     }
     public void addMsg(Message messageBean) {
         list.insert(messageBean);

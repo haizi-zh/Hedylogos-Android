@@ -8,9 +8,9 @@ import com.alibaba.fastjson.JSON;
 import com.loopj.android.http.AsyncHttpClient;
 import com.loopj.android.http.JsonHttpResponseHandler;
 import com.loopj.android.http.RequestParams;
+import com.lv.Utils.Config;
 import com.lv.bean.IMessage;
 import com.lv.bean.Message;
-import com.lv.bean.MessageBean;
 import com.lv.data.MessageDB;
 
 import org.apache.http.Header;
@@ -34,8 +34,6 @@ import java.util.ArrayList;
 public class SendMsgAsyncTask {
 
     Context c;
-    public static final String SEND_URL = "http://hedy.zephyre.me/chats";
-    public static final String ACK_URL = "http://hedy.zephyre.me/chats";
     sendTask task;
     public SendMsgAsyncTask(Context c) {
         this.c = c;
@@ -54,7 +52,7 @@ public static void sendMsg(Context c, IMessage msg){
         params.put("contents",msg.getContents());
         params.put("msgType",msg.getMsgType());
         params.put("receiver",msg.getReceiver());
-        client.post(c,SEND_URL,params,new JsonHttpResponseHandler(){
+        client.post(c,Config.SEND_URL,params,new JsonHttpResponseHandler(){
             @Override
             public void onSuccess(int statusCode, Header[] headers, JSONObject response) {
                 super.onSuccess(statusCode, headers, response);
@@ -73,13 +71,13 @@ public static void sendMsg(Context c, IMessage msg){
     }
 
 }
-    public static void sendMessage(final String correntUser, final String currentFri, final IMessage msg) {
+    public static void sendMessage(final String correntUser, final String currentFri, final IMessage msg, final long localId, final SendMsgListen listen) {
         final String str = JSON.toJSON(msg).toString();
         System.out.println("send_message:"+str);
         new Thread(new Runnable() {
             @Override
             public void run() {
-                HttpPost post = new HttpPost(SEND_URL);
+                HttpPost post = new HttpPost(Config.SEND_URL);
                 HttpResponse httpResponse = null;
                 try {
                   StringEntity entity = new StringEntity(str,
@@ -93,17 +91,19 @@ public static void sendMsg(Context c, IMessage msg){
                         HttpEntity res=httpResponse.getEntity();
                         String result=EntityUtils.toString(res);
                         System.out.println(result);
-                        JSONObject object =new JSONObject();
-                        String a  = object.get("result").toString();
-                        JSONObject obj =new JSONObject();
-                        String conversation=object.get("conversation").toString();
-                        String msgId=object.get("msgId").toString();
-                        Long timestamp=Long.parseLong(object.get("timestamp").toString());
+                        JSONObject object =new JSONObject(result);
+                        JSONObject obj=object.getJSONObject("result");
+                        String conversation=obj.get("conversation").toString();
+                        String msgId=obj.get("msgId").toString();
+                        Long timestamp=Long.parseLong(obj.get("timestamp").toString());
                         MessageDB db= new MessageDB(correntUser);
-                        db.saveMsg(currentFri,new MessageBean(Integer.parseInt(msgId),0,msg.getMsgType(),msg.getContents(),timestamp,0,null,Long.parseLong(correntUser)));
+                        db.updateMsg(currentFri,localId,msgId,conversation,timestamp,Config.STATUS_SUCCESS);
+                        listen.onSuccess();
+                        System.out.println("发送成功，消息更新！");
                     }
                     else {
                         System.out.println("发送失败：code "+code);
+                        listen.onFailed(code);
                     }
 
                   //  db.updateMsg(currentFri, ,msgId,conversation,timestamp);
@@ -142,7 +142,7 @@ public static void sendMsg(Context c, IMessage msg){
                 e.printStackTrace();
             }
             AsyncHttpClient client = new AsyncHttpClient();
-            client.post(c, SEND_URL, entity, "application/json", new JsonHttpResponseHandler() {
+            client.post(c, Config.SEND_URL, entity, "application/json", new JsonHttpResponseHandler() {
                 @Override
                 public void onSuccess(int statusCode, Header[] headers, JSONArray response) {
                     super.onSuccess(statusCode, headers, response);
@@ -161,7 +161,7 @@ public static void sendMsg(Context c, IMessage msg){
 
     }
     public static void postack(final ArrayList<String> list,String id){
-        final String url =ACK_URL+id+"/ack";
+        final String url =Config.ACK_URL+id+"/ack";
           final JSONObject obj =new JSONObject();
         try {
             obj.put("msgList",JSON.toJSONString(list));

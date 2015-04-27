@@ -18,9 +18,8 @@ import android.widget.SimpleAdapter;
 import com.lv.R;
 import com.lv.Utils.TimeUtils;
 import com.lv.bean.ConversationBean;
-import com.lv.data.MessageDB;
+import com.lv.im.IMClient;
 import com.lv.net.UploadUtils;
-import com.igexin.sdk.PushManager;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -33,8 +32,6 @@ public class MainActivity extends Activity implements View.OnClickListener {
     Button test;
     ListView lv;
     List<HashMap<String, Object>> data;
-    MessageDB messageDB ;
-    int i=0;
     SimpleAdapter adapter =null;
     List<ConversationBean> list;
     private String currentuser;
@@ -51,10 +48,8 @@ public class MainActivity extends Activity implements View.OnClickListener {
         btn.setOnClickListener(this);
         application=(SDKApplication) getApplication();
         currentuser = (application.getCurrentUser());
-        messageDB = new MessageDB(currentuser);
-        System.out.println("CurrentUser " + ((SDKApplication) getApplication()).getCurrentUser());
+
         Log.d("GetuiSdkDemo", "initializing sdk...");
-        PushManager.getInstance().initialize(this.getApplicationContext());
         lv.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
@@ -69,9 +64,8 @@ public class MainActivity extends Activity implements View.OnClickListener {
     @Override
     protected void onResume() {
         super.onResume();
-        //list.clear();
-
-        List<ConversationBean> list= messageDB.getConversationList();
+        System.out.println("CurrentUser " + IMClient.getInstance().getCurrentUser());
+        List<ConversationBean> list= IMClient.getInstance().getConversationList();
         data=new ArrayList<HashMap<String,Object>>();
         for (int n=0;n<list.size();n++){
             HashMap<String, Object> hashMap=new HashMap<String, Object>();

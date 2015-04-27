@@ -126,7 +126,6 @@ public class UploadUtils {
         /**
          HttpClient client = new DefaultHttpClient();
          StringBuilder builder = new StringBuilder();
-
          HttpGet myget = new HttpGet(URL);
          try {
          HttpResponse response = client.execute(myget);

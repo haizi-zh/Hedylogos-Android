@@ -3,6 +3,7 @@ package com.lv.Audio;
 import android.media.MediaRecorder;
 import android.os.Environment;
 
+import com.lv.Utils.Config;
 import com.lv.Utils.TimeUtils;
 
 import java.io.File;
@@ -10,12 +11,11 @@ import java.io.File;
 public class AudioFileFunc {
     public final static int AUDIO_INPUT = MediaRecorder.AudioSource.MIC;
 
-    public final static int AUDIO_SAMPLE_RATE = 44100; // 44.1KHz,普遍使用的频率
+    public final static int AUDIO_SAMPLE_RATE = 44100;
+    // 44.1KHz,普遍使用的频率
     // 录音输出文件
     //private final static String AUDIO_RAW_FILENAME = "RawAudio.raw";
     //private final static String AUDIO_WAV_FILENAME = "FinalAudio.wav";
-    public final static String AUDIO_AMR_FILENAME = "Audio.amr";
-
     public static boolean isSdcardExit() {
         if (Environment.getExternalStorageState().equals(
                 Environment.MEDIA_MOUNTED))
@@ -34,7 +34,7 @@ public class AudioFileFunc {
         if (isSdcardExit()) {
             String fileBasePath = Environment.getExternalStorageDirectory()
                     .toString();
-            mAudioAMRPath = fileBasePath + "/SDK/audio/" + TimeUtils.getTimestamp()+"_"+AUDIO_AMR_FILENAME;
+            mAudioAMRPath = fileBasePath + "/SDK/audio/" + TimeUtils.getTimestamp()+"_"+ Config.AUDIO_AMR_FILENAME;
         }
         return mAudioAMRPath;
     }

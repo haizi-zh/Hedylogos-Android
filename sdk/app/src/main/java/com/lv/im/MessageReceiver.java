@@ -42,15 +42,15 @@ LazyQueue queue;
                     if (jsonValidator.validate(data)){
                         final Message newmsg = JSON.parseObject(data, Message.class);
                         newmsg.setSendType(1);
-                        queue = new LazyQueue(10000,10,new DequeueListenr() {
+                        queue = new LazyQueue(5000,10);
+                        queue.addMsg(newmsg);
+                        queue.begin();
+                        queue.setDequeueListenr(new DequeueListenr() {
                             @Override
                             public void onDequeueMsg(Message messageBean) {
-
-                                onMessageReceive(context, messageBean);
-                                System.out.println("dequeue调用");
+                                onMessageReceive(context,messageBean);
                             }
                         });
-                         queue.addMsg(newmsg);
                     }
                   else {
                         System.out.println("非json格式");
@@ -62,6 +62,8 @@ LazyQueue queue;
                 // 获取ClientID(CID)
                 // 第三方应用需要将CID上传到第三方服务器，并且将当前用户帐号和CID进行关联，以便日后通过用户帐号查找CID进行消息推送
                 String cid = bundle.getString("clientid");
+                IMClient.getInstance().setCid(cid);
+                System.out.println(IMClient.getInstance().getCid());
                 onGetCid(context, cid);
                 Log.d("GetuiSdkDemo", "cid:" + cid);
                 break;

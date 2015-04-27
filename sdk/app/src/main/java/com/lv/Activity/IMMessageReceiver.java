@@ -27,6 +27,7 @@ public class IMMessageReceiver extends MessageReceiver {
         OnActivityMessageListener listener =
                 sessionMessageDispatchers.get(PrivateConversationActivity.Activityid);
             msg.setSendType(0);
+
         System.out.println(msg.toString());
         if (listener == null) {
             Log.d("IMMessageReceiver", "Activity inactive, about to send notification.");
@@ -101,6 +102,7 @@ public class IMMessageReceiver extends MessageReceiver {
     @Override
     public void onGetCid(Context context, String cid) {
         System.out.println("cid:"+cid);
+
     }
 
     @Override

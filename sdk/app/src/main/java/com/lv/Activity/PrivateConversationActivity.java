@@ -23,8 +23,10 @@ import com.lv.bean.IMessage;
 import com.lv.bean.Message;
 import com.lv.bean.MessageBean;
 import com.lv.data.MessageDB;
+import com.lv.im.IMClient;
 import com.lv.im.OnActivityMessageListener;
 import com.lv.im.SendMsgAsyncTask;
+import com.lv.im.SendMsgListen;
 import com.lv.net.UploadUtils;
 
 import java.io.File;
@@ -52,7 +54,6 @@ public class PrivateConversationActivity extends Activity
     List<Message> messages = new LinkedList<Message>();
     List<MessageBean> msgs = new LinkedList<MessageBean>();
     private String CurrentFriend;
-    private String CurrentUser;
     SDKApplication application;
     long i = 2;
     MessageDB db ;
@@ -62,11 +63,8 @@ public class PrivateConversationActivity extends Activity
         super.onCreate(savedInstanceState);
         this.setContentView(R.layout.heartbeat);
         application=(SDKApplication) getApplication();
-        CurrentUser=application.getCurrentUser();
-        db = new MessageDB(CurrentUser);
         initview();
-        CurrentFriend = getIntent().getStringExtra("friend_id");
-        tv.setText("好友：" + CurrentFriend);
+
     }
     private void initview() {
         chatList = (ListView) this.findViewById(R.id.avoscloud_chat_list);
@@ -97,14 +95,23 @@ public class PrivateConversationActivity extends Activity
                     return;
                 }
                 composeZone.getEditableText().clear();
-                IMessage message = new IMessage(2, 1, 1, text);
+                IMClient.getInstance().sendTextMessage(text, Integer.parseInt(CurrentFriend), new SendMsgListen() {
+                    @Override
+                    public void onSuccess() {
+                        System.out.println("fasongchenggong");
+                    }
+
+                    @Override
+                    public void onFailed(int code) {
+
+                    }
+                });
+                IMessage message = new IMessage(Integer.parseInt(IMClient.getInstance().getCurrentUser()),Integer.parseInt(CurrentFriend), 0, text);
                 MessageBean messageBean = imessage2Bean(message);
                 System.out.println(message.toString());
-                SendMsgAsyncTask.sendMessage(CurrentUser,CurrentFriend, message);
-               // SendMsgAsyncTask.sendMsg(PrivateConversationActivity.this, message);
-                // MessageBean msg = new MessageBean(text);
+               // SendMsgAsyncTask.sendMessage(CurrentUser,CurrentFriend, message);
                 msgs.add(messageBean);
-                db.saveMsg(CurrentFriend, messageBean);
+               // db.saveMsg(CurrentFriend, messageBean);
                 adapter.notifyDataSetChanged();
                 break;
             case R.id.Btn_AudioMsg:
@@ -133,7 +140,11 @@ public class PrivateConversationActivity extends Activity
     @Override
     public void onResume() {
         super.onResume();
-        msgs = db.getAllMsg(CurrentFriend, 0);
+        CurrentFriend = getIntent().getStringExtra("friend_id");
+        System.out.println("C fri:"+CurrentFriend);
+        db=new MessageDB(IMClient.getInstance().getCurrentUser());
+        tv.setText("好友：" + CurrentFriend);
+        msgs = IMClient.getInstance().getMessages(CurrentFriend,0);
         adapter = new ChatDataAdapter(this, msgs);
         chatList.setAdapter(adapter);
         chatList.setSelection(adapter.getCount() - 1);
@@ -142,7 +153,8 @@ public class PrivateConversationActivity extends Activity
             Message notify = JSON.parseObject(targetPeerId, Message.class);
             MessageBean messageBean = Msg2Bean(notify);
             msgs.add(messageBean);
-            db.saveMsg(CurrentFriend, messageBean);
+          db.saveMsg(CurrentFriend, messageBean);
+          //  a.s
             adapter.notifyDataSetChanged();
             chatList.setSelection(adapter.getCount() - 1);
             messages.add(notify);
@@ -159,12 +171,15 @@ public class PrivateConversationActivity extends Activity
 
     @Override
     public void onMessage(Message msg) {
+        if (msg.getMsgId()!=application.getLastMsg(CurrentFriend)+1){
+            System.out.println("消息乱序");
+        }
         application.add2ackList(msg.getId());
         if (application.getLastMsg(CurrentFriend)!=msg.getMsgId())application.setBLOCK(true);
 
         if (application.getackListsize()>=20){
             System.out.println("ackListsize:"+application.getackListsize());
-            SendMsgAsyncTask.postack(application.getackList(),CurrentUser);
+            SendMsgAsyncTask.postack(application.getackList(),IMClient.getInstance().getCurrentUser());
         }
 
         if (!CurrentFriend.equals(msg.getSenderId() + "")) {
@@ -219,9 +234,9 @@ public class PrivateConversationActivity extends Activity
                             adapter.notifyDataSetChanged();
                             System.out.println("上传成功！");
                         }
-
                         @Override
                         public void onError(int errorCode, String msg) {
+
                         }
 
                         @Override

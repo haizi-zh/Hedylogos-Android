@@ -11,7 +11,11 @@ import android.widget.Button;
 import android.widget.EditText;
 import android.widget.Toast;
 
+import com.igexin.sdk.PushManager;
 import com.lv.R;
+import com.lv.Utils.Config;
+import com.lv.im.IMClient;
+import com.lv.net.LoginSuccessListen;
 
 import org.apache.http.HttpResponse;
 import org.apache.http.client.methods.HttpPost;
@@ -31,7 +35,6 @@ public class LoginActivity extends Activity implements View.OnClickListener{
     private Button user_register_button;
     private ProgressDialog dialog;
     private SDKApplication sdkApplication;
-    private static final String url="http://hedy.zephyre.me/users/login";
     Handler handler =new Handler(){
         @Override
         public void handleMessage(Message msg) {
@@ -51,6 +54,7 @@ public class LoginActivity extends Activity implements View.OnClickListener{
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.login_layout);
+        PushManager.getInstance().initialize(this.getApplicationContext());
         initview();
     }
     private void initview() {
@@ -93,12 +97,27 @@ public class LoginActivity extends Activity implements View.OnClickListener{
         Intent intent =new Intent();
         switch (v.getId()){
             case R.id.user_login_button:
-                intent.setClass(LoginActivity.this,MainActivity.class);
                 //getApplicationContext().
                 // SharedPreferences sharedPreferences = getSharedPreferences("userInfo", Context.MODE_PRIVATE);
                 //String qwe=sharedPreferences.getString("username","");
-                login(login_username.getText().toString());
+                //login(login_username.getText().toString());
                 // System.out.println("username:"+qwe);
+                System.out.println("click");
+                IMClient.getInstance().Login(login_username.getText().toString(),new LoginSuccessListen() {
+                    @Override
+                    public void OnSuccess() {
+                        System.out.println("登陆成功");
+                        Intent intent =new Intent();
+                        intent.setClass(LoginActivity.this,MainActivity.class);
+                        startActivity(intent);
+                        LoginActivity.this.finish();
+                    }
+
+                    @Override
+                    public void OnFalied(int code) {
+                        Toast.makeText(LoginActivity.this,"登陆失败："+code,Toast.LENGTH_LONG).show();
+                    }
+                });
                 break;
             case R.id.user_register_button:
                 break;
@@ -117,7 +136,7 @@ public class LoginActivity extends Activity implements View.OnClickListener{
                     obj.put("userId",Long.parseLong(username));
                     obj.put("regId","45c10d381af0f4998032d933a00f3c6e");
                     System.out.println("login:"+array.toString());
-                    HttpPost post = new HttpPost(url);
+                    HttpPost post = new HttpPost(Config.LOGIN_URL);
                     HttpResponse httpResponse = null;
                         StringEntity entity = new StringEntity(obj.toString(),
                                 HTTP.UTF_8);

@@ -4,6 +4,7 @@ import android.content.ContentValues;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 
+import com.lv.Utils.Config;
 import com.lv.Utils.CryptUtils;
 import com.lv.bean.ConversationBean;
 import com.lv.bean.FriendBean;
@@ -19,8 +20,6 @@ import java.util.List;
  */
 
 public class MessageDB {
-    public static final String MSG_DBNAME = "IM_SDK.db";
-    public static final String DB_PATH = "/data/data/com.lv/";
     public static final String TAG = "IMDB";
     private String con_table_name;
     private String fri_table_name;
@@ -30,9 +29,9 @@ public class MessageDB {
         String path = CryptUtils.getMD5String(User_Id);
         con_table_name = "con_" + path;
         fri_table_name = "fri_" + path;
-        String DATABASE_PATH = DB_PATH + path;
+        String DATABASE_PATH = Config.DB_PATH + path;
         System.out.println("DATABASE_PATH:" + DATABASE_PATH);
-        String databaseFilename = DATABASE_PATH + "/" + MSG_DBNAME;
+        String databaseFilename = DATABASE_PATH + "/" + Config.MSG_DBNAME;
         System.out.println("databaseFilename:" + databaseFilename);
         File dir = new File(DATABASE_PATH);
         if (!dir.exists())
@@ -141,7 +140,7 @@ public class MessageDB {
         List<ConversationBean> list = new ArrayList<ConversationBean>();
         db.execSQL("CREATE table IF NOT EXISTS "
                 + con_table_name
-                + " (Friend_Id INTEGER PRIMARY KEY,lastTime INTEGER,HASH TEXT,last_rec_msgId INTEGER)");
+                + " (Friend_Id INTEGER PRIMARY KEY,lastTime INTEGER,HASH TEXT,last_rec_msgId INTEGER,status INTEGER,conversation TEXT)");
         db.execSQL("create index if not exists index_Con_Friend_Id on " + con_table_name + "(Friend_Id)");
         Cursor c = db.rawQuery("SELECT * FROM " + con_table_name, null);
         while (c.moveToNext()) {
@@ -160,15 +159,22 @@ public class MessageDB {
         return list;
     }
 
-    public void updateMsg(String fri_ID,int LocalId,String msgId,String conversation,long timestamp) {
+    public void updateMsg(String fri_ID,long LocalId,String msgId,String conversation,long timestamp,int status) {
         String table_name = "chat_" + CryptUtils.getMD5String(fri_ID);
         ContentValues values=new ContentValues();
         values.put("msgId",msgId);
-        values.put("conversation",conversation);
+        //values.put("conversation",conversation);
         values.put("timestamp",timestamp);
-            db.update(table_name,values,"LocalId=?",new String[LocalId]);
+        values.put("Status",status);
+        db.update(table_name,values,"LocalId=?",new String[(int)LocalId]);
+        updateConversation(fri_ID,conversation);
     }
+    public void updateConversation(String fri_ID,String conversation){
 
+        ContentValues values=new ContentValues();
+        values.put("conversation",conversation);
+        db.update(con_table_name,values,"Friend_Id",new String[Integer.parseInt(fri_ID)]);
+    }
     public void test_Insert() {
         db.beginTransaction();
         for (int i = 1; i <= 100; i++) {

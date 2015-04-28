@@ -97,9 +97,11 @@ public static void sendMsg(Context c, IMessage msg){
                         String msgId=obj.get("msgId").toString();
                         Long timestamp=Long.parseLong(obj.get("timestamp").toString());
                         MessageDB db= new MessageDB(correntUser);
+                        IMClient.getInstance().setLastMsg(currentFri,Integer.parseInt(msgId));
                         db.updateMsg(currentFri,localId,msgId,conversation,timestamp,Config.STATUS_SUCCESS);
-                        listen.onSuccess();
                         System.out.println("发送成功，消息更新！");
+                        listen.onSuccess();
+
                     }
                     else {
                         System.out.println("发送失败：code "+code);

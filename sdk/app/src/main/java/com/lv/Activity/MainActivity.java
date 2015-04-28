@@ -19,6 +19,7 @@ import com.lv.R;
 import com.lv.Utils.TimeUtils;
 import com.lv.bean.ConversationBean;
 import com.lv.im.IMClient;
+import com.lv.net.UploadListener;
 import com.lv.net.UploadUtils;
 
 import java.util.ArrayList;
@@ -41,15 +42,12 @@ public class MainActivity extends Activity implements View.OnClickListener {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         btn = (Button) findViewById(R.id.btn);
-        img = (ImageView) findViewById(R.id.img);
         test = (Button) findViewById(R.id.btn_test);
         lv = (ListView) findViewById(R.id.listview);
         test.setOnClickListener(this);
         btn.setOnClickListener(this);
         application=(SDKApplication) getApplication();
         currentuser = (application.getCurrentUser());
-
-        Log.d("GetuiSdkDemo", "initializing sdk...");
         lv.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
@@ -64,6 +62,7 @@ public class MainActivity extends Activity implements View.OnClickListener {
     @Override
     protected void onResume() {
         super.onResume();
+        IMClient.getInstance().fetchNewMsg("3");
         System.out.println("CurrentUser " + IMClient.getInstance().getCurrentUser());
         List<ConversationBean> list= IMClient.getInstance().getConversationList();
         data=new ArrayList<HashMap<String,Object>>();
@@ -86,7 +85,7 @@ public class MainActivity extends Activity implements View.OnClickListener {
             case R.id.btn:
                 Intent intent = new Intent();
                 intent.setClass(MainActivity.this, PrivateConversationActivity.class);
-                intent.putExtra("friend_id","1");
+                intent.putExtra("friend_id","3");
                 startActivity(intent);
              break;
             case R.id.btn_test:
@@ -121,7 +120,7 @@ public class MainActivity extends Activity implements View.OnClickListener {
      * @param result
      */
     private void uploadBitmap(Bitmap result) {
-        UploadUtils.getInstance().uploadImage(result, new UploadUtils.QiniuUploadUitlsListener() {
+        UploadUtils.getInstance().uploadImage(result, new UploadListener() {
 
             public void onSucess(String fileUrl) {
 

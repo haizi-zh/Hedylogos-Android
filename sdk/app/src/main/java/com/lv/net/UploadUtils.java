@@ -4,6 +4,7 @@ import android.graphics.Bitmap;
 import android.os.Environment;
 
 import com.lv.Utils.PictureUtil;
+import com.lv.Utils.TimeUtils;
 import com.qiniu.android.http.ResponseInfo;
 import com.qiniu.android.storage.UpCompletionHandler;
 import com.qiniu.android.storage.UpProgressHandler;
@@ -22,18 +23,11 @@ import java.util.Random;
 
 public class UploadUtils {
 
-    private static final String fileName = "temp.jpg";
-    private static final String URL = "";
-    private static final String tempJpeg = Environment.getExternalStorageDirectory().getPath() + "/" + fileName;
+    //private static final String fileName = "temp.jpg";
+      private static final String imagepath = Environment.getExternalStorageDirectory().getPath() + "/SDK/image/" ;
 
 
-    public interface QiniuUploadUitlsListener {
-        public void onSucess(String fileUrl);
 
-        public void onError(int errorCode, String msg);
-
-        public void onProgress(int progress);
-    }
 
     private UploadUtils() {
 
@@ -54,12 +48,13 @@ public class UploadUtils {
         return PictureUtil.saveBitmapToJpegFile(bitmap, filePath, 75);
     }
 
-    public void uploadImage(Bitmap bitmap, QiniuUploadUitlsListener listener) {
-        saveBitmapToJpegFile(bitmap, tempJpeg);
-        upload(tempJpeg, listener);
+    public void uploadImage(Bitmap bitmap, UploadListener listener) {
+        String image = imagepath+ TimeUtils.getTimestamp()+"_image.jpeg";
+        saveBitmapToJpegFile(bitmap, image);
+        upload(image, listener);
     }
 
-    public void uploadFile(File file, QiniuUploadUitlsListener listener) {
+    public void uploadFile(File file, UploadListener listener) {
         upload(file.getAbsolutePath(), listener);
     }
 //    public void uploadbyte(byte[] data, QiniuUploadUitlsListener listener) {
@@ -67,7 +62,7 @@ public class UploadUtils {
 //        upload(tempJpeg, listener);
 //    }
 
-    public void upload(String filePath, final QiniuUploadUitlsListener listener) {
+    public void upload(String filePath, final UploadListener listener) {
         final String fileUrlUUID = getFileUrlUUID();
         String token = getToken();
         if (token == null) {

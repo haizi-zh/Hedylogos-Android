@@ -48,7 +48,14 @@
             android:layout_height="wrap_content"
             android:layout_gravity="bottom"
             android:text="语音消息"
-            android:src="@mipmap/record_audio_play" />
+            />
+        <Button
+            android:id="@+id/Btn_ImageMsg"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="bottom"
+            android:text="图片"
+            />
     </LinearLayout>
     <ImageButton
         android:id="@+id/record"

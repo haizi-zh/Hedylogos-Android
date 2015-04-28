@@ -9,6 +9,7 @@ import com.lv.Utils.CryptUtils;
 import com.lv.bean.ConversationBean;
 import com.lv.bean.FriendBean;
 import com.lv.bean.MessageBean;
+import com.lv.im.IMClient;
 
 import java.io.File;
 import java.util.ArrayList;
@@ -37,7 +38,6 @@ public class MessageDB {
         if (!dir.exists())
             dir.mkdir();
         db = SQLiteDatabase.openOrCreateDatabase(databaseFilename, null);
-
     }
 
     public synchronized long saveMsg(String Friend_Id, MessageBean entity) {
@@ -57,6 +57,7 @@ public class MessageDB {
         values.put("Metadata", entity.getMetadata());
         values.put("SenderId", entity.getSenderId());
       long localid=  db.insert(table_name, null, values);
+        IMClient.getInstance().setLastMsg(entity.getServerId()+"",entity.getServerId());
         add2Conversion(Integer.parseInt(Friend_Id), entity.getCreateTime(), table_name,entity.getServerId());
         add2Friend(Integer.parseInt(Friend_Id));
         return localid;
@@ -148,6 +149,7 @@ public class MessageDB {
             int friend_id = c.getInt(c.getColumnIndex("Friend_Id"));
             String table = c.getString(c.getColumnIndex("HASH"));
             int lastmsgId=c.getInt(c.getColumnIndex("last_rec_msgId"));
+            IMClient.getInstance().setLastMsg(friend_id+"",lastmsgId);
             Cursor cursor = db.rawQuery("SELECT * FROM " + table + " order by LocalId desc limit 1", null);
             cursor.moveToLast();
             String lastmessage = cursor.getString(4);
@@ -162,18 +164,26 @@ public class MessageDB {
     public void updateMsg(String fri_ID,long LocalId,String msgId,String conversation,long timestamp,int status) {
         String table_name = "chat_" + CryptUtils.getMD5String(fri_ID);
         ContentValues values=new ContentValues();
-        values.put("msgId",msgId);
+        values.put("ServerId",msgId);
         //values.put("conversation",conversation);
-        values.put("timestamp",timestamp);
+        values.put("CreateTime",timestamp);
         values.put("Status",status);
-        db.update(table_name,values,"LocalId=?",new String[(int)LocalId]);
+        db.update(table_name,values,"LocalId=?",new String[]{LocalId+""});
+        IMClient.getInstance().setLastMsg(fri_ID,Integer.parseInt(msgId));
         updateConversation(fri_ID,conversation);
     }
     public void updateConversation(String fri_ID,String conversation){
 
         ContentValues values=new ContentValues();
         values.put("conversation",conversation);
-        db.update(con_table_name,values,"Friend_Id",new String[Integer.parseInt(fri_ID)]);
+        db.update(con_table_name,values,"Friend_Id=?",new String[]{fri_ID});
+    }
+        public void saveMsgs(List<MessageBean> list){
+        db.beginTransaction();
+            for (MessageBean msg:list){
+                saveMsg(msg.getSenderId()+"",msg);
+            }
+        db.endTransaction();
     }
     public void test_Insert() {
         db.beginTransaction();
@@ -184,4 +194,5 @@ public class MessageDB {
         }
         db.endTransaction();
     }
+
 }

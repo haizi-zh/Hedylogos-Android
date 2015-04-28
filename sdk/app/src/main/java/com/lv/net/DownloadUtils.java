@@ -12,13 +12,6 @@ import com.loopj.android.http.RequestParams;
  */
 public class DownloadUtils {
     private static AsyncHttpClient client = new AsyncHttpClient();
-
-    //    public static void getImagefromUrl(String url){
-//        String token =getDownLoadToken();
-//        String realUrl=url+ TimeUtils.getTimestamp()+token;
-//        String[] allowedContentTypes = new String[] { "application/pdf", "image/png", "image/jpeg" };
-//        client.get(realUrl);
-//    }
     static {
         client.setTimeout(11000);   //设置链接超时，如果不设置，默认为10s
     }

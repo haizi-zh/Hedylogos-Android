@@ -2,6 +2,11 @@ package com.lv.Activity;
 
 
 import android.app.Activity;
+import android.content.ContentResolver;
+import android.content.Intent;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
+import android.net.Uri;
 import android.os.Bundle;
 import android.text.TextUtils;
 import android.view.MotionEvent;
@@ -18,6 +23,7 @@ import com.alibaba.fastjson.JSON;
 import com.lv.Audio.MediaRecordFunc;
 import com.lv.R;
 import com.lv.Utils.CommonUtils;
+import com.lv.Utils.Config;
 import com.lv.Utils.TimeUtils;
 import com.lv.bean.IMessage;
 import com.lv.bean.Message;
@@ -27,6 +33,7 @@ import com.lv.im.IMClient;
 import com.lv.im.OnActivityMessageListener;
 import com.lv.im.SendMsgAsyncTask;
 import com.lv.im.SendMsgListen;
+import com.lv.net.UploadListener;
 import com.lv.net.UploadUtils;
 
 import java.io.File;
@@ -43,6 +50,7 @@ public class PrivateConversationActivity extends Activity
     String targetPeerId;
     private ImageButton sendBtn;
     Button Audiomsg;
+    Button ImageMsg;
     ImageButton record;
     LinearLayout input;
     private EditText composeZone;
@@ -56,26 +64,29 @@ public class PrivateConversationActivity extends Activity
     private String CurrentFriend;
     SDKApplication application;
     long i = 2;
-    MessageDB db ;
+    MessageDB db;
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         this.setContentView(R.layout.heartbeat);
-        application=(SDKApplication) getApplication();
+        application = (SDKApplication) getApplication();
         initview();
 
     }
+
     private void initview() {
         chatList = (ListView) this.findViewById(R.id.avoscloud_chat_list);
         input = (LinearLayout) findViewById(R.id.chat_input_wrapper);
         tv = (TextView) findViewById(R.id.top);
+        ImageMsg = (Button) findViewById(R.id.Btn_ImageMsg);
         sendBtn = (ImageButton) this.findViewById(R.id.sendBtn);
         Audiomsg = (Button) this.findViewById(R.id.Btn_AudioMsg);
         record = (ImageButton) this.findViewById(R.id.record);
         composeZone = (EditText) this.findViewById(R.id.chatText);
         sendBtn.setOnClickListener(this);
         Audiomsg.setOnClickListener(this);
+        ImageMsg.setOnClickListener(this);
         record.setOnTouchListener(new MyClickListener());
         record.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -103,20 +114,26 @@ public class PrivateConversationActivity extends Activity
 
                     @Override
                     public void onFailed(int code) {
-
+                        System.out.println("failed code : " + code);
                     }
                 });
-                IMessage message = new IMessage(Integer.parseInt(IMClient.getInstance().getCurrentUser()),Integer.parseInt(CurrentFriend), 0, text);
+                IMessage message = new IMessage(Integer.parseInt(IMClient.getInstance().getCurrentUser()), Integer.parseInt(CurrentFriend), 0, text);
                 MessageBean messageBean = imessage2Bean(message);
                 System.out.println(message.toString());
-               // SendMsgAsyncTask.sendMessage(CurrentUser,CurrentFriend, message);
+                // SendMsgAsyncTask.sendMessage(CurrentUser,CurrentFriend, message);
                 msgs.add(messageBean);
-               // db.saveMsg(CurrentFriend, messageBean);
+                // db.saveMsg(CurrentFriend, messageBean);
                 adapter.notifyDataSetChanged();
                 break;
             case R.id.Btn_AudioMsg:
                 record.setVisibility(View.VISIBLE);
                 input.setVisibility(View.GONE);
+                break;
+            case R.id.Btn_ImageMsg:
+                Intent intent = new Intent();
+                intent.setType("image/*");
+                intent.setAction(Intent.ACTION_GET_CONTENT);
+                startActivityForResult(intent, Config.CHOOSE_IMAGE_CODE);
                 break;
         }
     }
@@ -141,10 +158,10 @@ public class PrivateConversationActivity extends Activity
     public void onResume() {
         super.onResume();
         CurrentFriend = getIntent().getStringExtra("friend_id");
-        System.out.println("C fri:"+CurrentFriend);
-        db=new MessageDB(IMClient.getInstance().getCurrentUser());
+        System.out.println("C fri:" + CurrentFriend);
+        db = new MessageDB(IMClient.getInstance().getCurrentUser());
         tv.setText("好友：" + CurrentFriend);
-        msgs = IMClient.getInstance().getMessages(CurrentFriend,0);
+        msgs = IMClient.getInstance().getMessages(CurrentFriend, 0);
         adapter = new ChatDataAdapter(this, msgs);
         chatList.setAdapter(adapter);
         chatList.setSelection(adapter.getCount() - 1);
@@ -153,8 +170,8 @@ public class PrivateConversationActivity extends Activity
             Message notify = JSON.parseObject(targetPeerId, Message.class);
             MessageBean messageBean = Msg2Bean(notify);
             msgs.add(messageBean);
-          db.saveMsg(CurrentFriend, messageBean);
-          //  a.s
+            db.saveMsg(CurrentFriend, messageBean);
+            //  a.s
             adapter.notifyDataSetChanged();
             chatList.setSelection(adapter.getCount() - 1);
             messages.add(notify);
@@ -171,15 +188,13 @@ public class PrivateConversationActivity extends Activity
 
     @Override
     public void onMessage(Message msg) {
-        if (msg.getMsgId()!=application.getLastMsg(CurrentFriend)+1){
-            System.out.println("消息乱序");
-        }
-        application.add2ackList(msg.getId());
-        if (application.getLastMsg(CurrentFriend)!=msg.getMsgId())application.setBLOCK(true);
 
-        if (application.getackListsize()>=20){
-            System.out.println("ackListsize:"+application.getackListsize());
-            SendMsgAsyncTask.postack(application.getackList(),IMClient.getInstance().getCurrentUser());
+        application.add2ackList(msg.getId());
+        if (application.getLastMsg(CurrentFriend) != msg.getMsgId()) application.setBLOCK(true);
+
+        if (application.getackListsize() >= 20) {
+            System.out.println("ackListsize:" + application.getackListsize());
+            SendMsgAsyncTask.postack(application.getackList(), IMClient.getInstance().getCurrentUser());
         }
 
         if (!CurrentFriend.equals(msg.getSenderId() + "")) {
@@ -216,7 +231,7 @@ public class PrivateConversationActivity extends Activity
                     final String path = MediaRecordFunc.getInstance().stopRecordAndFile();
                     record.setVisibility(View.GONE);
                     input.setVisibility(View.VISIBLE);
-                    UploadUtils.getInstance().upload(path, new UploadUtils.QiniuUploadUitlsListener() {
+                    UploadUtils.getInstance().upload(path, new UploadListener() {
                         @Override
                         public void onSucess(String fileUrl) {
                             Long time = 0l;
@@ -234,6 +249,7 @@ public class PrivateConversationActivity extends Activity
                             adapter.notifyDataSetChanged();
                             System.out.println("上传成功！");
                         }
+
                         @Override
                         public void onError(int errorCode, String msg) {
 
@@ -256,6 +272,38 @@ public class PrivateConversationActivity extends Activity
             return false;
         }
 
+    }
+
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        if (resultCode == RESULT_OK && requestCode == Config.CHOOSE_IMAGE_CODE) {
+            //Log.i(TAG, "resultCode == RESULT_OK && requestCode == CHOOSE_IMAGE_CODE");
+            Uri uri = data.getData();
+            ContentResolver cr = this.getContentResolver();
+            try {
+                Bitmap bitmap = BitmapFactory.decodeStream(cr.openInputStream(uri));
+                // uploadBitmap(bitmap);
+                //Log.i(TAG, "uploadBitmap(bitmap); ");
+                IMClient.getInstance().UploadImage(bitmap, new UploadListener() {
+                    @Override
+                    public void onSucess(String fileUrl) {
+
+                    }
+
+                    @Override
+                    public void onError(int errorCode, String msg) {
+
+                    }
+
+                    @Override
+                    public void onProgress(int progress) {
+
+                    }
+                });
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }
+        super.onActivityResult(requestCode, resultCode, data);
     }
 
 }

@@ -2,6 +2,9 @@ package com.lv.im;
 
 import com.lv.bean.Message;
 
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.Map;
 import java.util.Timer;
 import java.util.TimerTask;
 
@@ -11,11 +14,10 @@ import java.util.TimerTask;
 public class LazyQueue {
     long max_time;
     long max_size;
-    long current_time;
-    static SortList list = new SortList();
+   // static SortList list = new SortList();
+    static HashMap<Long,SortList>LazyMap =new HashMap<Long, SortList>();
     boolean isRunning;
     DequeueListenr listenr;
-    Thread executeThread;
     Timer timer;
 
 
@@ -59,6 +61,7 @@ public class LazyQueue {
 
     }
     public void begin(){
+        System.out.println("isRunning"+isRunning);
       if (isRunning){
           return;
        }
@@ -74,15 +77,27 @@ public class LazyQueue {
         },max_time,max_time);
     }
     private void Dequeue(){
-        for (int i = 0; i < list.size(); i++) {
-            try {
-                listenr.onDequeueMsg(list.deleteFirst());
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
-        }
+       Iterator iter = LazyMap.entrySet().iterator();
+       while (iter.hasNext()) {
+           Map.Entry entry = (Map.Entry) iter.next();
+           SortList list=(SortList)entry.getValue();
+           for (int i = 0; i < list.size(); i++) {
+               try {
+                   System.out.println("Dequeue()");
+                   listenr.onDequeueMsg(list.deleteFirst());
+               } catch (Exception e) {
+                   e.printStackTrace();
+               }
+           }
+           }
     }
-    public void addMsg(Message messageBean) {
-        list.insert(messageBean);
+    public void addMsg(long FriendId,Message messageBean) {
+
+    if (!LazyMap.containsKey(FriendId)){
+      LazyMap.put(FriendId,new SortList());
+    }
+       LazyMap.get(FriendId).insert(messageBean);
+        System.out.println("list.insert(messageBean);");
+
     }
 }

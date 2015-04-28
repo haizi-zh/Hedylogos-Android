@@ -16,7 +16,7 @@ import com.lv.bean.Message;
  * Created by q on 2015/4/16.
  */
 public abstract class MessageReceiver extends BroadcastReceiver implements MessageListener {
-LazyQueue queue;
+LazyQueue queue = new LazyQueue(2000,10);
     @Override
     public void onReceive(final Context context, Intent intent) {
         Bundle bundle = intent.getExtras();
@@ -40,21 +40,26 @@ LazyQueue queue;
                     System.out.println("data:"+data);
                     JsonValidator jsonValidator =new JsonValidator();
                     if (jsonValidator.validate(data)){
-                        final Message newmsg = JSON.parseObject(data, Message.class);
+                         Message newmsg = JSON.parseObject(data, Message.class);
                         newmsg.setSendType(1);
-                        queue = new LazyQueue(5000,10);
-                        queue.addMsg(newmsg);
-                        queue.begin();
-                        queue.setDequeueListenr(new DequeueListenr() {
-                            @Override
-                            public void onDequeueMsg(Message messageBean) {
-                                onMessageReceive(context,messageBean);
-                            }
-                        });
-                    }
-                  else {
-                        System.out.println("非json格式");
-                        onMessageReceive(context, data);
+                      //  if (IMClient.getInstance().isBLOCK())
+                        if (newmsg.getMsgType()==0) {
+                            queue.addMsg(newmsg.getSenderId(),newmsg);
+                            queue.begin();
+                            queue.setDequeueListenr(new DequeueListenr() {
+                                @Override
+                                public void onDequeueMsg(Message messageBean) {
+                                    if (checkOrder(messageBean)) {
+                                        onMessageReceive(context, messageBean);
+                                    } else {
+                                        IMClient.getInstance().setBLOCK(true);
+                                        System.out.println("fetch");
+                                        IMClient.getInstance().fetchNewMsg(messageBean.getSenderId() + "");
+                                    }
+                                }
+                            });
+                        }
+                        else onMessageReceive(context, newmsg);
                     }
                 }
                 break;
@@ -82,6 +87,25 @@ LazyQueue queue;
                 break;
             default:
                 break;
+        }
+    }
+
+    private boolean checkOrder(Message messageBean) {
+        int lastid=IMClient.getInstance().getLastMsg(messageBean.getSenderId()+"");
+        System.out.println("lastid"+lastid+" messageBean:"+messageBean);
+        if (lastid==-1){
+            IMClient.getInstance().saveMessage(messageBean);
+            System.out.println("checkOrder:first msg ");
+            return true;
+        }
+        else if (messageBean.getMsgId()-1==lastid){
+            System.out.println("checkOrder:正序 ");
+            IMClient.getInstance().saveMessage(messageBean);
+            return true;
+        }
+        else {
+            System.out.println("checkOrder:乱序 ");
+            return false;
         }
     }
 }

@@ -237,11 +237,9 @@ public class PictureUtil {
             }
             op.inJustDecodeBounds = false;
             Bitmap b = BitmapFactory.decodeFile(filePath, op);
-
             if (!save_picture(ctx, b, 90, attachPath, newName)) {
                 copyFile(filePath, attachPath + File.separator + newName);
             }
-
             if (b != null && !b.isRecycled())
                 b.recycle();
 

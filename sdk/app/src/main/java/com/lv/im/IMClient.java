@@ -1,15 +1,19 @@
 package com.lv.im;
 
+import android.graphics.Bitmap;
 import android.text.TextUtils;
 
 import com.lv.Utils.Config;
 import com.lv.Utils.TimeUtils;
 import com.lv.bean.ConversationBean;
 import com.lv.bean.IMessage;
+import com.lv.bean.Message;
 import com.lv.bean.MessageBean;
 import com.lv.data.MessageDB;
 import com.lv.net.HttpUtils;
 import com.lv.net.LoginSuccessListen;
+import com.lv.net.UploadListener;
+import com.lv.net.UploadUtils;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -72,10 +76,15 @@ public class IMClient {
     }
 
     public int getLastMsg(String fri_id) {
+        if (lastMsgMap.get(fri_id)!=null)
         return lastMsgMap.get(fri_id);
+        else
+        return -1;
     }
 
     public void setLastMsg (String fri_Id,int msgId) {
+      //  int temp=lastMsgMap.get(fri_Id);
+      //  if (temp>msgId)return;
         lastMsgMap.put(fri_Id,msgId);
     }
 
@@ -107,6 +116,31 @@ public class IMClient {
     private MessageBean imessage2Bean(IMessage message) {
 
         return new MessageBean(0, Config.STATUS_SENDING, message.getMsgType(), message.getContents(), TimeUtils.getTimestamp(), Config.TYPE_SEND, null, Long.parseLong(CurrentUser));
+    }
+    public void saveMessage(Message message){
+        MessageBean newMsg=Msg2Bean(message);
+        db.saveMsg(newMsg.getSenderId()+"",newMsg);
+        lastMsgMap.put(newMsg.getSenderId()+"",newMsg.getServerId());
+        add2ackList(message.getId());
+    }
+    private MessageBean Msg2Bean(Message msg) {
+        return new MessageBean(msg.getMsgId(), Config.STATUS_SUCCESS, msg.getMsgType(), msg.getContents(), msg.getTimestamp(), msg.getSendType(), null, msg.getSenderId());
+    }
+    public void fetchNewMsg(String friid){
+            HttpUtils.FetchNewMsg(friid);
+
+    }
+    public void UploadImage(Bitmap bitmap,UploadListener listener){
+        UploadUtils.getInstance().uploadImage(bitmap,listener);
+    }
+    public void saveMessages(List<Message> list){
+        List<MessageBean> list1 =new ArrayList<MessageBean>();
+        for (Message message:list){
+          list1.add(Msg2Bean(message));
+            System.out.println(message.getMsgId());
+        }
+        db.saveMsgs(list1);
+
     }
     public void test(){
         System.out.println("c:"+CurrentUser);

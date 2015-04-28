@@ -9,20 +9,13 @@
         android:id="@+id/btn"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="SingleConversation测试"/>
-
-    <ImageView
-        android:layout_below="@id/btn"
-        android:id="@+id/img"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:src="@mipmap/ic_launcher"/>
+        android:text="Single测试"/>
     <Button
         android:id="@+id/btn_test"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_below="@id/img"
-        android:text="加密测试"/>
+        android:layout_below="@id/btn"
+        android:text="群组测试"/>
     <ListView
         android:id="@+id/listview"
         android:layout_below="@id/btn_test"

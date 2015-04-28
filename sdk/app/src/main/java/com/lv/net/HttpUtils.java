@@ -1,19 +1,32 @@
 package com.lv.net;
 
+import com.alibaba.fastjson.JSON;
+import com.loopj.android.http.AsyncHttpClient;
+import com.loopj.android.http.RequestParams;
+import com.loopj.android.http.TextHttpResponseHandler;
 import com.lv.Utils.Config;
+import com.lv.bean.Message;
+import com.lv.bean.MessageBean;
 import com.lv.im.IMClient;
 
+import org.apache.http.Header;
 import org.apache.http.HttpResponse;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.entity.StringEntity;
 import org.apache.http.impl.client.DefaultHttpClient;
 import org.apache.http.protocol.HTTP;
+import org.json.JSONArray;
+import org.json.JSONException;
 import org.json.JSONObject;
+
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * Created by q on 2015/4/27.
  */
 public class HttpUtils {
+    private static AsyncHttpClient client = new AsyncHttpClient();
     public static void login( final String username, final LoginSuccessListen listen) {
         new  Thread(new Runnable() {
             @Override
@@ -22,12 +35,10 @@ public class HttpUtils {
                 try {
                     System.out.println("run");
                     String cid=null;
-                           //"45c10d381af0f4998032d933a00f3c6e";
                     System.out.println("IMClient.getInstance().getCid()"+IMClient.getInstance().getCid());
                     while (true){
                         if (IMClient.getInstance().getCid()!=null){
                             cid=IMClient.getInstance().getCid();
-                            System.out.println("!!cid");
                             break;
                         }
                     }
@@ -44,7 +55,6 @@ public class HttpUtils {
                     final int code=httpResponse.getStatusLine().getStatusCode();
                     System.out.println("Status code:"+code);
                     if (code==200){
-                        System.out.println("denglu"+username);
                         IMClient.getInstance().setCurrentUser(username);
                         IMClient.getInstance().test();
                         IMClient.getInstance().initDB();
@@ -59,5 +69,38 @@ public class HttpUtils {
                 }
             }
         }).start();
+    }
+    public static void FetchNewMsg(String user){
+        String path=Config.FETCH_URL+user;
+        RequestParams params=new RequestParams();
+        params.put("userId",user);
+         client.get(path,params,new TextHttpResponseHandler() {
+          @Override
+          public void onFailure(int i, Header[] headers, String s, Throwable throwable) {
+                    System.out.println("error code:"+i);
+          }
+
+          @Override
+          public void onSuccess(int i, Header[] headers, String s) {
+              try {
+                  System.out.println(Thread.currentThread());
+                  System.out.println("fetch:"+s);
+                  JSONObject object =new JSONObject(s);
+                  JSONObject obj=object.getJSONObject("result");
+                  JSONArray array =new JSONArray(obj.toString());
+                  List<Message> list=new ArrayList<Message>();
+                  for (int j=0;j<array.length();j++){
+                   Message msg=JSON.parseObject( array.getJSONObject(j).toString(), Message.class);
+                    list.add(msg);
+                  }
+                   IMClient.getInstance().saveMessages(list);
+              } catch (JSONException e) {
+                  e.printStackTrace();
+              }
+          }
+      });
+    }
+    private MessageBean Msg2Bean(Message msg) {
+        return new MessageBean(msg.getMsgId(), Config.STATUS_SUCCESS, msg.getMsgType(), msg.getContents(), msg.getTimestamp(), msg.getSendType(), null, msg.getSenderId());
     }
 }

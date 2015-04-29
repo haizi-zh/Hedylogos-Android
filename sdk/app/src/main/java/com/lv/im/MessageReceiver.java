@@ -16,10 +16,11 @@ import com.lv.bean.Message;
  * Created by q on 2015/4/16.
  */
 public abstract class MessageReceiver extends BroadcastReceiver implements MessageListener {
-LazyQueue queue = new LazyQueue(2000,10);
+LazyQueue queue=LazyQueue.getInstance();
     @Override
     public void onReceive(final Context context, Intent intent) {
         Bundle bundle = intent.getExtras();
+
         Log.d("GetuiSdkDemo", "onReceive() action=" + bundle.getInt("action"));
         System.out.println(" messageid:" + bundle.getString("messageid"));
         System.out.println("bundle.getInt(action):" + bundle.getInt("action"));
@@ -42,10 +43,10 @@ LazyQueue queue = new LazyQueue(2000,10);
                     if (jsonValidator.validate(data)){
                          Message newmsg = JSON.parseObject(data, Message.class);
                         newmsg.setSendType(1);
-                      //  if (IMClient.getInstance().isBLOCK())
-                        if (newmsg.getMsgType()==0) {
                             queue.addMsg(newmsg.getSenderId(),newmsg);
-                            queue.begin();
+                        if (IMClient.getInstance().isBLOCK()){
+
+                        }
                             queue.setDequeueListenr(new DequeueListenr() {
                                 @Override
                                 public void onDequeueMsg(Message messageBean) {
@@ -54,12 +55,10 @@ LazyQueue queue = new LazyQueue(2000,10);
                                     } else {
                                         IMClient.getInstance().setBLOCK(true);
                                         System.out.println("fetch");
-                                        IMClient.getInstance().fetchNewMsg(messageBean.getSenderId() + "");
+                                        IMClient.getInstance().fetchNewMsg();
                                     }
                                 }
                             });
-                        }
-                        else onMessageReceive(context, newmsg);
                     }
                 }
                 break;
@@ -92,7 +91,7 @@ LazyQueue queue = new LazyQueue(2000,10);
 
     private boolean checkOrder(Message messageBean) {
         int lastid=IMClient.getInstance().getLastMsg(messageBean.getSenderId()+"");
-        System.out.println("lastid"+lastid+" messageBean:"+messageBean);
+        System.out.println("lastid  "+lastid+" messageBean: "+messageBean.getMsgId());
         if (lastid==-1){
             IMClient.getInstance().saveMessage(messageBean);
             System.out.println("checkOrder:first msg ");

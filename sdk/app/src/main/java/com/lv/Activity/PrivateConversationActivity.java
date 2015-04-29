@@ -200,13 +200,11 @@ public class PrivateConversationActivity extends Activity
         if (!CurrentFriend.equals(msg.getSenderId() + "")) {
             MessageBean messageBean = Msg2Bean(msg);
             messageBean.setSendType(1);
-            db.saveMsg(messageBean.getSenderId() + "", messageBean);
             Toast.makeText(PrivateConversationActivity.this, "有新消息！", Toast.LENGTH_SHORT).show();
         } else {
             MessageBean messageBean = Msg2Bean(msg);
             messageBean.setSendType(1);
             msgs.add(messageBean);
-            db.saveMsg(CurrentFriend, messageBean);
             adapter.notifyDataSetChanged();
             chatList.setSelection(adapter.getCount() - 1);
         }
@@ -231,7 +229,7 @@ public class PrivateConversationActivity extends Activity
                     final String path = MediaRecordFunc.getInstance().stopRecordAndFile();
                     record.setVisibility(View.GONE);
                     input.setVisibility(View.VISIBLE);
-                    UploadUtils.getInstance().upload(path, new UploadListener() {
+                    UploadUtils.getInstance().upload(path,"3","2",1, new UploadListener() {
                         @Override
                         public void onSucess(String fileUrl) {
                             Long time = 0l;
@@ -241,10 +239,11 @@ public class PrivateConversationActivity extends Activity
                                 e.printStackTrace();
                             }
                             MessageBean messageBean = new MessageBean("时长：" + time + "ms");
+                            System.out.println("时长： "+time+"ms");
                             messageBean.setMetadata(path);
-                            messageBean.setType(2);
+                            messageBean.setType(1);
                             messageBean.setSendType(0);
-                            db.saveMsg(CurrentFriend, messageBean);
+                         //   db.saveMsg(CurrentFriend, messageBean);
                             msgs.add(messageBean);
                             adapter.notifyDataSetChanged();
                             System.out.println("上传成功！");
@@ -252,7 +251,7 @@ public class PrivateConversationActivity extends Activity
 
                         @Override
                         public void onError(int errorCode, String msg) {
-
+System.out.println(errorCode);
                         }
 
                         @Override
@@ -286,12 +285,12 @@ public class PrivateConversationActivity extends Activity
                 IMClient.getInstance().UploadImage(bitmap, new UploadListener() {
                     @Override
                     public void onSucess(String fileUrl) {
-
+System.out.println("success");
                     }
 
                     @Override
                     public void onError(int errorCode, String msg) {
-
+                        System.out.println("serror:"+errorCode);
                     }
 
                     @Override

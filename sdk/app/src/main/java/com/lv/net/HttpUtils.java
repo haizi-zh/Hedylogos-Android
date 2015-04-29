@@ -8,6 +8,7 @@ import com.lv.Utils.Config;
 import com.lv.bean.Message;
 import com.lv.bean.MessageBean;
 import com.lv.im.IMClient;
+import com.lv.im.LazyQueue;
 
 import org.apache.http.Header;
 import org.apache.http.HttpResponse;
@@ -91,9 +92,10 @@ public class HttpUtils {
                   List<Message> list=new ArrayList<Message>();
                   for (int j=0;j<array.length();j++){
                    Message msg=JSON.parseObject( array.getJSONObject(j).toString(), Message.class);
-                    list.add(msg);
+                      LazyQueue.getInstance().addMsg(msg.getSenderId(),msg);
                   }
-                   IMClient.getInstance().saveMessages(list);
+                  IMClient.getInstance().setBLOCK(false);
+                  // IMClient.getInstance().saveMessages(list);
               } catch (JSONException e) {
                   e.printStackTrace();
               }

@@ -20,10 +20,10 @@ import android.net.Uri;
 import android.provider.MediaStore;
 import android.text.TextUtils;
 
-import java.io.BufferedOutputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -341,16 +341,43 @@ public class PictureUtil {
     }
 
     public static boolean saveBitmapToJpegFile(Bitmap bitmap, String filePath, int quality) {
-        try {
-            FileOutputStream fileOutStr = new FileOutputStream(filePath);
-            BufferedOutputStream bufOutStr = new BufferedOutputStream(fileOutStr);
-            resizeBitmap(bitmap).compress(Bitmap.CompressFormat.JPEG, quality, bufOutStr);
-            bufOutStr.flush();
-            bufOutStr.close();
-        } catch (Exception exception) {
-            return false;
+        File f = new File(filePath);
+        if (f.exists()) {
+            f.delete();
         }
-        return true;
+        try {
+            FileOutputStream out = null;
+
+                out = new FileOutputStream(f);
+            bitmap.compress(Bitmap.CompressFormat.PNG, 90, out);
+                out.flush();
+                out.close();
+
+            } catch (FileNotFoundException e) {
+                e.printStackTrace();
+            System.out.println(e);
+            return false;
+            }
+            catch (IOException e) {
+                e.printStackTrace();
+                System.out.println(e);
+                return false;
+            }
+
+
+
+//        try {
+//            FileOutputStream fileOutStr = new FileOutputStream(filePath);
+//            BufferedOutputStream bufOutStr = new BufferedOutputStream(fileOutStr);
+//            resizeBitmap(bitmap).compress(Bitmap.CompressFormat.JPEG, quality, bufOutStr);
+//            bufOutStr.flush();
+//            bufOutStr.close();
+//        } catch (Exception exception) {
+//            System.out.println(exception);
+//            exception.printStackTrace();
+//            return false;
+//        }
+     return true;
     }
 
     public static Bitmap resizeBitmap(Bitmap bitmap) {

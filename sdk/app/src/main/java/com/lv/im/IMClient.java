@@ -126,12 +126,12 @@ public class IMClient {
     private MessageBean Msg2Bean(Message msg) {
         return new MessageBean(msg.getMsgId(), Config.STATUS_SUCCESS, msg.getMsgType(), msg.getContents(), msg.getTimestamp(), msg.getSendType(), null, msg.getSenderId());
     }
-    public void fetchNewMsg(String friid){
-            HttpUtils.FetchNewMsg(friid);
+    public void fetchNewMsg(){
+            HttpUtils.FetchNewMsg(CurrentUser);
 
     }
     public void UploadImage(Bitmap bitmap,UploadListener listener){
-        UploadUtils.getInstance().uploadImage(bitmap,listener);
+        UploadUtils.getInstance().uploadImage(bitmap,"3","2",2,listener);
     }
     public void saveMessages(List<Message> list){
         List<MessageBean> list1 =new ArrayList<MessageBean>();

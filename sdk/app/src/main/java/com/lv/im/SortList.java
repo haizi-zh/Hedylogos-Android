@@ -31,10 +31,13 @@ public class SortList {
 
         Data cur = first;
         while (cur!=null) {
+            if (data.value==cur.value)return;
+
             if(data.value>cur.value)
             {
                 pre = cur;
                 cur = cur.next;}
+
             else break;
         }
         if (pre == null)

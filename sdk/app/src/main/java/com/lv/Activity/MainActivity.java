@@ -62,7 +62,8 @@ public class MainActivity extends Activity implements View.OnClickListener {
     @Override
     protected void onResume() {
         super.onResume();
-        IMClient.getInstance().fetchNewMsg("3");
+       // UploadUtils.getToken();
+       // IMClient.getInstance().fetchNewMsg("3");
         System.out.println("CurrentUser " + IMClient.getInstance().getCurrentUser());
         List<ConversationBean> list= IMClient.getInstance().getConversationList();
         data=new ArrayList<HashMap<String,Object>>();
@@ -106,7 +107,6 @@ public class MainActivity extends Activity implements View.OnClickListener {
             try {
                 Bitmap bitmap = BitmapFactory.decodeStream(cr.openInputStream(uri));
                 uploadBitmap(bitmap);
-                Log.i("tag", "uploadBitmap(bitmap); ");
             } catch (Exception e) {
                 e.printStackTrace();
             }
@@ -120,7 +120,8 @@ public class MainActivity extends Activity implements View.OnClickListener {
      * @param result
      */
     private void uploadBitmap(Bitmap result) {
-        UploadUtils.getInstance().uploadImage(result, new UploadListener() {
+        System.out.println("开始上传！");
+        UploadUtils.getInstance().uploadImage(result,"3" ,"2",2,new UploadListener() {
 
             public void onSucess(String fileUrl) {
 

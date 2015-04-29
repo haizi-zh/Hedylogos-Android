@@ -47,6 +47,7 @@ public class MessageDB {
                 + " (LocalId INTEGER PRIMARY KEY AUTOINCREMENT,ServerId INTEGER,Status INTEGER," +
                 "Type INTEGER, Message TEXT,CreateTime INTEGER, SendType INTEGER, Metadata TEXT," +
                 "SenderId INTEGER)");
+        //db.execSQL("create index if not exists index_Msg_Friend_Id on " + fri_table_name + "(Friend_Id)");
         ContentValues values = new ContentValues();
         values.put("ServerId", entity.getServerId());
         values.put("Status", entity.getStatus());
@@ -171,6 +172,7 @@ public class MessageDB {
         db.update(table_name,values,"LocalId=?",new String[]{LocalId+""});
         IMClient.getInstance().setLastMsg(fri_ID,Integer.parseInt(msgId));
         updateConversation(fri_ID,conversation);
+
     }
     public void updateConversation(String fri_ID,String conversation){
 

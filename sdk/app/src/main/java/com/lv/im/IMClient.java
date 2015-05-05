@@ -10,10 +10,13 @@ import com.lv.bean.IMessage;
 import com.lv.bean.Message;
 import com.lv.bean.MessageBean;
 import com.lv.data.MessageDB;
+import com.lv.net.FetchListener;
 import com.lv.net.HttpUtils;
 import com.lv.net.LoginSuccessListen;
 import com.lv.net.UploadListener;
 import com.lv.net.UploadUtils;
+
+import org.json.JSONArray;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -26,7 +29,7 @@ public class IMClient {
     private boolean isBLOCK ;
     public static final String SP_FILE_NAME = "push_msg_sp";
     private static String CurrentUser;
-    private ArrayList<String> acklist;
+    private JSONArray acklist;
     private HashMap<String,Integer> lastMsgMap;
     private HashMap<String,String> cidMap;
     private HashMap<String,String> user;
@@ -36,7 +39,7 @@ public class IMClient {
         cidMap =new HashMap<String, String>();
         user =new HashMap<String, String>();
         lastMsgMap=new HashMap<String, Integer>();
-        acklist=new ArrayList<String>();
+        acklist=new JSONArray();
     }
     public static IMClient getInstance(){
         return client;
@@ -49,22 +52,22 @@ public class IMClient {
        CurrentUser=currentUser;
     }
     public void initDB(){
-        db=new MessageDB(CurrentUser);
+        db=MessageDB.getInstance();
     }
-    public ArrayList<String> getackList() {
+    public JSONArray getackList() {
         return acklist;
     }
 
     public int getackListsize() {
-        return acklist.size();
+        return acklist.length();
     }
 
     public void add2ackList(String id) {
-        acklist.add(id);
+        acklist.put(id);
     }
 
     public void clearackList() {
-        acklist.clear();
+        acklist=new JSONArray();
     }
 
     public boolean isBLOCK() {
@@ -74,7 +77,6 @@ public class IMClient {
     public void setBLOCK(boolean isBLOCK) {
         this.isBLOCK = isBLOCK;
     }
-
     public int getLastMsg(String fri_id) {
         if (lastMsgMap.get(fri_id)!=null)
         return lastMsgMap.get(fri_id);
@@ -83,8 +85,11 @@ public class IMClient {
     }
 
     public void setLastMsg (String fri_Id,int msgId) {
-      //  int temp=lastMsgMap.get(fri_Id);
-      //  if (temp>msgId)return;
+        if (!lastMsgMap.containsKey(fri_Id)){
+            lastMsgMap.put(fri_Id,-1);
+        }
+        int temp=lastMsgMap.get(fri_Id);
+       if (temp>msgId)return;
         lastMsgMap.put(fri_Id,msgId);
     }
 
@@ -126,12 +131,19 @@ public class IMClient {
     private MessageBean Msg2Bean(Message msg) {
         return new MessageBean(msg.getMsgId(), Config.STATUS_SUCCESS, msg.getMsgType(), msg.getContents(), msg.getTimestamp(), msg.getSendType(), null, msg.getSenderId());
     }
-    public void fetchNewMsg(){
-            HttpUtils.FetchNewMsg(CurrentUser);
+    public void fetchNewMsg(FetchListener listener){
+        System.out.println("fetchNewMsg IM");
+            HttpUtils.FetchNewMsg(CurrentUser, listener );
 
     }
-    public void UploadImage(Bitmap bitmap,UploadListener listener){
-        UploadUtils.getInstance().uploadImage(bitmap,"3","2",2,listener);
+    public void saveReceiveMsg(Message message){
+        db.saveReceiveMsg(message.getSenderId()+"",Msg2Bean(message));
+        setLastMsg(message.getSenderId()+"",message.getMsgId());
+        add2ackList(message.getId());
+
+    }
+    public void UploadImage(Bitmap bitmap,String currentFri,UploadListener listener){
+        UploadUtils.getInstance().uploadImage(bitmap,CurrentUser,currentFri,Config.IMAGE_MSG,listener);
     }
     public void saveMessages(List<Message> list){
         List<MessageBean> list1 =new ArrayList<MessageBean>();

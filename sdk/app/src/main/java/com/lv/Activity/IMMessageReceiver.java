@@ -22,8 +22,10 @@ import java.util.HashMap;
  */
 public class IMMessageReceiver extends MessageReceiver {
     private static final String TAG = "IMMessageReceiver";
+
     @Override
     public void onMessageReceive(Context context, Message msg) {
+        System.out.println("IMMessageReceiver调用");
         OnActivityMessageListener listener =
                 sessionMessageDispatchers.get(PrivateConversationActivity.Activityid);
             msg.setSendType(0);
@@ -52,7 +54,6 @@ public class IMMessageReceiver extends MessageReceiver {
             nm.notify(233, notification);
             Log.d(TAG, "notification sent");
         } else {
-            System.out.println("imM调用");
             listener.onMessage(msg);
         }
     }

@@ -26,7 +26,6 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.io.UnsupportedEncodingException;
-import java.util.ArrayList;
 
 /**
  * Created by q on 2015/4/17.
@@ -96,7 +95,7 @@ public static void sendMsg(Context c, IMessage msg){
                         String conversation=obj.get("conversation").toString();
                         String msgId=obj.get("msgId").toString();
                         Long timestamp=Long.parseLong(obj.get("timestamp").toString());
-                        MessageDB db= new MessageDB(correntUser);
+                        MessageDB db=MessageDB.getInstance();
                         IMClient.getInstance().setLastMsg(currentFri,Integer.parseInt(msgId));
                         db.updateMsg(currentFri,localId,msgId,conversation,timestamp,Config.STATUS_SUCCESS);
                         System.out.println("发送成功，消息更新！");
@@ -162,11 +161,14 @@ public static void sendMsg(Context c, IMessage msg){
         }
 
     }
-    public static void postack(final ArrayList<String> list,String id){
+    public static void postack(final JSONArray array,String id){
         final String url =Config.ACK_URL+id+"/ack";
           final JSONObject obj =new JSONObject();
         try {
-            obj.put("msgList",JSON.toJSONString(list));
+
+            obj.put("msgList",array);
+            System.out.println("ack : "+obj.toString());
+            IMClient.getInstance().clearackList();
         } catch (JSONException e) {
             e.printStackTrace();
         }
@@ -183,9 +185,8 @@ public static void sendMsg(Context c, IMessage msg){
                     httpResponse = new DefaultHttpClient().execute(post);
                     System.out.println("send status code:"+httpResponse.getStatusLine().getStatusCode());
                     HttpEntity res=httpResponse.getEntity();
-                    System.out.println(EntityUtils.toString(res));
-                    System.out.println("list size:"+list.size());
-                    list.clear();
+                    System.out.println("ack Result : "+EntityUtils.toString(res));
+                    System.out.println("list size:"+array.length());
 
                 } catch (Exception e) {
                     e.printStackTrace();

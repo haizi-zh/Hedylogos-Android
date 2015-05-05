@@ -7,6 +7,7 @@ import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.net.Uri;
 import android.os.Bundle;
+import android.os.Handler;
 import android.util.Log;
 import android.view.View;
 import android.widget.AdapterView;
@@ -18,7 +19,9 @@ import android.widget.SimpleAdapter;
 import com.lv.R;
 import com.lv.Utils.TimeUtils;
 import com.lv.bean.ConversationBean;
+import com.lv.bean.Message;
 import com.lv.im.IMClient;
+import com.lv.im.LazyQueue;
 import com.lv.net.UploadListener;
 import com.lv.net.UploadUtils;
 
@@ -33,20 +36,32 @@ public class MainActivity extends Activity implements View.OnClickListener {
     Button test;
     ListView lv;
     List<HashMap<String, Object>> data;
-    SimpleAdapter adapter =null;
+    SimpleAdapter adapter = null;
     List<ConversationBean> list;
     private String currentuser;
     private SDKApplication application;
+    static int i = 1;
+    static Handler handler = new Handler() {
+        @Override
+        public void handleMessage(android.os.Message msg) {
+            if (msg.what == 1) {
+                Message messageBean = (Message) msg.obj;
+                System.out.println("新消息 " + (i++));
+            }
+        }
+    };
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        LazyQueue.getInstance().setHandler(handler);
         setContentView(R.layout.activity_main);
         btn = (Button) findViewById(R.id.btn);
         test = (Button) findViewById(R.id.btn_test);
         lv = (ListView) findViewById(R.id.listview);
         test.setOnClickListener(this);
         btn.setOnClickListener(this);
-        application=(SDKApplication) getApplication();
+        application = (SDKApplication) getApplication();
         currentuser = (application.getCurrentUser());
         lv.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
@@ -59,45 +74,47 @@ public class MainActivity extends Activity implements View.OnClickListener {
             }
         });
     }
+
     @Override
     protected void onResume() {
         super.onResume();
-       // UploadUtils.getToken();
-       // IMClient.getInstance().fetchNewMsg("3");
+        // UploadUtils.getToken();
+        // IMClient.getInstance().fetchNewMsg("3");
         System.out.println("CurrentUser " + IMClient.getInstance().getCurrentUser());
-        List<ConversationBean> list= IMClient.getInstance().getConversationList();
-        data=new ArrayList<HashMap<String,Object>>();
-        for (int n=0;n<list.size();n++){
-            HashMap<String, Object> hashMap=new HashMap<String, Object>();
+        List<ConversationBean> list = IMClient.getInstance().getConversationList();
+        data = new ArrayList<HashMap<String, Object>>();
+        for (int n = 0; n < list.size(); n++) {
+            HashMap<String, Object> hashMap = new HashMap<String, Object>();
             hashMap.put("Friend_Id", list.get(n).getFriendId());
-            hashMap.put("lastTime", TimeUtils.TimeStamp2Date( list.get(n).getLastChatTime()));
+            hashMap.put("lastTime", TimeUtils.TimeStamp2Date(list.get(n).getLastChatTime()));
             hashMap.put("HASH", list.get(n).getHASH());
-            application.setLastMsg(list.get(n).getFriendId()+"",list.get(n).getLast_rev_msgId());
+            application.setLastMsg(list.get(n).getFriendId() + "", list.get(n).getLast_rev_msgId());
             data.add(hashMap);
         }
-        adapter=new SimpleAdapter(this,data,R.layout.test_list_item,new String[]{"Friend_Id","lastTime","HASH"},new int[]{R.id.tv1,R.id.tv2,R.id.tv3});
+        adapter = new SimpleAdapter(this, data, R.layout.test_list_item, new String[]{"Friend_Id", "lastTime", "HASH"}, new int[]{R.id.tv1, R.id.tv2, R.id.tv3});
         lv.setAdapter(adapter);
         adapter.notifyDataSetChanged();
     }
 
     @Override
     public void onClick(View v) {
-        switch (v.getId()){
+        switch (v.getId()) {
             case R.id.btn:
                 Intent intent = new Intent();
                 intent.setClass(MainActivity.this, PrivateConversationActivity.class);
-                intent.putExtra("friend_id","3");
+                intent.putExtra("friend_id", "3");
                 startActivity(intent);
-             break;
+                break;
             case R.id.btn_test:
-                Intent intent1= new Intent();
-                intent1.setClass(MainActivity.this,AEStest.class);
+                Intent intent1 = new Intent();
+                intent1.setClass(MainActivity.this, AEStest.class);
                 startActivity(intent1);
                 break;
             default:
                 break;
         }
     }
+
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         if (resultCode == RESULT_OK && requestCode == 1) {
@@ -121,7 +138,7 @@ public class MainActivity extends Activity implements View.OnClickListener {
      */
     private void uploadBitmap(Bitmap result) {
         System.out.println("开始上传！");
-        UploadUtils.getInstance().uploadImage(result,"3" ,"2",2,new UploadListener() {
+        UploadUtils.getInstance().uploadImage(result, "3", "2", 2, new UploadListener() {
 
             public void onSucess(String fileUrl) {
 

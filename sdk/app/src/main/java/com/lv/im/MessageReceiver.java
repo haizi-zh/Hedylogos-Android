@@ -4,37 +4,72 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
+import android.os.Handler;
 import android.util.Log;
 
 import com.alibaba.fastjson.JSON;
 import com.igexin.sdk.PushConsts;
-import com.igexin.sdk.PushManager;
+import com.lv.Utils.Config;
 import com.lv.Utils.JsonValidator;
 import com.lv.bean.Message;
+
+import org.json.JSONException;
+import org.json.JSONObject;
+
+import java.lang.ref.WeakReference;
+
 
 /**
  * Created by q on 2015/4/16.
  */
 public abstract class MessageReceiver extends BroadcastReceiver implements MessageListener {
 LazyQueue queue=LazyQueue.getInstance();
+    private  WeakReference<Context> contextWeakReference;
+    Context c;
+    MsgHandler handler = new MsgHandler(MessageReceiver.this);
+     class MsgHandler extends Handler {
+        WeakReference<BroadcastReceiver> mReceiveReference;
+        MsgHandler(BroadcastReceiver receiver) {
+            mReceiveReference= new WeakReference<BroadcastReceiver>(receiver);
+        }
+
+        @Override
+        public void handleMessage(android.os.Message message) {
+            final BroadcastReceiver receiver = mReceiveReference.get();
+            if (receiver != null) {
+                switch (message.what){
+                    case Config.TEXT_MSG:
+                        Message newMessage= (Message)message.obj;
+                        onMessageReceive(c,newMessage);
+                        break;
+                    case Config.DOWNLOAD_SUCCESS:
+                    case Config.DOWNLOAD_FILED:
+                        Message newMediaMessage= (Message)message.obj;
+                        onMessageReceive(c,newMediaMessage);
+                        break;
+                }
+            }
+        }
+    }
     @Override
     public void onReceive(final Context context, Intent intent) {
+        if ("DOWNLOAD_COMPLETE".equals(intent.getAction())){
+            System.out.println("newMediaMsg!");
+            Message message=(Message)intent.getSerializableExtra("newMsg");
+            onMessageReceive(context,message);
+        }
+        contextWeakReference=new WeakReference<Context>(context);
         Bundle bundle = intent.getExtras();
-
-        Log.d("GetuiSdkDemo", "onReceive() action=" + bundle.getInt("action"));
-        System.out.println(" messageid:" + bundle.getString("messageid"));
+        c=context;
         System.out.println("bundle.getInt(action):" + bundle.getInt("action"));
         switch (bundle.getInt("action")) {
             case PushConsts.GET_MSG_DATA:
-                // 获取透传数据
-                // String appid = bundle.getString("appid");
                 byte[] payload = bundle.getByteArray("payload");
                 String taskid = bundle.getString("taskid");
                 String messageid = bundle.getString("messageid");
-                Log.d("GetuiSdkDemo", " messageid:" + messageid);
                 // smartPush第三方回执调用接口，actionid范围为90000-90999，可根据业务场景执行
-                boolean result = PushManager.getInstance().sendFeedbackMessage(context, taskid, messageid, 90001);
-                System.out.println("第三方回执接口调用" + (result ? "成功" : "失败"));
+                //boolean result = PushManager.getInstance().sendFeedbackMessage(context, taskid, messageid, 90001);
+               // System.out.println("第三方回执接口调用" + (result ? "成功" : "失败"));
                 String data = null;
                 if (payload != null) {
                     data = new String(payload);
@@ -42,34 +77,76 @@ LazyQueue queue=LazyQueue.getInstance();
                     JsonValidator jsonValidator =new JsonValidator();
                     if (jsonValidator.validate(data)){
                          Message newmsg = JSON.parseObject(data, Message.class);
-                        newmsg.setSendType(1);
-                            queue.addMsg(newmsg.getSenderId(),newmsg);
-                        if (IMClient.getInstance().isBLOCK()){
-
-                        }
+                            newmsg.setSendType(1);
+//                        if (IMClient.getInstance().isBLOCK()){
+//                                LazyQueue.getInstance().add2Temp(newmsg.getSenderId(),newmsg);
+//                        }
+//                        else {
+                            queue.addMsg(newmsg.getSenderId(), newmsg);
+                   //    }
                             queue.setDequeueListenr(new DequeueListenr() {
                                 @Override
                                 public void onDequeueMsg(Message messageBean) {
-                                    if (checkOrder(messageBean)) {
-                                        onMessageReceive(context, messageBean);
-                                    } else {
-                                        IMClient.getInstance().setBLOCK(true);
-                                        System.out.println("fetch");
-                                        IMClient.getInstance().fetchNewMsg();
+                                    messageBean.setSendType(1);
+                                    IMClient.getInstance().saveReceiveMsg(messageBean);
+                                    String content=messageBean.getContents();
+                                    JSONObject object=null;
+                                    switch (messageBean.getMsgType()){
+                                        case Config.TEXT_MSG:
+                                            android.os.Message handlermsg= android.os.Message.obtain();
+                                            handlermsg.obj=messageBean;
+                                            handlermsg.what= Config.TEXT_MSG;
+                                            handler.sendMessage(handlermsg);
+                                            System.out.println("onDequeueMsg");
+                                            break;
+                                        case Config.AUDIO_MSG:
+                                            try {
+                                                object =new JSONObject(content);
+                                            } catch (JSONException e) {
+                                                e.printStackTrace();
+                                            }
+                                            Intent dlA_intent=new Intent("ACTION.IMSDK.STARTDOWNLOAD");
+                                            String aurl=null;
+                                            try {
+                                                aurl =object.getString("url");
+                                                System.out.println("url "+aurl);
+                                            } catch (JSONException e) {
+                                                e.printStackTrace();
+                                            }
+                                            messageBean.setUrl(aurl);
+                                            dlA_intent.putExtra("msg",messageBean);
+                                            context.startService(dlA_intent);
+                                            break;
+                                        case Config.IMAGE_MSG:
+                                            try {
+                                                object =new JSONObject(content);
+                                            } catch (JSONException e) {
+                                                e.printStackTrace();
+                                            }
+                                            String iurl=null;
+                                            try {
+                                                iurl =object.getString("thumb");
+                                                System.out.println("url " + iurl);
+                                            } catch (JSONException e) {
+                                                e.printStackTrace();
+                                            }
+                                            messageBean.setUrl(iurl);
+                                            Intent dlI_intent=new Intent("ACTION.IMSDK.STARTDOWNLOAD");
+                                            dlI_intent.putExtra("msg",messageBean);
+                                            context.startService(dlI_intent);
+                                            break;
                                     }
                                 }
                             });
-                    }
+                   }
                 }
                 break;
             case PushConsts.GET_CLIENTID:
                 // 获取ClientID(CID)
-                // 第三方应用需要将CID上传到第三方服务器，并且将当前用户帐号和CID进行关联，以便日后通过用户帐号查找CID进行消息推送
                 String cid = bundle.getString("clientid");
                 IMClient.getInstance().setCid(cid);
                 System.out.println(IMClient.getInstance().getCid());
                 onGetCid(context, cid);
-                Log.d("GetuiSdkDemo", "cid:" + cid);
                 break;
             case PushConsts.THIRDPART_FEEDBACK:
                 String appid = bundle.getString("appid");
@@ -86,25 +163,6 @@ LazyQueue queue=LazyQueue.getInstance();
                 break;
             default:
                 break;
-        }
-    }
-
-    private boolean checkOrder(Message messageBean) {
-        int lastid=IMClient.getInstance().getLastMsg(messageBean.getSenderId()+"");
-        System.out.println("lastid  "+lastid+" messageBean: "+messageBean.getMsgId());
-        if (lastid==-1){
-            IMClient.getInstance().saveMessage(messageBean);
-            System.out.println("checkOrder:first msg ");
-            return true;
-        }
-        else if (messageBean.getMsgId()-1==lastid){
-            System.out.println("checkOrder:正序 ");
-            IMClient.getInstance().saveMessage(messageBean);
-            return true;
-        }
-        else {
-            System.out.println("checkOrder:乱序 ");
-            return false;
         }
     }
 }

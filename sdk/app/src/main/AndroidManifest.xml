@@ -117,6 +117,7 @@
                 <action android:name="com.igexin.sdk.action.7fjUl2Z3LH6xYy7NQK4ni4" />
                 <!-- android:name="com.igexin.sdk.action.第三方的appId" -->
                 <action android:name="com.igexin.sdk.action.PSrYJWRPN765o211bIkFM3" />
+
             </intent-filter>
         </receiver>
 
@@ -128,6 +129,7 @@
             android:exported="false" >
             <intent-filter>
                 <action android:name="com.igexin.sdk.action.PSrYJWRPN765o211bIkFM3" />
+                <action android:name="DOWNLOAD_COMPLETE" />
             </intent-filter>
         </receiver>
         <activity
@@ -143,6 +145,11 @@
             android:name="com.lv.Activity.MainActivity"
             >
         </activity>
+        <service android:name=".service.DownloadService">
+            <intent-filter>
+                <action android:name="ACTION.IMSDK.STARTDOWNLOAD" />
+            </intent-filter>
+        </service>
     </application>
 
 </manifest>

@@ -56,11 +56,11 @@ public class PrivateConversationActivity extends Activity
     private EditText composeZone;
     String currentName;
     String selfId;
-    ListView chatList;
-    ChatDataAdapter adapter;
+    static ListView chatList;
+    static ChatDataAdapter adapter;
     TextView tv;
     List<Message> messages = new LinkedList<Message>();
-    List<MessageBean> msgs = new LinkedList<MessageBean>();
+    static List<MessageBean> msgs = new LinkedList<MessageBean>();
     private String CurrentFriend;
     SDKApplication application;
     long i = 2;
@@ -72,9 +72,7 @@ public class PrivateConversationActivity extends Activity
         this.setContentView(R.layout.heartbeat);
         application = (SDKApplication) getApplication();
         initview();
-
     }
-
     private void initview() {
         chatList = (ListView) this.findViewById(R.id.avoscloud_chat_list);
         input = (LinearLayout) findViewById(R.id.chat_input_wrapper);
@@ -94,7 +92,6 @@ public class PrivateConversationActivity extends Activity
                 record.setVisibility(View.GONE);
             }
         });
-
     }
 
     @Override
@@ -138,7 +135,7 @@ public class PrivateConversationActivity extends Activity
         }
     }
 
-    private MessageBean imessage2Bean(IMessage message) {
+    private static MessageBean imessage2Bean(IMessage message) {
 
         return new MessageBean(0, 0, message.getMsgType(), message.getContents(), TimeUtils.getTimestamp(), 0, null, 2);
     }
@@ -159,12 +156,11 @@ public class PrivateConversationActivity extends Activity
         super.onResume();
         CurrentFriend = getIntent().getStringExtra("friend_id");
         System.out.println("C fri:" + CurrentFriend);
-        db = new MessageDB(IMClient.getInstance().getCurrentUser());
         tv.setText("好友：" + CurrentFriend);
-        msgs = IMClient.getInstance().getMessages(CurrentFriend, 0);
+        msgs = IMClient.getInstance().getMessages(CurrentFriend, 5);
         adapter = new ChatDataAdapter(this, msgs);
         chatList.setAdapter(adapter);
-        chatList.setSelection(adapter.getCount() - 1);
+      //  chatList.setSelection(adapter.getCount() - 1);
         String targetPeerId = this.getIntent().getStringExtra(DATA_EXTRA_SINGLE_DIALOG_TARGET);
         if (targetPeerId != null) {
             Message notify = JSON.parseObject(targetPeerId, Message.class);
@@ -173,7 +169,7 @@ public class PrivateConversationActivity extends Activity
             db.saveMsg(CurrentFriend, messageBean);
             //  a.s
             adapter.notifyDataSetChanged();
-            chatList.setSelection(adapter.getCount() - 1);
+          //  chatList.setSelection(adapter.getCount() - 1);
             messages.add(notify);
             adapter.notifyDataSetChanged();
         }
@@ -188,13 +184,10 @@ public class PrivateConversationActivity extends Activity
 
     @Override
     public void onMessage(Message msg) {
-
-        application.add2ackList(msg.getId());
-        if (application.getLastMsg(CurrentFriend) != msg.getMsgId()) application.setBLOCK(true);
-
-        if (application.getackListsize() >= 20) {
-            System.out.println("ackListsize:" + application.getackListsize());
-            SendMsgAsyncTask.postack(application.getackList(), IMClient.getInstance().getCurrentUser());
+        System.out.println();
+        if (IMClient.getInstance().getackListsize() >= 20) {
+            System.out.println("ackListsize:" + IMClient.getInstance().getackListsize());
+            SendMsgAsyncTask.postack(IMClient.getInstance().getackList(), IMClient.getInstance().getCurrentUser());
         }
 
         if (!CurrentFriend.equals(msg.getSenderId() + "")) {
@@ -209,10 +202,10 @@ public class PrivateConversationActivity extends Activity
             chatList.setSelection(adapter.getCount() - 1);
         }
     }
-
-    private MessageBean Msg2Bean(Message msg) {
-        return new MessageBean(msg.getMsgId(), 0, 0, msg.getContents(), msg.getTimestamp(), msg.getSendType(), null, msg.getSenderId());
+    public static MessageBean Msg2Bean(Message msg) {
+        return new MessageBean(msg.getMsgId(), Config.STATUS_SUCCESS, msg.getMsgType(), msg.getContents(), msg.getTimestamp(), msg.getSendType(), null, msg.getSenderId());
     }
+
 
     @Override
     public void onMessage(String msg) {
@@ -282,7 +275,7 @@ System.out.println(errorCode);
                 Bitmap bitmap = BitmapFactory.decodeStream(cr.openInputStream(uri));
                 // uploadBitmap(bitmap);
                 //Log.i(TAG, "uploadBitmap(bitmap); ");
-                IMClient.getInstance().UploadImage(bitmap, new UploadListener() {
+                IMClient.getInstance().UploadImage(bitmap,CurrentFriend, new UploadListener() {
                     @Override
                     public void onSucess(String fileUrl) {
 System.out.println("success");

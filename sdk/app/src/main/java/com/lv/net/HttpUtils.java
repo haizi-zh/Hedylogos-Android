@@ -1,14 +1,13 @@
 package com.lv.net;
 
 import com.alibaba.fastjson.JSON;
-import com.loopj.android.http.AsyncHttpClient;
 import com.loopj.android.http.RequestParams;
+import com.loopj.android.http.SyncHttpClient;
 import com.loopj.android.http.TextHttpResponseHandler;
 import com.lv.Utils.Config;
 import com.lv.bean.Message;
 import com.lv.bean.MessageBean;
 import com.lv.im.IMClient;
-import com.lv.im.LazyQueue;
 
 import org.apache.http.Header;
 import org.apache.http.HttpResponse;
@@ -27,13 +26,14 @@ import java.util.List;
  * Created by q on 2015/4/27.
  */
 public class HttpUtils {
-    private static AsyncHttpClient client = new AsyncHttpClient();
+    private static SyncHttpClient client = new SyncHttpClient();
     public static void login( final String username, final LoginSuccessListen listen) {
         new  Thread(new Runnable() {
             @Override
             public void run() {
                 JSONObject obj =new JSONObject();
                 try {
+                    System.out.println("login threaad "+Thread.currentThread());
                     System.out.println("run");
                     String cid=null;
                     System.out.println("IMClient.getInstance().getCid()"+IMClient.getInstance().getCid());
@@ -71,36 +71,56 @@ public class HttpUtils {
             }
         }).start();
     }
-    public static void FetchNewMsg(String user){
-        String path=Config.FETCH_URL+user;
-        RequestParams params=new RequestParams();
+    public static void FetchNewMsg(String user , final FetchListener listener){
+        final String path=Config.FETCH_URL+user;
+        System.out.println("Ht fetchMsg");
+        final RequestParams params=new RequestParams();
         params.put("userId",user);
-         client.get(path,params,new TextHttpResponseHandler() {
-          @Override
-          public void onFailure(int i, Header[] headers, String s, Throwable throwable) {
-                    System.out.println("error code:"+i);
-          }
+//        URL url = null;
+//        try {
+//            url = new URL(path);
+//
+//        HttpURLConnection conn = (HttpURLConnection) url
+//                .openConnection();
+//        conn.setConnectTimeout(5000);
+//        conn.setRequestMethod("GET");
+//        if (conn.getResponseCode()==200){
+//
+//        }
+//        } catch (Exception e) {
+//            e.printStackTrace();
+//        }
 
-          @Override
-          public void onSuccess(int i, Header[] headers, String s) {
-              try {
-                  System.out.println(Thread.currentThread());
-                  System.out.println("fetch:"+s);
-                  JSONObject object =new JSONObject(s);
-                  JSONObject obj=object.getJSONObject("result");
-                  JSONArray array =new JSONArray(obj.toString());
-                  List<Message> list=new ArrayList<Message>();
-                  for (int j=0;j<array.length();j++){
-                   Message msg=JSON.parseObject( array.getJSONObject(j).toString(), Message.class);
-                      LazyQueue.getInstance().addMsg(msg.getSenderId(),msg);
-                  }
-                  IMClient.getInstance().setBLOCK(false);
-                  // IMClient.getInstance().saveMessages(list);
-              } catch (JSONException e) {
-                  e.printStackTrace();
-              }
-          }
-      });
+new Thread(new Runnable() {
+    @Override
+    public void run() {
+        client.get(path,params,new TextHttpResponseHandler() {
+            @Override
+            public void onFailure(int i, Header[] headers, String s, Throwable throwable) {
+                System.out.println("error code:"+i);
+            }
+
+            @Override
+            public void onSuccess(int i, Header[] headers, String s) {
+                try {
+                    System.out.println(Thread.currentThread());
+                    System.out.println("fetch:"+s);
+                    JSONObject object =new JSONObject(s);
+                    JSONArray array=object.getJSONArray("result");
+                    List<Message> list=new ArrayList<Message>();
+                    for (int j=0;j<array.length();j++){
+                        Message msg=JSON.parseObject( array.getJSONObject(j).toString(), Message.class);
+                        list.add(msg);
+                    }
+                    listener.OnMsgArrive(list);
+                } catch (JSONException e) {
+                    e.printStackTrace();
+                }
+            }
+        });
+    }
+}).start();
+
     }
     private MessageBean Msg2Bean(Message msg) {
         return new MessageBean(msg.getMsgId(), Config.STATUS_SUCCESS, msg.getMsgType(), msg.getContents(), msg.getTimestamp(), msg.getSendType(), null, msg.getSenderId());

@@ -20,7 +20,7 @@ public class SortList {
 
     private Data first = null;
 
-    public void insert(Message obj) {
+    public synchronized void insert(Message obj) {
         Data data = new Data(obj);
         size++;
         Data pre = null;
@@ -47,9 +47,9 @@ public class SortList {
         data.next = cur;
     }
 
-    public Message deleteFirst() throws Exception {
+    public synchronized Message deleteFirst() throws Exception {
         if (first == null)
-            throw new Exception("empty!");
+            return null;
         Data temp = first;
         first = first.next;
         size--;

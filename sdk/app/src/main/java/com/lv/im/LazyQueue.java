@@ -17,7 +17,7 @@ import java.util.TimerTask;
  * Created by q on 2015/4/25.
  */
 public class LazyQueue {
-    long max_time = 10000;
+    long max_time = 2000;
     private static LazyQueue instance;
     static HashMap<Long, SortList> LazyMap = new HashMap<Long, SortList>();
     static HashMap<Long, SortList> TempMap = new HashMap<Long, SortList>();
@@ -84,9 +84,6 @@ public class LazyQueue {
             }
         }, new Date(System.currentTimeMillis() + max_time));
     }
-    public void setHandler(Handler handler){
-        this.handler=handler;
-    }
 
     class DequeueThread extends Thread{
         @Override
@@ -101,14 +98,15 @@ public class LazyQueue {
             System.out.println(Thread.currentThread());
             Map.Entry entry = (Map.Entry) iter.next();
             SortList list = (SortList) entry.getValue();
-            for (int i = 0; i < list.size(); i++) {
+            //for (int i = 0; i < list.size(); i++) {
+                while (list.size()>0){
                 System.out.println("size :"+ list.size());
                 try {
                     Message message = list.deleteFirst();
                     if (IMClient.getInstance().isBLOCK()){
                         System.out.println("status: block");
                         System.out.println("dequeue block "+message.getContents());
-                     add2Temp(message.getSenderId(), message);
+                        add2Temp(message.getSenderId(), message);
                     }
                     else {
                         if (checkOrder(message)) {
@@ -139,16 +137,17 @@ public class LazyQueue {
             TempDequeue();
         }
     };
-    private void TempDequeue() {
+    public  void TempDequeue() {
         Iterator iter = TempMap.entrySet().iterator();
         while (iter.hasNext()) {
             Map.Entry entry = (Map.Entry) iter.next();
             SortList list = (SortList) entry.getValue();
-            for (int i = 0; i < list.size(); i++) {
+        //    for (int i = 0; i < list.size(); i++) {
+                while (list.size()>0){
                 try {
                     Message message=list.deleteFirst();
                     System.out.println("list size : "+list.size()+" tempDequeue block "+message.getContents());
-                   listenr.onDequeueMsg(message);
+                    if (message!=null) listenr.onDequeueMsg(message);
 //                    android.os.Message m= android.os.Message.obtain();
 //                    m.what=1;
 //                    m.obj=list.deleteFirst();
@@ -178,18 +177,14 @@ public class LazyQueue {
         TempMap.get(FriendId).insert(messageBean);
         System.out.println("Temp.insert(messageBean);");
     }
-
-
     private boolean checkOrder(Message messageBean) {
         int lastid = IMClient.getInstance().getLastMsg(messageBean.getSenderId() + "");
         System.out.println("lastid  " + lastid + " messageBean: " + messageBean.getMsgId());
         if (lastid == -1) {
-            IMClient.getInstance().saveMessage(messageBean);
             System.out.println("checkOrder:first msg ");
             return true;
         } else if (messageBean.getMsgId() - 1 == lastid) {
             System.out.println("checkOrder:正序 ");
-            IMClient.getInstance().saveMessage(messageBean);
             return true;
         } else {
             System.out.println("checkOrder:乱序 ");

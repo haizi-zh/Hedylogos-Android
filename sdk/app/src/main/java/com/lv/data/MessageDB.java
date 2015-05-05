@@ -64,7 +64,7 @@ public class MessageDB {
         values.put("SendType", entity.getSendType());
         values.put("Metadata", entity.getMetadata());
         values.put("SenderId", entity.getSenderId());
-      long localid=  db.insert(table_name, null, values);
+        long localid=  db.insert(table_name, null, values);
         IMClient.getInstance().setLastMsg(entity.getServerId()+"",entity.getServerId());
         add2Conversion(Integer.parseInt(Friend_Id), entity.getCreateTime(), table_name,entity.getServerId());
         add2Friend(Integer.parseInt(Friend_Id));
@@ -86,7 +86,7 @@ public class MessageDB {
                 + " (LocalId INTEGER PRIMARY KEY AUTOINCREMENT,ServerId INTEGER,Status INTEGER," +
                 "Type INTEGER, Message TEXT,CreateTime INTEGER, SendType INTEGER, Metadata TEXT," +
                 "SenderId INTEGER)");
-        db.execSQL("create UNIQUE index if not exists index_Msg_Id on " + table_name + "(ServerId)");
+       // db.execSQL("create UNIQUE index if not exists index_Msg_Id on " + table_name + "(ServerId)");
 
         Cursor cursor=db.rawQuery("select * from "+table_name+" where ServerId=?",new String[]{entity.getServerId()+""});
         int count= cursor.getCount();

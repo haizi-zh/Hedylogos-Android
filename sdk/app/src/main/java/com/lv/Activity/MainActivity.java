@@ -1,14 +1,8 @@
 package com.lv.Activity;
 
 import android.app.Activity;
-import android.content.ContentResolver;
 import android.content.Intent;
-import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
-import android.net.Uri;
 import android.os.Bundle;
-import android.os.Handler;
-import android.util.Log;
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.Button;
@@ -19,11 +13,7 @@ import android.widget.SimpleAdapter;
 import com.lv.R;
 import com.lv.Utils.TimeUtils;
 import com.lv.bean.ConversationBean;
-import com.lv.bean.Message;
 import com.lv.im.IMClient;
-import com.lv.im.LazyQueue;
-import com.lv.net.UploadListener;
-import com.lv.net.UploadUtils;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -41,20 +31,10 @@ public class MainActivity extends Activity implements View.OnClickListener {
     private String currentuser;
     private SDKApplication application;
     static int i = 1;
-    static Handler handler = new Handler() {
-        @Override
-        public void handleMessage(android.os.Message msg) {
-            if (msg.what == 1) {
-                Message messageBean = (Message) msg.obj;
-                System.out.println("新消息 " + (i++));
-            }
-        }
-    };
-
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        LazyQueue.getInstance().setHandler(handler);
+        IMClient.getInstance().initfetch();
         setContentView(R.layout.activity_main);
         btn = (Button) findViewById(R.id.btn);
         test = (Button) findViewById(R.id.btn_test);
@@ -115,42 +95,5 @@ public class MainActivity extends Activity implements View.OnClickListener {
         }
     }
 
-    @Override
-    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
-        if (resultCode == RESULT_OK && requestCode == 1) {
-            Log.i("tag", "resultCode == RESULT_OK && requestCode == CHOOSE_IMAGE_CODE");
-            Uri uri = data.getData();
-            ContentResolver cr = this.getContentResolver();
-            try {
-                Bitmap bitmap = BitmapFactory.decodeStream(cr.openInputStream(uri));
-                uploadBitmap(bitmap);
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
-        }
-        super.onActivityResult(requestCode, resultCode, data);
-    }
 
-    /**
-     * 上传从相册选择的图片
-     *
-     * @param result
-     */
-    private void uploadBitmap(Bitmap result) {
-        System.out.println("开始上传！");
-        UploadUtils.getInstance().uploadImage(result, "3", "2", 2, new UploadListener() {
-
-            public void onSucess(String fileUrl) {
-
-                System.out.print("上传图片成功");
-            }
-
-            public void onProgress(int progress) {
-            }
-
-            public void onError(int errorCode, String msg) {
-                System.out.print("errorCode=" + errorCode + ",msg=" + msg);
-            }
-        });
-    }
 }

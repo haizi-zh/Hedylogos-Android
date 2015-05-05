@@ -27,4 +27,5 @@ public class Config {
     public static final String ACTION_START="ACTION.IMSDK.STARTDOWNLOAD";
     public static final String DownLoadImage_path= Environment.getExternalStorageDirectory().getPath()+"/SDK/Download/image/";
     public static final String DownLoadAudio_path= Environment.getExternalStorageDirectory().getAbsolutePath()+"/SDK/Download/audio/";
+    public static final String imagepath = Environment.getExternalStorageDirectory().getPath()+"/SDK/image/" ;
 }

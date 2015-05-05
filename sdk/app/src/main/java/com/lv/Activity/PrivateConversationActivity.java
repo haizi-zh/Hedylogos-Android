@@ -28,13 +28,10 @@ import com.lv.Utils.TimeUtils;
 import com.lv.bean.IMessage;
 import com.lv.bean.Message;
 import com.lv.bean.MessageBean;
-import com.lv.data.MessageDB;
 import com.lv.im.IMClient;
 import com.lv.im.OnActivityMessageListener;
-import com.lv.im.SendMsgAsyncTask;
 import com.lv.im.SendMsgListen;
 import com.lv.net.UploadListener;
-import com.lv.net.UploadUtils;
 
 import java.io.File;
 import java.io.IOException;
@@ -64,7 +61,7 @@ public class PrivateConversationActivity extends Activity
     private String CurrentFriend;
     SDKApplication application;
     long i = 2;
-    MessageDB db;
+    Long time;
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -73,6 +70,7 @@ public class PrivateConversationActivity extends Activity
         application = (SDKApplication) getApplication();
         initview();
     }
+
     private void initview() {
         chatList = (ListView) this.findViewById(R.id.avoscloud_chat_list);
         input = (LinearLayout) findViewById(R.id.chat_input_wrapper);
@@ -160,16 +158,15 @@ public class PrivateConversationActivity extends Activity
         msgs = IMClient.getInstance().getMessages(CurrentFriend, 5);
         adapter = new ChatDataAdapter(this, msgs);
         chatList.setAdapter(adapter);
-      //  chatList.setSelection(adapter.getCount() - 1);
+        //  chatList.setSelection(adapter.getCount() - 1);
         String targetPeerId = this.getIntent().getStringExtra(DATA_EXTRA_SINGLE_DIALOG_TARGET);
         if (targetPeerId != null) {
             Message notify = JSON.parseObject(targetPeerId, Message.class);
             MessageBean messageBean = Msg2Bean(notify);
             msgs.add(messageBean);
-            db.saveMsg(CurrentFriend, messageBean);
             //  a.s
             adapter.notifyDataSetChanged();
-          //  chatList.setSelection(adapter.getCount() - 1);
+            //  chatList.setSelection(adapter.getCount() - 1);
             messages.add(notify);
             adapter.notifyDataSetChanged();
         }
@@ -184,11 +181,6 @@ public class PrivateConversationActivity extends Activity
 
     @Override
     public void onMessage(Message msg) {
-        System.out.println();
-        if (IMClient.getInstance().getackListsize() >= 20) {
-            System.out.println("ackListsize:" + IMClient.getInstance().getackListsize());
-            SendMsgAsyncTask.postack(IMClient.getInstance().getackList(), IMClient.getInstance().getCurrentUser());
-        }
 
         if (!CurrentFriend.equals(msg.getSenderId() + "")) {
             MessageBean messageBean = Msg2Bean(msg);
@@ -202,10 +194,10 @@ public class PrivateConversationActivity extends Activity
             chatList.setSelection(adapter.getCount() - 1);
         }
     }
+
     public static MessageBean Msg2Bean(Message msg) {
         return new MessageBean(msg.getMsgId(), Config.STATUS_SUCCESS, msg.getMsgType(), msg.getContents(), msg.getTimestamp(), msg.getSendType(), null, msg.getSenderId());
     }
-
 
     @Override
     public void onMessage(String msg) {
@@ -222,33 +214,31 @@ public class PrivateConversationActivity extends Activity
                     final String path = MediaRecordFunc.getInstance().stopRecordAndFile();
                     record.setVisibility(View.GONE);
                     input.setVisibility(View.VISIBLE);
-                    UploadUtils.getInstance().upload(path,"3","2",1, new UploadListener() {
+                    //final Long time = 0l;
+                    try {
+                         time = CommonUtils.getAmrDuration(new File(path));
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
+                    MessageBean messageBean = new MessageBean("时长：" + time + "ms");
+                    System.out.println("时长： " + time + "ms");
+                    messageBean.setMetadata(path);
+                    messageBean.setType(1);
+                    messageBean.setSendType(0);
+                    //   db.saveMsg(CurrentFriend, messageBean);
+                    msgs.add(messageBean);
+                    adapter.notifyDataSetChanged();
+                    IMClient.getInstance().sendAudioMessage(path,CurrentFriend,time,new UploadListener() {
                         @Override
                         public void onSucess(String fileUrl) {
-                            Long time = 0l;
-                            try {
-                                time = CommonUtils.getAmrDuration(new File(path));
-                            } catch (IOException e) {
-                                e.printStackTrace();
-                            }
-                            MessageBean messageBean = new MessageBean("时长：" + time + "ms");
-                            System.out.println("时长： "+time+"ms");
-                            messageBean.setMetadata(path);
-                            messageBean.setType(1);
-                            messageBean.setSendType(0);
-                         //   db.saveMsg(CurrentFriend, messageBean);
-                            msgs.add(messageBean);
-                            adapter.notifyDataSetChanged();
                             System.out.println("上传成功！");
                         }
-
                         @Override
                         public void onError(int errorCode, String msg) {
-System.out.println(errorCode);
                         }
-
                         @Override
                         public void onProgress(int progress) {
+
                         }
                     });
                     break;
@@ -273,17 +263,15 @@ System.out.println(errorCode);
             ContentResolver cr = this.getContentResolver();
             try {
                 Bitmap bitmap = BitmapFactory.decodeStream(cr.openInputStream(uri));
-                // uploadBitmap(bitmap);
-                //Log.i(TAG, "uploadBitmap(bitmap); ");
-                IMClient.getInstance().UploadImage(bitmap,CurrentFriend, new UploadListener() {
+                IMClient.getInstance().sendImageMessage(uri.getPath(),bitmap, CurrentFriend, new UploadListener() {
                     @Override
                     public void onSucess(String fileUrl) {
-System.out.println("success");
+                        System.out.println("图片上传成功");
                     }
 
                     @Override
                     public void onError(int errorCode, String msg) {
-                        System.out.println("serror:"+errorCode);
+
                     }
 
                     @Override

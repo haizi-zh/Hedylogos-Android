@@ -349,7 +349,7 @@ public class PictureUtil {
             FileOutputStream out = null;
 
                 out = new FileOutputStream(f);
-            bitmap.compress(Bitmap.CompressFormat.PNG, 90, out);
+            bitmap.compress(Bitmap.CompressFormat.JPEG, quality, out);
                 out.flush();
                 out.close();
 

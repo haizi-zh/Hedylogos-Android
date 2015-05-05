@@ -25,6 +25,7 @@ import java.lang.ref.WeakReference;
 public abstract class MessageReceiver extends BroadcastReceiver implements MessageListener {
 LazyQueue queue=LazyQueue.getInstance();
     private  WeakReference<Context> contextWeakReference;
+    DequeueListenr listenr;
     Context c;
     MsgHandler handler = new MsgHandler(MessageReceiver.this);
      class MsgHandler extends Handler {
@@ -79,63 +80,6 @@ LazyQueue queue=LazyQueue.getInstance();
                          Message newmsg = JSON.parseObject(data, Message.class);
                             newmsg.setSendType(1);
                             queue.addMsg(newmsg.getSenderId(), newmsg);
-                            queue.setDequeueListenr(new DequeueListenr() {
-                                @Override
-                                public void onDequeueMsg(Message messageBean) {
-                                    System.out.println("onDequeueMsg");
-                                    messageBean.setSendType(1);
-                                    int result =IMClient.getInstance().saveReceiveMsg(messageBean);
-                                    System.out.println("result :"+result);
-                                    if (result==0){
-                                    String content=messageBean.getContents();
-                                    JSONObject object=null;
-                                    switch (messageBean.getMsgType()){
-                                        case Config.TEXT_MSG:
-                                            android.os.Message handlermsg= android.os.Message.obtain();
-                                            handlermsg.obj=messageBean;
-                                            handlermsg.what= Config.TEXT_MSG;
-                                            handler.sendMessage(handlermsg);
-                                            break;
-                                        case Config.AUDIO_MSG:
-                                            try {
-                                                object =new JSONObject(content);
-                                            } catch (JSONException e) {
-                                                e.printStackTrace();
-                                            }
-                                            Intent dlA_intent=new Intent("ACTION.IMSDK.STARTDOWNLOAD");
-                                            String aurl=null;
-                                            try {
-                                                aurl =object.getString("url");
-                                                System.out.println("url "+aurl);
-                                            } catch (JSONException e) {
-                                                e.printStackTrace();
-                                            }
-                                            messageBean.setUrl(aurl);
-                                            dlA_intent.putExtra("msg",messageBean);
-                                            context.startService(dlA_intent);
-                                            break;
-                                        case Config.IMAGE_MSG:
-                                            try {
-                                                object =new JSONObject(content);
-                                            } catch (JSONException e) {
-                                                e.printStackTrace();
-                                            }
-                                            String iurl=null;
-                                            try {
-                                                iurl =object.getString("thumb");
-                                                System.out.println("url " + iurl);
-                                            } catch (JSONException e) {
-                                                e.printStackTrace();
-                                            }
-                                            messageBean.setUrl(iurl);
-                                            Intent dlI_intent=new Intent("ACTION.IMSDK.STARTDOWNLOAD");
-                                            dlI_intent.putExtra("msg",messageBean);
-                                            context.startService(dlI_intent);
-                                            break;
-                                    }
-                                 }
-                                }
-                            });
                    }
                 }
                 break;
@@ -162,5 +106,64 @@ LazyQueue queue=LazyQueue.getInstance();
             default:
                 break;
         }
+        listenr=new DequeueListenr() {
+            @Override
+            public void onDequeueMsg(Message messageBean) {
+                System.out.println("onDequeueMsg");
+                messageBean.setSendType(1);
+                int result =IMClient.getInstance().saveReceiveMsg(messageBean);
+                System.out.println("result :"+result);
+                if (result==0){
+                    String content=messageBean.getContents();
+                    JSONObject object=null;
+                    switch (messageBean.getMsgType()){
+                        case Config.TEXT_MSG:
+                            android.os.Message handlermsg= android.os.Message.obtain();
+                            handlermsg.obj=messageBean;
+                            handlermsg.what= Config.TEXT_MSG;
+                            handler.sendMessage(handlermsg);
+                            break;
+                        case Config.AUDIO_MSG:
+                            try {
+                                object =new JSONObject(content);
+                            } catch (JSONException e) {
+                                e.printStackTrace();
+                            }
+                            Intent dlA_intent=new Intent("ACTION.IMSDK.STARTDOWNLOAD");
+                            String aurl=null;
+                            try {
+                                aurl =object.getString("url");
+                                System.out.println("url "+aurl);
+                            } catch (JSONException e) {
+                                e.printStackTrace();
+                            }
+                            messageBean.setUrl(aurl);
+                            dlA_intent.putExtra("msg",messageBean);
+                            context.startService(dlA_intent);
+                            break;
+                        case Config.IMAGE_MSG:
+                            try {
+                                object =new JSONObject(content);
+                            } catch (JSONException e) {
+                                e.printStackTrace();
+                            }
+                            String iurl=null;
+                            try {
+                                iurl =object.getString("thumb");
+                                System.out.println("url " + iurl);
+                            } catch (JSONException e) {
+                                e.printStackTrace();
+                            }
+                            messageBean.setUrl(iurl);
+                            Intent dlI_intent=new Intent("ACTION.IMSDK.STARTDOWNLOAD");
+                            dlI_intent.putExtra("msg",messageBean);
+                            context.startService(dlI_intent);
+                            break;
+                    }
+                }
+            }
+        };
+        queue.setDequeueListenr(listenr);
     }
+
 }

@@ -2,8 +2,10 @@ package com.lv.net;
 
 import android.graphics.Bitmap;
 
+import com.lv.Utils.Config;
 import com.lv.Utils.PictureUtil;
 import com.lv.Utils.TimeUtils;
+import com.lv.im.IMClient;
 import com.qiniu.android.http.ResponseInfo;
 import com.qiniu.android.storage.UpCompletionHandler;
 import com.qiniu.android.storage.UpProgressHandler;
@@ -16,6 +18,7 @@ import org.apache.http.entity.StringEntity;
 import org.apache.http.impl.client.DefaultHttpClient;
 import org.apache.http.protocol.HTTP;
 import org.apache.http.util.EntityUtils;
+import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.io.File;
@@ -27,7 +30,6 @@ public class UploadUtils {
 
     //private static final String fileName = "temp.jpg";
     //  private static final String imagepath = Environment.getExternalStorageDirectory().getPath() + "/SDK/image/" ;
-    private static final String imagepath = "/mnt/sdcard/SDK/image/" ;
       private String KEY;
     private String TOKEN;
 
@@ -54,24 +56,21 @@ public interface tokenget{
         return PictureUtil.saveBitmapToJpegFile(bitmap, filePath, 75);
     }
 
-    public void uploadImage(Bitmap bitmap,String sender,String receive,int msgType ,UploadListener listener) {
-       File path=new File(imagepath);
+    public String uploadImage(Bitmap bitmap,String sender,String receive,int msgType,long localId ,UploadListener listener) {
+       File path=new File(Config.imagepath);
         if (!path.exists())path.mkdirs();
-        String imagepath1 = imagepath+ TimeUtils.getTimestamp()+"_image.jpeg";
+        String imagepath1 = Config.imagepath+ TimeUtils.getTimestamp()+"_image.jpeg";
         if (saveBitmapToJpegFile(bitmap, imagepath1))
-        upload(imagepath1,sender,receive,msgType, listener);
+            upload(imagepath1,sender,receive,msgType,localId, listener);
         else System.out.println("文件出错");
+        return imagepath1;
     }
 
     public void uploadFile(File file, UploadListener listener) {
        // upload(file.getAbsolutePath(), listener);
     }
-//    public void uploadbyte(byte[] data, QiniuUploadUitlsListener listener) {
-//        saveBitmapToJpegFile(bitmap, tempJpeg);
-//        upload(tempJpeg, listener);
-//    }
 
-    public void upload(final String filePath, final String sender, final String receive, final int msgType, final UploadListener listener) {
+    public void upload(final String filePath, final String sender, final String receive, final int msgType, final long localId ,final UploadListener listener) {
        System.out.println("filePath:"+filePath);
         final String fileUrlUUID = getFileUrlUUID();
        getToken(new tokenget() {
@@ -91,6 +90,22 @@ public interface tokenget{
                     public void complete(String key, ResponseInfo info, JSONObject response) {
                         System.out.println("debug:info = " + info + ",response = " + response);
                         if (info != null && info.statusCode == 200) {// 上传成功
+                            String conversation= null;
+                            try {
+                                JSONObject obj=response.getJSONObject("result");
+                                conversation = obj.get("conversation").toString();
+                                String msgId=obj.get("msgId").toString();
+                                System.out.println("timestamp"+obj.get("timestamp").toString());
+                                long timestamp = (Double.valueOf(obj.get("timestamp").toString())).longValue();
+                                IMClient.getInstance().setLastMsg(receive,Integer.parseInt(msgId));
+                                IMClient.getInstance().updateMessage(receive, localId, msgId, conversation, timestamp, Config.STATUS_SUCCESS);
+                                System.out.println("发送成功，消息更新！");
+
+                            } catch (JSONException e) {
+                                e.printStackTrace();
+                            }
+
+
                             if (listener != null) {
                                 listener.onSucess(null);
                             }

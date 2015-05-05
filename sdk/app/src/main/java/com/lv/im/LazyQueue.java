@@ -17,8 +17,7 @@ import java.util.TimerTask;
  * Created by q on 2015/4/25.
  */
 public class LazyQueue {
-    long max_time = 3000;
-    // static SortList list = new SortList();
+    long max_time = 10000;
     private static LazyQueue instance;
     static HashMap<Long, SortList> LazyMap = new HashMap<Long, SortList>();
     static HashMap<Long, SortList> TempMap = new HashMap<Long, SortList>();
@@ -67,7 +66,6 @@ public class LazyQueue {
 
     public void setDequeueListenr(DequeueListenr listenr) {
         this.listenr = listenr;
-
     }
 
     public void begin() {
@@ -81,9 +79,8 @@ public class LazyQueue {
         timer.schedule(new TimerTask() {
             @Override
             public void run() {
-                System.out.println(Thread.currentThread());
+                isRunning=false;
                 new DequeueThread().start();
-                timer.cancel();
             }
         }, new Date(System.currentTimeMillis() + max_time));
     }
@@ -110,25 +107,27 @@ public class LazyQueue {
                     Message message = list.deleteFirst();
                     if (IMClient.getInstance().isBLOCK()){
                         System.out.println("status: block");
+                        System.out.println("dequeue block "+message.getContents());
                      add2Temp(message.getSenderId(), message);
                     }
                     else {
                         if (checkOrder(message)) {
+                            System.out.println("dequeue 正序 "+message.getContents());
                             listenr.onDequeueMsg(message);
                         } else {
+                            System.out.println("dequeue 乱序 "+message.getContents());
                             add2Temp(message.getSenderId(), message);
                             IMClient.getInstance().setBLOCK(true);
                             IMClient.getInstance().fetchNewMsg(flistener);
                         }
                     }
-
                 } catch (Exception e) {
                     e.printStackTrace();
                 }
             }
         }
         System.out.println("Dequeue()");
-        isRunning = false;
+        //isRunning = false;
     }
     FetchListener flistener=new FetchListener() {
         @Override
@@ -147,7 +146,9 @@ public class LazyQueue {
             SortList list = (SortList) entry.getValue();
             for (int i = 0; i < list.size(); i++) {
                 try {
-                   listenr.onDequeueMsg(list.deleteFirst());
+                    Message message=list.deleteFirst();
+                    System.out.println("list size : "+list.size()+" tempDequeue block "+message.getContents());
+                   listenr.onDequeueMsg(message);
 //                    android.os.Message m= android.os.Message.obtain();
 //                    m.what=1;
 //                    m.obj=list.deleteFirst();
@@ -167,7 +168,6 @@ public class LazyQueue {
         }
         LazyMap.get(FriendId).insert(messageBean);
         System.out.println("list.insert(messageBean);");
-       // if (!IMClient.getInstance().isBLOCK())
         begin();
     }
     public void add2Temp(long FriendId, Message messageBean) {
@@ -177,7 +177,6 @@ public class LazyQueue {
         }
         TempMap.get(FriendId).insert(messageBean);
         System.out.println("Temp.insert(messageBean);");
-        System.out.println("temp "+Thread.currentThread());
     }
 
 

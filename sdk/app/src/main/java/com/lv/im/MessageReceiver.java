@@ -78,17 +78,15 @@ LazyQueue queue=LazyQueue.getInstance();
                     if (jsonValidator.validate(data)){
                          Message newmsg = JSON.parseObject(data, Message.class);
                             newmsg.setSendType(1);
-//                        if (IMClient.getInstance().isBLOCK()){
-//                                LazyQueue.getInstance().add2Temp(newmsg.getSenderId(),newmsg);
-//                        }
-//                        else {
                             queue.addMsg(newmsg.getSenderId(), newmsg);
-                   //    }
                             queue.setDequeueListenr(new DequeueListenr() {
                                 @Override
                                 public void onDequeueMsg(Message messageBean) {
+                                    System.out.println("onDequeueMsg");
                                     messageBean.setSendType(1);
-                                    IMClient.getInstance().saveReceiveMsg(messageBean);
+                                    int result =IMClient.getInstance().saveReceiveMsg(messageBean);
+                                    System.out.println("result :"+result);
+                                    if (result==0){
                                     String content=messageBean.getContents();
                                     JSONObject object=null;
                                     switch (messageBean.getMsgType()){
@@ -97,7 +95,6 @@ LazyQueue queue=LazyQueue.getInstance();
                                             handlermsg.obj=messageBean;
                                             handlermsg.what= Config.TEXT_MSG;
                                             handler.sendMessage(handlermsg);
-                                            System.out.println("onDequeueMsg");
                                             break;
                                         case Config.AUDIO_MSG:
                                             try {
@@ -136,6 +133,7 @@ LazyQueue queue=LazyQueue.getInstance();
                                             context.startService(dlI_intent);
                                             break;
                                     }
+                                 }
                                 }
                             });
                    }

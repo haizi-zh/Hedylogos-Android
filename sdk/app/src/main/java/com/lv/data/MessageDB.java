@@ -79,7 +79,7 @@ public class MessageDB {
 //                        entity.getType(), entity.getMessage(), entity.getCreateTime(),
 //                        entity.getSendType(), entity.getMetadata(), entity.getSenderId()});
     }
-    public synchronized long saveReceiveMsg(String Friend_Id, MessageBean entity) {
+    public synchronized int saveReceiveMsg(String Friend_Id, MessageBean entity) {
         String table_name = "chat_" + CryptUtils.getMD5String(Friend_Id);
         db.execSQL("CREATE table IF NOT EXISTS "
                 + table_name
@@ -88,17 +88,16 @@ public class MessageDB {
                 "SenderId INTEGER)");
         db.execSQL("create UNIQUE index if not exists index_Msg_Id on " + table_name + "(ServerId)");
 
-        Cursor cursor=db.rawQuery("select ServerId from "+table_name+" where ServerId=?",new String[]{entity.getServerId()+""});
+        Cursor cursor=db.rawQuery("select * from "+table_name+" where ServerId=?",new String[]{entity.getServerId()+""});
         int count= cursor.getCount();
         System.out.println(entity.getMessage()+" cursor : "+count);
-
+        if(count>0)return 1;
         cursor.close();
         db.execSQL("INSERT OR REPLACE INTO "+table_name+" (ServerId,Status ," +
                 "Type , Message ,CreateTime , SendType , Metadata ," +
                 " SenderId )" +
                   "VALUES ('"+entity.getServerId()+"','"+entity.getStatus()+"','"+entity.getStatus()+"','"+entity.getMessage()
                 +"','"+entity.getCreateTime()+"','"+entity.getSendType()+"','"+entity.getMetadata()+"','"+entity.getSenderId()+"')");
-
 
 //        ContentValues values = new ContentValues();
 //        values.put("ServerId", entity.getServerId());
@@ -197,7 +196,7 @@ public class MessageDB {
             String table = c.getString(c.getColumnIndex("HASH"));
             int lastmsgId=c.getInt(c.getColumnIndex("last_rec_msgId"));
             IMClient.getInstance().setLastMsg(friend_id+"",lastmsgId);
-            Cursor cursor = db.rawQuery("SELECT * FROM " + table + " order by LocalId desc limit 1", null);
+            Cursor cursor = db.rawQuery("SELECT * FROM " + table + " order by ServerId desc limit 1", null);
             cursor.moveToLast();
             String lastmessage = cursor.getString(4);
             // System.out.println("lastmessage:"+lastmessage);

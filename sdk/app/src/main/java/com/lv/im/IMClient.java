@@ -136,11 +136,13 @@ public class IMClient {
             HttpUtils.FetchNewMsg(CurrentUser, listener );
 
     }
-    public void saveReceiveMsg(Message message){
-        db.saveReceiveMsg(message.getSenderId()+"",Msg2Bean(message));
-        setLastMsg(message.getSenderId()+"",message.getMsgId());
-        add2ackList(message.getId());
-
+    public int saveReceiveMsg(Message message){
+      int result= db.saveReceiveMsg(message.getSenderId()+"",Msg2Bean(message));
+        if (result==0) {
+            setLastMsg(message.getSenderId() + "", message.getMsgId());
+            add2ackList(message.getId());
+        }
+       return result;
     }
     public void UploadImage(Bitmap bitmap,String currentFri,UploadListener listener){
         UploadUtils.getInstance().uploadImage(bitmap,CurrentUser,currentFri,Config.IMAGE_MSG,listener);

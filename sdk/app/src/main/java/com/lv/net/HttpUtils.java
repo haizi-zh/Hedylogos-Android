@@ -76,21 +76,6 @@ public class HttpUtils {
         System.out.println("Ht fetchMsg");
         final RequestParams params=new RequestParams();
         params.put("userId",user);
-//        URL url = null;
-//        try {
-//            url = new URL(path);
-//
-//        HttpURLConnection conn = (HttpURLConnection) url
-//                .openConnection();
-//        conn.setConnectTimeout(5000);
-//        conn.setRequestMethod("GET");
-//        if (conn.getResponseCode()==200){
-//
-//        }
-//        } catch (Exception e) {
-//            e.printStackTrace();
-//        }
-
 new Thread(new Runnable() {
     @Override
     public void run() {

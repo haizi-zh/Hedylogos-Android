@@ -4,6 +4,8 @@ import com.alibaba.fastjson.JSON;
 import com.loopj.android.http.RequestParams;
 import com.loopj.android.http.SyncHttpClient;
 import com.loopj.android.http.TextHttpResponseHandler;
+import com.lv.Listener.FetchListener;
+import com.lv.Listener.LoginSuccessListener;
 import com.lv.Utils.Config;
 import com.lv.bean.Message;
 import com.lv.im.IMClient;
@@ -20,6 +22,7 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
@@ -32,7 +35,7 @@ public class HttpUtils {
     private static SyncHttpClient client = new SyncHttpClient();
     static ExecutorService exec = Executors.newCachedThreadPool();
 
-    public static void login(final String username, final LoginSuccessListen listen) {
+    public static void login(final String username, final LoginSuccessListener listen) {
 
         exec.execute(new Runnable() {
             @Override
@@ -60,7 +63,6 @@ public class HttpUtils {
                     System.out.println("Status code:" + code);
                     if (code == 200) {
                         IMClient.getInstance().setCurrentUser(username);
-                        IMClient.getInstance().test();
                         IMClient.getInstance().initDB();
                         listen.OnSuccess();
                     } else {
@@ -85,6 +87,7 @@ public class HttpUtils {
                     public void onFailure(int i, Header[] headers, String s, Throwable throwable) {
                         System.out.println("error code:" + i);
                     }
+
                     @Override
                     public void onSuccess(int i, Header[] headers, String s) {
                         try {
@@ -106,13 +109,14 @@ public class HttpUtils {
             }
         });
     }
-    public static void postack(final JSONArray array,String userid){
-        final String url =Config.ACK_URL+userid+"/ack";
-        final JSONObject obj =new JSONObject();
+
+    public static void postack(final JSONArray array, String userid) {
+        final String url = Config.ACK_URL + userid + "/ack";
+        final JSONObject obj = new JSONObject();
         try {
-            obj.put("msgList",array);
+            obj.put("msgList", array);
             IMClient.getInstance().clearackList();
-            System.out.println("ack : "+obj.toString());
+            System.out.println("ack : " + obj.toString());
             IMClient.getInstance().clearackList();
         } catch (JSONException e) {
             e.printStackTrace();
@@ -128,10 +132,10 @@ public class HttpUtils {
                     entity.setContentType("application/json");
                     post.setEntity(entity);
                     httpResponse = new DefaultHttpClient().execute(post);
-                    System.out.println("send status code:"+httpResponse.getStatusLine().getStatusCode());
-                    HttpEntity res=httpResponse.getEntity();
-                    System.out.println("ack Result : "+ EntityUtils.toString(res));
-                    System.out.println("list size:"+array.length());
+                    System.out.println("send status code:" + httpResponse.getStatusLine().getStatusCode());
+                    HttpEntity res = httpResponse.getEntity();
+                    System.out.println("ack Result : " + EntityUtils.toString(res));
+                    System.out.println("list size:" + array.length());
 
                 } catch (Exception e) {
                     e.printStackTrace();
@@ -140,5 +144,86 @@ public class HttpUtils {
 
         });
 
+    }
+
+    public static void NetSpeedTest() {
+        exec.execute(new Runnable() {
+            @Override
+            public void run() {
+                List<String> urlList = new ArrayList<String>();
+                urlList.add("www.baidu.com");
+                urlList.add("www.sina.com.cn");
+                urlList.add("www.163.com");
+                Process process = null;
+                String result = "";
+                String fastest="";
+                long temp=9999;
+                for (String url : urlList) {
+                    long start = 0;
+                    long end = 0;
+                    try {
+                        start = System.currentTimeMillis();
+                        process = Runtime.getRuntime().exec("/system/bin/ping -c 1 "+url);
+                        int status = process.waitFor();
+                        if (status == 0) {
+                            result = "success";
+
+
+                        } else {
+                            result = Integer.toString(status);
+                        }
+                        end = System.currentTimeMillis();
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    } catch (InterruptedException e) {
+                        e.printStackTrace();
+                    }
+                    long time=end - start;
+                    System.out.println("result " + result);
+                    System.out.println(url+" ping time:" + time);
+                    if (time<temp){
+                        temp=time;
+                        fastest=url;
+                    }
+                }
+                System.out.println("fastest url "+fastest);
+            }
+        });
+
+
+    }
+    public interface tokenget {
+        public void OnSuccess(String key, String token);
+    }
+
+    public static void getToken(final tokenget listener) {
+        String token = null;
+        exec.execute(new Runnable() {
+            @Override
+            public void run() {
+                JSONObject object = new JSONObject();
+                try {
+                    object.put("action", 1);
+                    HttpPost post = new HttpPost("http://hedy.zephyre.me/upload/token-generator");
+                    HttpResponse httpResponse = null;
+                    StringEntity entity = new StringEntity(object.toString(),
+                            HTTP.UTF_8);
+                    entity.setContentType("application/json");
+                    post.setEntity(entity);
+                    httpResponse = new DefaultHttpClient().execute(post);
+                    if (httpResponse.getStatusLine().getStatusCode() == 200) {
+                        String result = EntityUtils.toString(httpResponse.getEntity());
+                        JSONObject res = new JSONObject(result);
+                        JSONObject obj = res.getJSONObject("result");
+                        String key = obj.getString("key");
+                        String token = obj.getString("token");
+                        listener.OnSuccess(key, token);
+                    } else
+                        System.out.println("Tokenget Error :" + httpResponse.getStatusLine().getStatusCode());
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+            }
+        });
     }
 }

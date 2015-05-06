@@ -4,26 +4,16 @@ import android.app.Activity;
 import android.app.ProgressDialog;
 import android.content.Intent;
 import android.os.Bundle;
-import android.os.Handler;
-import android.os.Message;
 import android.view.View;
+import android.view.Window;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.Toast;
 
-import com.igexin.sdk.PushManager;
+import com.lv.Listener.LoginSuccessListener;
 import com.lv.R;
-import com.lv.Utils.Config;
 import com.lv.im.IMClient;
-import com.lv.net.LoginSuccessListen;
-
-import org.apache.http.HttpResponse;
-import org.apache.http.client.methods.HttpPost;
-import org.apache.http.entity.StringEntity;
-import org.apache.http.impl.client.DefaultHttpClient;
-import org.apache.http.protocol.HTTP;
-import org.json.JSONArray;
-import org.json.JSONObject;
+import com.lv.net.HttpUtils;
 
 /**
  * Created by q on 2015/4/18.
@@ -35,27 +25,15 @@ public class LoginActivity extends Activity implements View.OnClickListener{
     private Button user_register_button;
     private ProgressDialog dialog;
     private SDKApplication sdkApplication;
-    Handler handler =new Handler(){
-        @Override
-        public void handleMessage(Message msg) {
-            switch (msg.what){
-                case 1:
-                    Intent intent =new Intent();
-                    intent.setClass(LoginActivity.this,MainActivity.class);
-                    startActivity(intent);
-                    sdkApplication= (SDKApplication) getApplication();
-                    sdkApplication.setCurrentUser(msg.obj.toString());
-                    LoginActivity.this.finish();
-                    break;
-            }
-        }
-    };
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        requestWindowFeature(Window.FEATURE_NO_TITLE);
         setContentView(R.layout.login_layout);
-        PushManager.getInstance().initialize(this.getApplicationContext());
+        IMClient.getInstance().init(this);
         initview();
+        HttpUtils.NetSpeedTest();
+
     }
     private void initview() {
         login_username=(EditText)findViewById(R.id.login_username);
@@ -66,7 +44,6 @@ public class LoginActivity extends Activity implements View.OnClickListener{
         user_register_button.setOnClickListener(this);
         login_username.setOnFocusChangeListener(new View.OnFocusChangeListener()
         {
-
             @Override
             public void onFocusChange(View v, boolean hasFocus) {
                 if(!hasFocus){
@@ -103,9 +80,11 @@ public class LoginActivity extends Activity implements View.OnClickListener{
                 //login(login_username.getText().toString());
                 // System.out.println("username:"+qwe);
                 System.out.println("click");
-                IMClient.getInstance().Login(login_username.getText().toString(),new LoginSuccessListen() {
+                dialog=ProgressDialog.show(LoginActivity.this,"","");
+                IMClient.getInstance().Login(login_username.getText().toString(),new LoginSuccessListener() {
                     @Override
                     public void OnSuccess() {
+                        dialog.dismiss();
                         System.out.println("登陆成功");
                         Intent intent =new Intent();
                         intent.setClass(LoginActivity.this,MainActivity.class);
@@ -115,6 +94,7 @@ public class LoginActivity extends Activity implements View.OnClickListener{
 
                     @Override
                     public void OnFalied(int code) {
+                        dialog.dismiss();
                         Toast.makeText(LoginActivity.this,"登陆失败："+code,Toast.LENGTH_LONG).show();
                     }
                 });
@@ -126,45 +106,5 @@ public class LoginActivity extends Activity implements View.OnClickListener{
         }
 
     }
-    private void login(final String username) {
-        new  Thread(new Runnable() {
-            @Override
-            public void run() {
-                JSONObject obj =new JSONObject();
-                JSONArray array=new JSONArray();
-                try {
-                    obj.put("userId",Long.parseLong(username));
-                    obj.put("regId","45c10d381af0f4998032d933a00f3c6e");
-                    System.out.println("login:"+array.toString());
-                    HttpPost post = new HttpPost(Config.LOGIN_URL);
-                    HttpResponse httpResponse = null;
-                        StringEntity entity = new StringEntity(obj.toString(),
-                                HTTP.UTF_8);
-                        entity.setContentType("application/json");
-                        post.setEntity(entity);
-                        httpResponse = new DefaultHttpClient().execute(post);
-                    final int code=httpResponse.getStatusLine().getStatusCode();
-                   System.out.println("Status code:"+code);
-                    if (code==200){
-                        System.out.println("登陆成功！");
-                        Message message=Message.obtain();
-                        message.obj=username;
-                        message.what=1;
-                        handler.sendMessage(message);
-                    }
-                    else {
-                        handler.post(new Runnable() {
-                            @Override
-                            public void run() {
-                                Toast.makeText(LoginActivity.this,"登陆失败："+code,Toast.LENGTH_LONG).show();
-                            }
-                        });
-                    }
-                } catch (Exception e) {
-                    e.printStackTrace();
-                }
-            }
-        }).start();
 
-    }
 }

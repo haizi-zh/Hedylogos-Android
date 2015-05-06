@@ -1,8 +1,12 @@
 package com.lv.im;
 
+import android.content.Context;
 import android.graphics.Bitmap;
 import android.text.TextUtils;
 
+import com.igexin.sdk.PushManager;
+import com.lv.Listener.LoginSuccessListener;
+import com.lv.Listener.SendMsgListener;
 import com.lv.Utils.Config;
 import com.lv.Utils.TimeUtils;
 import com.lv.bean.ConversationBean;
@@ -10,10 +14,9 @@ import com.lv.bean.IMessage;
 import com.lv.bean.Message;
 import com.lv.bean.MessageBean;
 import com.lv.data.MessageDB;
-import com.lv.net.FetchListener;
+import com.lv.Listener.FetchListener;
 import com.lv.net.HttpUtils;
-import com.lv.net.LoginSuccessListen;
-import com.lv.net.UploadListener;
+import com.lv.Listener.UploadListener;
 import com.lv.net.UploadUtils;
 
 import org.json.JSONArray;
@@ -60,6 +63,9 @@ public class IMClient {
     public void initDB() {
         db = MessageDB.getInstance();
     }
+    public void init(Context context){
+        PushManager.getInstance().initialize(context.getApplicationContext());
+    }
 
     public JSONArray getackList() {
         return acklist;
@@ -71,6 +77,7 @@ public class IMClient {
 
     public void add2ackList(String id) {
         acklist.put(id);
+        System.out.println("ack list size:"+acklist.length());
         if (acklist.length()>10){
             HttpUtils.postack(acklist,CurrentUser);
         }
@@ -104,7 +111,7 @@ public class IMClient {
         lastMsgMap.put(fri_Id, msgId);
     }
 
-    public void Login(String UserId, LoginSuccessListen listen) {
+    public void Login(String UserId, LoginSuccessListener listen) {
         HttpUtils.login(UserId, listen);
     }
 
@@ -124,7 +131,7 @@ public class IMClient {
         return db.getAllMsg(friendId, page);
     }
 
-    public void sendTextMessage(String text, int friendId, SendMsgListen listen) {
+    public void sendTextMessage(String text, int friendId, SendMsgListener listen) {
         if (TextUtils.isEmpty(text)) return;
         IMessage message = new IMessage(Integer.parseInt(CurrentUser), friendId, Config.TEXT_MSG, text);
         MessageBean messageBean = imessage2Bean(message);
@@ -190,11 +197,10 @@ public class IMClient {
                 LazyQueue.getInstance().TempDequeue();
             }
         });
-
     }
 
     public int saveReceiveMsg(Message message) {
-        int result = db.saveReceiveMsg(message.getSenderId() + "", Msg2Bean(message));
+        int result = db.saveReceiveMsg(message.getSenderId() + "",Msg2Bean(message));
         if (result == 0) {
             setLastMsg(message.getSenderId() + "", message.getMsgId());
             add2ackList(message.getId());
@@ -210,10 +216,6 @@ public class IMClient {
         }
         db.saveMsgs(list1);
 
-    }
-
-    public void test() {
-        System.out.println("c:" + CurrentUser);
     }
 }
 

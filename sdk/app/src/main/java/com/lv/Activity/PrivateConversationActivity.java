@@ -1,14 +1,18 @@
 package com.lv.Activity;
 
 
+import android.app.ActionBar;
 import android.app.Activity;
 import android.content.ContentResolver;
 import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.graphics.Color;
 import android.net.Uri;
 import android.os.Bundle;
 import android.text.TextUtils;
+import android.view.Menu;
+import android.view.MenuItem;
 import android.view.MotionEvent;
 import android.view.View;
 import android.widget.Button;
@@ -21,6 +25,7 @@ import android.widget.Toast;
 
 import com.alibaba.fastjson.JSON;
 import com.lv.Audio.MediaRecordFunc;
+import com.lv.Listener.SendMsgListener;
 import com.lv.R;
 import com.lv.Utils.CommonUtils;
 import com.lv.Utils.Config;
@@ -29,9 +34,8 @@ import com.lv.bean.IMessage;
 import com.lv.bean.Message;
 import com.lv.bean.MessageBean;
 import com.lv.im.IMClient;
-import com.lv.im.OnActivityMessageListener;
-import com.lv.im.SendMsgListen;
-import com.lv.net.UploadListener;
+import com.lv.Listener.OnActivityMessageListener;
+import com.lv.Listener.UploadListener;
 
 import java.io.File;
 import java.io.IOException;
@@ -62,7 +66,7 @@ public class PrivateConversationActivity extends Activity
     SDKApplication application;
     long i = 2;
     Long time;
-
+    ActionBar actionBar;
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -71,10 +75,33 @@ public class PrivateConversationActivity extends Activity
         initview();
     }
 
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        super.onCreateOptionsMenu(menu);
+        getMenuInflater().inflate(R.menu.menu_main, menu);
+//        MenuItem more=menu.add(0,0,0,"more");
+//        more.setShowAsAction(MenuItem.SHOW_AS_ACTION_IF_ROOM);
+        return true;
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        super.onOptionsItemSelected(item);
+        switch (item.getItemId()) {
+            case android.R.id.home:
+                this.finish();
+                break;
+            default:
+              break;
+        }
+        return true;
+    }
+
     private void initview() {
+        actionBar=getActionBar();
+        actionBar.setDisplayHomeAsUpEnabled(true);
         chatList = (ListView) this.findViewById(R.id.avoscloud_chat_list);
         input = (LinearLayout) findViewById(R.id.chat_input_wrapper);
-        tv = (TextView) findViewById(R.id.top);
         ImageMsg = (Button) findViewById(R.id.Btn_ImageMsg);
         sendBtn = (ImageButton) this.findViewById(R.id.sendBtn);
         Audiomsg = (Button) this.findViewById(R.id.Btn_AudioMsg);
@@ -101,7 +128,7 @@ public class PrivateConversationActivity extends Activity
                     return;
                 }
                 composeZone.getEditableText().clear();
-                IMClient.getInstance().sendTextMessage(text, Integer.parseInt(CurrentFriend), new SendMsgListen() {
+                IMClient.getInstance().sendTextMessage(text, Integer.parseInt(CurrentFriend), new SendMsgListener() {
                     @Override
                     public void onSuccess() {
                         System.out.println("fasongchenggong");
@@ -154,7 +181,11 @@ public class PrivateConversationActivity extends Activity
         super.onResume();
         CurrentFriend = getIntent().getStringExtra("friend_id");
         System.out.println("C fri:" + CurrentFriend);
-        tv.setText("好友：" + CurrentFriend);
+
+        int titleId = getResources().getIdentifier("action_bar_title", "id", "android");
+        TextView tv1 = (TextView) findViewById(titleId);
+        tv1.setTextColor(Color.BLACK);
+        tv1.setText("好友：" + CurrentFriend);
         msgs = IMClient.getInstance().getMessages(CurrentFriend, 5);
         adapter = new ChatDataAdapter(this, msgs);
         chatList.setAdapter(adapter);
@@ -271,12 +302,10 @@ public class PrivateConversationActivity extends Activity
 
                     @Override
                     public void onError(int errorCode, String msg) {
-
+                            System.out.println("errorCode :"+errorCode+" "+msg);
                     }
-
                     @Override
                     public void onProgress(int progress) {
-
                     }
                 });
             } catch (Exception e) {

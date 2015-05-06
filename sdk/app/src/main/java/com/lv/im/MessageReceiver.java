@@ -9,6 +9,8 @@ import android.util.Log;
 
 import com.alibaba.fastjson.JSON;
 import com.igexin.sdk.PushConsts;
+import com.lv.Listener.DequeueListener;
+import com.lv.Listener.MessageListener;
 import com.lv.Utils.Config;
 import com.lv.Utils.JsonValidator;
 import com.lv.bean.Message;
@@ -25,7 +27,7 @@ import java.lang.ref.WeakReference;
 public abstract class MessageReceiver extends BroadcastReceiver implements MessageListener {
 LazyQueue queue=LazyQueue.getInstance();
     private  WeakReference<Context> contextWeakReference;
-    DequeueListenr listenr;
+    DequeueListener listenr;
     Context c;
     MsgHandler handler = new MsgHandler(MessageReceiver.this);
      class MsgHandler extends Handler {
@@ -106,7 +108,7 @@ LazyQueue queue=LazyQueue.getInstance();
             default:
                 break;
         }
-        listenr=new DequeueListenr() {
+        listenr=new DequeueListener() {
             @Override
             public void onDequeueMsg(Message messageBean) {
                 System.out.println("onDequeueMsg");

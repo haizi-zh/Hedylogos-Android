@@ -2,8 +2,9 @@ package com.lv.im;
 
 import android.os.Handler;
 
+import com.lv.Listener.DequeueListener;
 import com.lv.bean.Message;
-import com.lv.net.FetchListener;
+import com.lv.Listener.FetchListener;
 
 import java.util.Date;
 import java.util.HashMap;
@@ -22,7 +23,7 @@ public class LazyQueue {
     static HashMap<Long, SortList> LazyMap = new HashMap<Long, SortList>();
     static HashMap<Long, SortList> TempMap = new HashMap<Long, SortList>();
     boolean isRunning;
-    DequeueListenr listenr;
+    DequeueListener listenr;
     Timer timer;
     private Handler handler;
 
@@ -64,7 +65,7 @@ public class LazyQueue {
         return instance;
     }
 
-    public void setDequeueListenr(DequeueListenr listenr) {
+    public void setDequeueListenr(DequeueListener listenr) {
         this.listenr = listenr;
     }
 

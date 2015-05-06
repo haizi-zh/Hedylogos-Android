@@ -13,7 +13,7 @@ import com.alibaba.fastjson.JSON;
 import com.lv.R;
 import com.lv.bean.Message;
 import com.lv.im.MessageReceiver;
-import com.lv.im.OnActivityMessageListener;
+import com.lv.Listener.OnActivityMessageListener;
 
 import java.util.HashMap;
 

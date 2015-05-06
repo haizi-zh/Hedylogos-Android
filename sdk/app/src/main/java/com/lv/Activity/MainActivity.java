@@ -4,15 +4,18 @@ import android.app.Activity;
 import android.content.Intent;
 import android.os.Bundle;
 import android.view.View;
+import android.view.Window;
 import android.widget.AdapterView;
 import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.ListView;
 import android.widget.SimpleAdapter;
 
+import com.lv.Listener.OnActivityMessageListener;
 import com.lv.R;
 import com.lv.Utils.TimeUtils;
 import com.lv.bean.ConversationBean;
+import com.lv.bean.Message;
 import com.lv.im.IMClient;
 
 import java.util.ArrayList;
@@ -20,21 +23,22 @@ import java.util.HashMap;
 import java.util.List;
 
 
-public class MainActivity extends Activity implements View.OnClickListener {
+public class MainActivity extends Activity implements View.OnClickListener ,OnActivityMessageListener{
     public static Button btn;
     ImageView img;
     Button test;
     ListView lv;
     List<HashMap<String, Object>> data;
     SimpleAdapter adapter = null;
-    List<ConversationBean> list;
     private String currentuser;
     private SDKApplication application;
     static int i = 1;
+    List<ConversationBean> list;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         IMClient.getInstance().initfetch();
+        requestWindowFeature(Window.FEATURE_NO_TITLE);
         setContentView(R.layout.activity_main);
         btn = (Button) findViewById(R.id.btn);
         test = (Button) findViewById(R.id.btn_test);
@@ -53,15 +57,17 @@ public class MainActivity extends Activity implements View.OnClickListener {
                 startActivity(intent);
             }
         });
+        IMMessageReceiver.registerSessionListener("PrivateConversationActivity", this);
     }
 
     @Override
     protected void onResume() {
         super.onResume();
-        // UploadUtils.getToken();
-        // IMClient.getInstance().fetchNewMsg("3");
         System.out.println("CurrentUser " + IMClient.getInstance().getCurrentUser());
-        List<ConversationBean> list = IMClient.getInstance().getConversationList();
+        refresh();
+    }
+    private void refresh(){
+        list= IMClient.getInstance().getConversationList();
         data = new ArrayList<HashMap<String, Object>>();
         for (int n = 0; n < list.size(); n++) {
             HashMap<String, Object> hashMap = new HashMap<String, Object>();
@@ -82,7 +88,7 @@ public class MainActivity extends Activity implements View.OnClickListener {
             case R.id.btn:
                 Intent intent = new Intent();
                 intent.setClass(MainActivity.this, PrivateConversationActivity.class);
-                intent.putExtra("friend_id", "3");
+                intent.putExtra("friend_id", "1");
                 startActivity(intent);
                 break;
             case R.id.btn_test:
@@ -94,6 +100,12 @@ public class MainActivity extends Activity implements View.OnClickListener {
                 break;
         }
     }
+    @Override
+    public void onMessage(Message msg) {
+        refresh();
+    }
 
-
+    @Override
+    public void onMessage(String msg) {
+    }
 }

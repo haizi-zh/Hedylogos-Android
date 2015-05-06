@@ -93,11 +93,23 @@ public class MessageDB {
         System.out.println(entity.getMessage()+" cursor : "+count);
         if(count>0)return 1;
         cursor.close();
-        db.execSQL("INSERT OR REPLACE INTO "+table_name+" (ServerId,Status ," +
-                "Type , Message ,CreateTime , SendType , Metadata ," +
-                " SenderId )" +
-                  "VALUES ('"+entity.getServerId()+"','"+entity.getStatus()+"','"+entity.getStatus()+"','"+entity.getMessage()
-                +"','"+entity.getCreateTime()+"','"+entity.getSendType()+"','"+entity.getMetadata()+"','"+entity.getSenderId()+"')");
+//        db.execSQL("INSERT OR REPLACE INTO "+table_name+" (ServerId,Status ," +
+//                "Type , Message ,CreateTime , SendType , Metadata ," +
+//                " SenderId )" +
+//                  "VALUES ("+entity.getServerId()+","+entity.getStatus()+","+entity.getType()+","+entity.getMessage()
+//                +","+entity.getCreateTime()+","+entity.getSendType()+","+entity.getMetadata()+","+entity.getSenderId()+")");
+
+        ContentValues values = new ContentValues();
+        values.put("ServerId", entity.getServerId());
+        values.put("Status", entity.getStatus());
+        values.put("Type", entity.getType());
+        values.put("Message", entity.getMessage());
+        values.put("CreateTime", entity.getCreateTime());
+        values.put("SendType", entity.getSendType());
+        values.put("Metadata", entity.getMetadata());
+        values.put("SenderId", entity.getSenderId());
+        db.insert(table_name, null, values);
+
 
 //        ContentValues values = new ContentValues();
 //        values.put("ServerId", entity.getServerId());
@@ -110,7 +122,7 @@ public class MessageDB {
 //        values.put("SenderId", entity.getSenderId());
 //        long localid = db.replace(table_name,null,values);
 //        System.out.println("localid : "+localid);
-        IMClient.getInstance().setLastMsg(entity.getServerId() + "", entity.getServerId());
+        IMClient.getInstance().setLastMsg(entity.getSenderId() + "", entity.getServerId());
         add2Conversion(Integer.parseInt(Friend_Id), entity.getCreateTime(), table_name, entity.getServerId());
         add2Friend(Integer.parseInt(Friend_Id));
         return 0;

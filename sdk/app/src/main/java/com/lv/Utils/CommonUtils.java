@@ -12,7 +12,6 @@ import java.io.RandomAccessFile;
  */
 public class CommonUtils {
     private Vibrator vibrator;
-
     public static void Phonevibrator(Context context) {
         Vibrator vibrator = (Vibrator) context.getSystemService(Context.VIBRATOR_SERVICE);
         long[] pattern = {100, 10, 100, 1000};   // 停止 开启 停止 开启

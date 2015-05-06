@@ -3,16 +3,6 @@
     android:layout_width="fill_parent"
     android:layout_height="fill_parent"
     android:orientation="vertical">
-<TextView
-    android:id="@+id/top"
-    android:layout_width="fill_parent"
-    android:layout_height="35dp"
-    android:gravity="center"
-    android:textColor="#ffffff"
-    android:background="#000000"
-    android:text="TOP"
-    />
-
 
     <ListView
         android:id="@+id/avoscloud_chat_list"
@@ -26,7 +16,6 @@
         android:id="@+id/chat_input_wrapper"
         android:layout_width="fill_parent"
         android:layout_height="wrap_content"
-        android:layout_alignParentBottom="true"
         android:orientation="horizontal" >
         <EditText
             android:id="@+id/chatText"

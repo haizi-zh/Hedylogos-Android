@@ -10,12 +10,12 @@ import android.support.v4.app.NotificationCompat;
 import android.util.Log;
 
 import com.alibaba.fastjson.JSON;
+import com.lv.Listener.OnActivityMessageListener;
 import com.lv.R;
-import com.lv.Utils.Config;
 import com.lv.bean.Message;
 import com.lv.im.MessageReceiver;
-import com.lv.Listener.OnActivityMessageListener;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 
 /**
@@ -23,83 +23,57 @@ import java.util.HashMap;
  */
 public class IMMessageReceiver extends MessageReceiver {
     private static final String TAG = "IMMessageReceiver";
-
+    public static ArrayList<MessagerHandler> ehList = new ArrayList<MessagerHandler>();
+    public static abstract interface MessagerHandler{
+        public void onMsgArrive(Message m);
+    }
     @Override
     public void onMessageReceive(Context context, Message msg) {
-        OnActivityMessageListener listener =
-                sessionMessageDispatchers.get(PrivateConversationActivity.Activityid);
-            msg.setSendType(0);
 
-        System.out.println(msg.toString());
-        if (listener == null) {
-            if (Config.isDebug){
-                Log.i(Config.TAG, "Activity inactive, about to send notification. ");
-            }
-            NotificationManager nm =
-                    (NotificationManager) context.getSystemService(Context.NOTIFICATION_SERVICE);
-            Intent resultIntent = new Intent(context, PrivateConversationActivity.class);
-            resultIntent.putExtra(PrivateConversationActivity.DATA_EXTRA_SINGLE_DIALOG_TARGET,
-                    JSON.toJSONString(msg));
-           resultIntent.putExtra("friend_id",msg.getSenderId());
-            resultIntent.addFlags(Intent.FLAG_ACTIVITY_BROUGHT_TO_FRONT);
-            PendingIntent pi =
-                    PendingIntent.getActivity(context, -1, resultIntent, PendingIntent.FLAG_ONE_SHOT);
-            Notification notification =
-                    new NotificationCompat.Builder(context)
-                            .setContentTitle("新消息")
-                            .setContentText(msg.getContents())
-                            .setContentIntent(pi)
-                            .setSmallIcon(R.drawable.ic_launcher)
-                            .setLargeIcon(
-                                    BitmapFactory.decodeResource(context.getResources(), R.drawable.ic_launcher))
-                            .setAutoCancel(true).build();
-            nm.notify(233, notification);
-            Log.d(TAG, "notification sent");
-        } else {
-            listener.onMessage(msg);
+
+        for (MessagerHandler handler:ehList){
+            handler.onMsgArrive(msg);
+        }
+        if (ehList.size()==0) {
+
+//            OnActivityMessageListener listener =
+//                    sessionMessageDispatchers.get(PrivateConversationActivity.Activityid);
+//            msg.setSendType(0);
+//
+//            System.out.println(msg.toString());
+//            if (listener == null) {
+//                if (Config.isDebug) {
+//                    Log.i(Config.TAG, "Activity inactive, about to send notification. ");
+//                }
+                NotificationManager nm =
+                        (NotificationManager) context.getSystemService(Context.NOTIFICATION_SERVICE);
+                Intent resultIntent = new Intent(context, PrivateConversationActivity.class);
+                resultIntent.putExtra(PrivateConversationActivity.DATA_EXTRA_SINGLE_DIALOG_TARGET,
+                        JSON.toJSONString(msg));
+                resultIntent.putExtra("friend_id", msg.getSenderId());
+                resultIntent.addFlags(Intent.FLAG_ACTIVITY_BROUGHT_TO_FRONT);
+                PendingIntent pi =
+                        PendingIntent.getActivity(context, -1, resultIntent, PendingIntent.FLAG_ONE_SHOT);
+                Notification notification =
+                        new NotificationCompat.Builder(context)
+                                .setContentTitle("新消息")
+                                .setContentText(msg.getContents())
+                                .setContentIntent(pi)
+                                .setSmallIcon(R.drawable.ic_launcher)
+                                .setLargeIcon(
+                                        BitmapFactory.decodeResource(context.getResources(), R.drawable.ic_launcher))
+                                .setAutoCancel(true).build();
+                nm.notify(233, notification);
+                Log.d(TAG, "notification sent");
+//            } else {
+//                listener.onMessage(msg);
+//            }
         }
     }
 
     @Override
     public void onMessageReceive(Context context, String msg) {
-//        ActivityManager am = (ActivityManager) context.getSystemService(Context.ACTIVITY_SERVICE);
-//        List<ActivityManager.RunningTaskInfo> tasks = am.getRunningTasks(1);
-//        if (!tasks.isEmpty()) {
-//            ComponentName topActivity = tasks.get(0).topActivity;
-//            if (!topActivity.getPackageName().equals(context.getPackageName())) {
-//
-//            }
-//        OnActivityMessageListener listener =
-//                sessionMessageDispatchers.get(PrivateConversationActivity.Activityid);
-//        if (listener == null) {
-//            Log.d("IMMessageReceiver", "Activity inactive, about to send notification.");
-//            NotificationManager nm =
-//                    (NotificationManager) context.getSystemService(Context.NOTIFICATION_SERVICE);
-//
-//            String ctnt = msg;
-//            Intent resultIntent = new Intent(context, PrivateConversationActivity.class);
-//            resultIntent.putExtra(PrivateConversationActivity.DATA_EXTRA_SINGLE_DIALOG_TARGET,
-//                    msg);
-//            // resultIntent.putExtra(Session.AV_SESSION_INTENT_DATA_KEY, JSON.toJSONString(message));
-//            resultIntent.addFlags(Intent.FLAG_ACTIVITY_BROUGHT_TO_FRONT);
-//
-//            PendingIntent pi =
-//                    PendingIntent.getActivity(context, -1, resultIntent, PendingIntent.FLAG_ONE_SHOT);
-//
-//            Notification notification =
-//                    new NotificationCompat.Builder(context)
-//                            .setContentTitle("新消息")
-//                            .setContentText(ctnt)
-//                            .setContentIntent(pi)
-//                            .setSmallIcon(R.drawable.ic_launcher)
-//                            .setLargeIcon(
-//                                    BitmapFactory.decodeResource(context.getResources(), R.drawable.ic_launcher))
-//                            .setAutoCancel(true).build();
-//            nm.notify(233, notification);
-//            Log.d(TAG, "notification sent");
-//        } else {
-//            listener.onMessage(msg);
-//        }
+
     }
 
     @Override

@@ -158,19 +158,15 @@ public class LazyQueue {
             Map.Entry entry = (Map.Entry) iter.next();
             SortList list = (SortList) entry.getValue();
                 while (list.size()>0){
-                try {
                     Message message=list.deleteFirst();
-                    if (Config.isDebug){
-                        Log.i(Config.TAG,"list size : "+list.size()+" tempDequeue block "+message.getContents());
+                    if (message!=null) {
+                        if (Config.isDebug) {
+                            Log.i(Config.TAG, "list size : " +
+                                    "" + list.size() + "" +
+                                    " tempDequeue block " + message.getContents());
+                        }
+                        listenr.onDequeueMsg(message);
                     }
-                    if (message!=null) listenr.onDequeueMsg(message);
-//                    android.os.Message m= android.os.Message.obtain();
-//                    m.what=1;
-//                    m.obj=list.deleteFirst();
-//                    handler.sendMessage(m);
-                } catch (Exception e) {
-                    e.printStackTrace();
-                }
             }
         }
         if (Config.isDebug){

@@ -46,26 +46,22 @@ import java.util.List;
 public class PrivateConversationActivity extends Activity
         implements
         View.OnClickListener,
-        OnActivityMessageListener {
+        OnActivityMessageListener ,
+        IMMessageReceiver.MessagerHandler{
     public static final String DATA_EXTRA_SINGLE_DIALOG_TARGET = "single_target_peerId";
     public static final String Activityid = "PrivateConversationActivity";
-    String targetPeerId;
     private ImageButton sendBtn;
     Button Audiomsg;
     Button ImageMsg;
     ImageButton record;
     LinearLayout input;
     private EditText composeZone;
-    String currentName;
-    String selfId;
     static ListView chatList;
     static ChatDataAdapter adapter;
-    TextView tv;
     List<Message> messages = new LinkedList<Message>();
     static List<MessageBean> msgs = new LinkedList<MessageBean>();
     private String CurrentFriend;
     SDKApplication application;
-    long i = 2;
     Long time;
     ActionBar actionBar;
     @Override
@@ -80,8 +76,6 @@ public class PrivateConversationActivity extends Activity
     public boolean onCreateOptionsMenu(Menu menu) {
         super.onCreateOptionsMenu(menu);
         getMenuInflater().inflate(R.menu.menu_main, menu);
-//        MenuItem more=menu.add(0,0,0,"more");
-//        more.setShowAsAction(MenuItem.SHOW_AS_ACTION_IF_ROOM);
         return true;
     }
 
@@ -145,9 +139,7 @@ public class PrivateConversationActivity extends Activity
                 IMessage message = new IMessage(Integer.parseInt(IMClient.getInstance().getCurrentUser()), Integer.parseInt(CurrentFriend), 0, text);
                 MessageBean messageBean = imessage2Bean(message);
                 System.out.println(message.toString());
-                // SendMsgAsyncTask.sendMessage(CurrentUser,CurrentFriend, message);
                 msgs.add(messageBean);
-                // db.saveMsg(CurrentFriend, messageBean);
                 adapter.notifyDataSetChanged();
                 break;
             case R.id.Btn_AudioMsg:
@@ -168,11 +160,6 @@ public class PrivateConversationActivity extends Activity
         return new MessageBean(0, 0, message.getMsgType(), message.getContents(), TimeUtils.getTimestamp(), 0, null, 2);
     }
 
-    private Message IMessagetoMessage(IMessage msg) {
-        //return new Message(i++, msg.getSender(), msg.getReceiver(), msg.getContents());
-        return null;
-    }
-
     @Override
     public void onBackPressed() {
         super.onBackPressed();
@@ -182,7 +169,10 @@ public class PrivateConversationActivity extends Activity
     @Override
     public void onResume() {
         super.onResume();
+        IMMessageReceiver.ehList.add(this);
+        IMMessageReceiver.registerSessionListener(Activityid, this);
         CurrentFriend = getIntent().getStringExtra("friend_id");
+        IMClient.getInstance().updateReadStatus(CurrentFriend);
         if (Config.isDebug){
             Log.i(Config.TAG,"Current fri:" + CurrentFriend);
         }
@@ -205,18 +195,16 @@ public class PrivateConversationActivity extends Activity
             messages.add(notify);
             adapter.notifyDataSetChanged();
         }
-        IMMessageReceiver.registerSessionListener(Activityid, this);
     }
 
     @Override
     public void onPause() {
         super.onPause();
-        IMMessageReceiver.unregisterSessionListener(Activityid);
+        IMMessageReceiver.ehList.remove(this);
     }
 
     @Override
     public void onMessage(Message msg) {
-
         if (!CurrentFriend.equals(msg.getSenderId() + "")) {
             MessageBean messageBean = Msg2Bean(msg);
             messageBean.setSendType(1);
@@ -236,7 +224,21 @@ public class PrivateConversationActivity extends Activity
 
     @Override
     public void onMessage(String msg) {
-        Toast.makeText(PrivateConversationActivity.this, "有新消息:" + msg, Toast.LENGTH_SHORT).show();
+    }
+
+    @Override
+    public void onMsgArrive(Message m) {
+        if (!CurrentFriend.equals(m.getSenderId() + "")) {
+            MessageBean messageBean = Msg2Bean(m);
+            messageBean.setSendType(1);
+            Toast.makeText(PrivateConversationActivity.this, "有新消息！", Toast.LENGTH_SHORT).show();
+        } else {
+            MessageBean messageBean = Msg2Bean(m);
+            messageBean.setSendType(1);
+            msgs.add(messageBean);
+            adapter.notifyDataSetChanged();
+            chatList.setSelection(adapter.getCount() - 1);
+        }
     }
 
     class MyClickListener implements View.OnTouchListener {

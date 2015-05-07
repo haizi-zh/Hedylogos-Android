@@ -25,7 +25,7 @@ import java.util.HashMap;
 import java.util.List;
 
 
-public class MainActivity extends Activity implements View.OnClickListener ,OnActivityMessageListener{
+public class MainActivity extends Activity implements View.OnClickListener ,OnActivityMessageListener,IMMessageReceiver.MessagerHandler{
     public static Button btn;
     ImageView img;
     Button test;
@@ -65,11 +65,19 @@ public class MainActivity extends Activity implements View.OnClickListener ,OnAc
     @Override
     protected void onResume() {
         super.onResume();
+        IMMessageReceiver.ehList.add(this);
         if (Config.isDebug){
             Log.i(Config.TAG, "CurrentUser " + IMClient.getInstance().getCurrentUser());
         }
         refresh();
     }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        IMMessageReceiver.ehList.remove(this);
+    }
+
     private void refresh(){
         list= IMClient.getInstance().getConversationList();
         data = new ArrayList<HashMap<String, Object>>();
@@ -77,11 +85,15 @@ public class MainActivity extends Activity implements View.OnClickListener ,OnAc
             HashMap<String, Object> hashMap = new HashMap<String, Object>();
             hashMap.put("Friend_Id", list.get(n).getFriendId());
             hashMap.put("lastTime", TimeUtils.TimeStamp2Date(list.get(n).getLastChatTime()));
-            hashMap.put("HASH", list.get(n).getHASH());
-            application.setLastMsg(list.get(n).getFriendId() + "", list.get(n).getLast_rev_msgId());
+            hashMap.put("lastMsg", list.get(n).getHASH());
+            System.out.println("IsRead : "+list.get(n).getIsRead());
+            if(list.get(n).getIsRead()==1){
+                hashMap.put("isRead", " ");
+            }
+            else hashMap.put("isRead", "*");
             data.add(hashMap);
         }
-        adapter = new SimpleAdapter(this, data, R.layout.test_list_item, new String[]{"Friend_Id", "lastTime", "HASH"}, new int[]{R.id.tv1, R.id.tv2, R.id.tv3});
+        adapter = new SimpleAdapter(this, data, R.layout.test_list_item, new String[]{"Friend_Id", "lastTime", "lastMsg","isRead"}, new int[]{R.id.tv1, R.id.tv2, R.id.tv3,R.id.tv4});
         lv.setAdapter(adapter);
         adapter.notifyDataSetChanged();
     }
@@ -111,5 +123,10 @@ public class MainActivity extends Activity implements View.OnClickListener ,OnAc
 
     @Override
     public void onMessage(String msg) {
+    }
+
+    @Override
+    public void onMsgArrive(Message m) {
+        refresh();
     }
 }

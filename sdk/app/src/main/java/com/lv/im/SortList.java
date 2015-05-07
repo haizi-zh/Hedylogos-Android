@@ -1,5 +1,8 @@
 package com.lv.im;
 
+import android.util.Log;
+
+import com.lv.Utils.Config;
 import com.lv.bean.Message;
 
 /**
@@ -47,9 +50,12 @@ public class SortList {
         data.next = cur;
     }
 
-    public synchronized Message deleteFirst() throws Exception {
-        if (first == null)
+    public synchronized Message deleteFirst(){
+        if (first == null) {
+            if (Config.isDebug) Log.i(Config.TAG,"first null");
+            size--;
             return null;
+        }
         Data temp = first;
         first = first.next;
         size--;

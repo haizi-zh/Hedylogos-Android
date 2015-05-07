@@ -122,7 +122,9 @@ LazyQueue queue=LazyQueue.getInstance();
                 }
                 messageBean.setSendType(1);
                 int result =IMClient.getInstance().saveReceiveMsg(messageBean);
-                System.out.println("result :"+result);
+                if (Config.isDebug){
+                    Log.i(Config.TAG,"result :"+result);
+                }
                 if (result==0){
                     String content=messageBean.getContents();
                     JSONObject object=null;

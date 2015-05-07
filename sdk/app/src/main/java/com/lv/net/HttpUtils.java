@@ -35,7 +35,7 @@ import java.util.concurrent.Executors;
  */
 public class HttpUtils {
     private static SyncHttpClient client = new SyncHttpClient();
-    static ExecutorService exec = Executors.newCachedThreadPool();
+    static ExecutorService exec = Executors.newFixedThreadPool(5);
 
     public static void login(final String username, final LoginSuccessListener listen) {
 
@@ -62,7 +62,9 @@ public class HttpUtils {
                             HTTP.UTF_8);
                     entity.setContentType("application/json");
                     post.setEntity(entity);
-                    httpResponse = new DefaultHttpClient().execute(post);
+                    DefaultHttpClient defaultHttpClient= new DefaultHttpClient();
+                    defaultHttpClient.getParams().setParameter("Timeout",5*1000);
+                    httpResponse = defaultHttpClient.execute(post);
                     final int code = httpResponse.getStatusLine().getStatusCode();
                     if (Config.isDebug){
                         Log.i(Config.TAG,"Status code:" + code);
@@ -88,6 +90,7 @@ public class HttpUtils {
         exec.execute(new Runnable() {
             @Override
             public void run() {
+
                 client.get(path, params, new TextHttpResponseHandler() {
                     @Override
                     public void onFailure(int i, Header[] headers, String s, Throwable throwable) {
@@ -110,7 +113,9 @@ public class HttpUtils {
                                 Message msg = JSON.parseObject(array.getJSONObject(j).toString(), Message.class);
                                 list.add(msg);
                             }
-                            listener.OnMsgArrive(list);
+                            if (list.size()>0) {
+                                listener.OnMsgArrive(list);
+                            }
                         } catch (JSONException e) {
                             e.printStackTrace();
                         }

@@ -5,8 +5,10 @@ import android.graphics.Bitmap;
 import android.text.TextUtils;
 
 import com.igexin.sdk.PushManager;
+import com.lv.Listener.FetchListener;
 import com.lv.Listener.LoginSuccessListener;
 import com.lv.Listener.SendMsgListener;
+import com.lv.Listener.UploadListener;
 import com.lv.Utils.Config;
 import com.lv.Utils.TimeUtils;
 import com.lv.bean.ConversationBean;
@@ -14,9 +16,7 @@ import com.lv.bean.IMessage;
 import com.lv.bean.Message;
 import com.lv.bean.MessageBean;
 import com.lv.data.MessageDB;
-import com.lv.Listener.FetchListener;
 import com.lv.net.HttpUtils;
-import com.lv.Listener.UploadListener;
 import com.lv.net.UploadUtils;
 
 import org.json.JSONArray;
@@ -40,14 +40,23 @@ public class IMClient {
     private HashMap<String, String> user;
     private static final IMClient client = new IMClient();
     private MessageDB db;
+    private List<MessageBean> messageList;
+    private List<ConversationBean> convercationList;
 
     private IMClient() {
+        convercationList = new ArrayList<ConversationBean>();
         cidMap = new HashMap<String, String>();
         user = new HashMap<String, String>();
         lastMsgMap = new HashMap<String, Integer>();
         acklist = new JSONArray();
     }
 
+    //Handler handler=new Handler(){
+//    @Override
+//    public void handleMessage(android.os.Message msg) {
+//
+//    }
+//};
     public static IMClient getInstance() {
         return client;
     }
@@ -63,7 +72,8 @@ public class IMClient {
     public void initDB() {
         db = MessageDB.getInstance();
     }
-    public void init(Context context){
+
+    public void init(Context context) {
         PushManager.getInstance().initialize(context.getApplicationContext());
     }
 
@@ -77,9 +87,9 @@ public class IMClient {
 
     public void add2ackList(String id) {
         acklist.put(id);
-        System.out.println("ack list size:"+acklist.length());
-        if (acklist.length()>10){
-            HttpUtils.postack(acklist,CurrentUser);
+        System.out.println("ack list size:" + acklist.length());
+        if (acklist.length() > 10) {
+            HttpUtils.postack(acklist, CurrentUser);
         }
     }
 
@@ -124,7 +134,20 @@ public class IMClient {
     }
 
     public List<ConversationBean> getConversationList() {
+//        if (convercationList.size()==0){
+//            convercationList=db.getConversationList();
+//        }
+//        return convercationList;
+
         return db.getConversationList();
+    }
+
+    public void add2ConversationList(ConversationBean conversationBean) {
+        convercationList.add(conversationBean);
+    }
+
+    public void updateReadStatus(String FriendId) {
+        db.updateReadStatus(FriendId);
     }
 
     public List<MessageBean> getMessages(String friendId, int page) {
@@ -138,33 +161,35 @@ public class IMClient {
         long localId = db.saveMsg(friendId + "", messageBean);
         SendMsgAsyncTask.sendMessage(CurrentUser, friendId + "", message, localId, listen);
     }
-    public void sendAudioMessage(String path, String friendId ,long durtime,UploadListener listener) {
+
+    public void sendAudioMessage(String path, String friendId, long durtime, UploadListener listener) {
         if (TextUtils.isEmpty(path)) return;
-        JSONObject object =new JSONObject();
+        JSONObject object = new JSONObject();
         try {
-            object.put("path",path);
-            object.put("durtime",durtime);
+            object.put("path", path);
+            object.put("durtime", durtime);
         } catch (JSONException e) {
             e.printStackTrace();
         }
         IMessage message = new IMessage(Integer.parseInt(CurrentUser), Integer.parseInt(friendId), Config.AUDIO_MSG, object.toString());
         MessageBean messageBean = imessage2Bean(message);
         long localId = db.saveMsg(friendId + "", messageBean);
-        UploadUtils.getInstance().upload(path, CurrentUser, friendId, Config.AUDIO_MSG,localId,listener );
+        UploadUtils.getInstance().upload(path, CurrentUser, friendId, Config.AUDIO_MSG, localId, listener);
 
     }
 
-    public void sendImageMessage(String path,Bitmap bitmap, String friendId ,UploadListener listener) {
+    public void sendImageMessage(String path, Bitmap bitmap, String friendId, UploadListener listener) {
 
-        IMessage message = new IMessage(Integer.parseInt(CurrentUser), Integer.parseInt(friendId), Config.IMAGE_MSG,path);
+        IMessage message = new IMessage(Integer.parseInt(CurrentUser), Integer.parseInt(friendId), Config.IMAGE_MSG, path);
         MessageBean messageBean = imessage2Bean(message);
         long localId = db.saveMsg(friendId + "", messageBean);
-        UploadUtils.getInstance().uploadImage(bitmap, CurrentUser, friendId,Config.IMAGE_MSG,localId, listener);
+        UploadUtils.getInstance().uploadImage(bitmap, CurrentUser, friendId, Config.IMAGE_MSG, localId, listener);
     }
 
-    public void updateMessage( String fri_ID,long LocalId,String msgId,String conversation,long timestamp,int status   ){
-        db.updateMsg(fri_ID,LocalId,msgId,conversation,timestamp,status);
+    public void updateMessage(String fri_ID, long LocalId, String msgId, String conversation, long timestamp, int status) {
+        db.updateMsg(fri_ID, LocalId, msgId, conversation, timestamp, status);
     }
+
     private MessageBean imessage2Bean(IMessage message) {
 
         return new MessageBean(0, Config.STATUS_SENDING, message.getMsgType(), message.getContents(), TimeUtils.getTimestamp(), Config.TYPE_SEND, null, Long.parseLong(CurrentUser));
@@ -185,12 +210,13 @@ public class IMClient {
         HttpUtils.FetchNewMsg(CurrentUser, listener);
 
     }
+
     public void initfetch() {
         System.out.println("fetchNewMsg IM");
         HttpUtils.FetchNewMsg(CurrentUser, new FetchListener() {
             @Override
             public void OnMsgArrive(List<Message> list) {
-                for (Message msg:list){
+                for (Message msg : list) {
                     LazyQueue.getInstance().add2Temp(msg.getSenderId(), msg);
                 }
                 LazyQueue.getInstance().TempDequeue();
@@ -199,7 +225,7 @@ public class IMClient {
     }
 
     public int saveReceiveMsg(Message message) {
-        int result = db.saveReceiveMsg(message.getSenderId() + "",Msg2Bean(message));
+        int result = db.saveReceiveMsg(message.getSenderId() + "", Msg2Bean(message));
         if (result == 0) {
             setLastMsg(message.getSenderId() + "", message.getMsgId());
             add2ackList(message.getId());

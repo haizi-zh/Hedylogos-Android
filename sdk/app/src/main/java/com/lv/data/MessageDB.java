@@ -15,6 +15,9 @@ import java.io.File;
 import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  * Created by q on 2015/4/21.
@@ -25,11 +28,12 @@ public class MessageDB {
     private String fri_table_name;
     private SQLiteDatabase db;
     private static MessageDB instance;
-
+    private String databaseFilename;
     private static final int CONVERSATION_INDEX_lastTime = 1;
     private static final int CONVERSATION_INDEX_Friend_Id = 0;
     private static final int CONVERSATION_INDEX_HASH = 2;
     private static final int CONVERSATION_INDEX_last_rec_msgId = 3;
+    private static final int CONVERSATION_INDEX_isRead = 6;
 
     private static final int MESSAGE_INDEX_LocalId = 0;
     private static final int MESSAGE_INDEX_ServerId = 1;
@@ -41,14 +45,17 @@ public class MessageDB {
     private static final int MESSAGE_INDEX_Metadata = 7;
     private static final int MESSAGE_INDEX_SenderId = 8;
 
+    private AtomicInteger mOpenCounter = new AtomicInteger();
+    private SQLiteDatabase mdb;
+
+    ExecutorService dbThread = Executors.newFixedThreadPool(1);
+
     private MessageDB(String User_Id) {
         String path = CryptUtils.getMD5String(User_Id);
         con_table_name = "con_" + path;
         fri_table_name = "fri_" + path;
         String DATABASE_PATH = Config.DB_PATH + path;
-        System.out.println("DATABASE_PATH:" + DATABASE_PATH);
-        String databaseFilename = DATABASE_PATH + "/" + Config.MSG_DBNAME;
-        System.out.println("databaseFilename:" + databaseFilename);
+        databaseFilename = DATABASE_PATH + "/" + Config.MSG_DBNAME;
         File dir = new File(DATABASE_PATH);
         if (!dir.exists())
             dir.mkdir();
@@ -61,10 +68,24 @@ public class MessageDB {
         }
         return instance;
     }
+    private SQLiteDatabase getDB(){
+        if (mOpenCounter.incrementAndGet() == 1){
+           db=SQLiteDatabase.openDatabase(databaseFilename, null, SQLiteDatabase.OPEN_READWRITE);
+        }
+        return db;
+    }
 
-    public synchronized long saveMsg(String Friend_Id, MessageBean entity) {
+    private void closeDB() {
+        if (mOpenCounter.decrementAndGet() == 0) {
+            db.close();
+        }
+    }
+
+    public synchronized long saveMsg(final String Friend_Id, final MessageBean entity) {
+
         String table_name = "chat_" + CryptUtils.getMD5String(Friend_Id);
-        db.execSQL("CREATE table IF NOT EXISTS "
+        mdb=getDB();
+        mdb.execSQL("CREATE table IF NOT EXISTS "
                 + table_name
                 + " (LocalId INTEGER PRIMARY KEY AUTOINCREMENT,ServerId INTEGER,Status INTEGER," +
                 "Type INTEGER, Message TEXT,CreateTime INTEGER, SendType INTEGER, Metadata TEXT," +
@@ -79,41 +100,29 @@ public class MessageDB {
         values.put("SendType", entity.getSendType());
         values.put("Metadata", entity.getMetadata());
         values.put("SenderId", entity.getSenderId());
-        long localid = db.insert(table_name, null, values);
+        long localid = mdb.insert(table_name, null, values);
         IMClient.getInstance().setLastMsg(entity.getServerId() + "", entity.getServerId());
         add2Conversion(Integer.parseInt(Friend_Id), entity.getCreateTime(), table_name, entity.getServerId());
         add2Friend(Integer.parseInt(Friend_Id));
+        closeDB();
         return localid;
-//        db.execSQL(
-//                "insert into "
-//                        + table_name
-//                        + " (ServerId,Status,Type,Message,CreateTime," +
-//                        "SendType,Metadata," +
-//                        "SenderId) values(?,?,?,?,?,?,?,?)",
-//                new Object[]{entity.getServerId(), entity.getStatus(),
-//                        entity.getType(), entity.getMessage(), entity.getCreateTime(),
-//                        entity.getSendType(), entity.getMetadata(), entity.getSenderId()});
     }
 
     public synchronized int saveReceiveMsg(String Friend_Id, MessageBean entity) {
+        mdb=getDB();
         String table_name = "chat_" + CryptUtils.getMD5String(Friend_Id);
-        db.execSQL("CREATE table IF NOT EXISTS "
+        mdb.execSQL("CREATE table IF NOT EXISTS "
                 + table_name
                 + " (LocalId INTEGER PRIMARY KEY AUTOINCREMENT,ServerId INTEGER,Status INTEGER," +
                 "Type INTEGER, Message TEXT,CreateTime INTEGER, SendType INTEGER, Metadata TEXT," +
                 "SenderId INTEGER)");
         // db.execSQL("create UNIQUE index if not exists index_Msg_Id on " + table_name + "(ServerId)");
 
-        Cursor cursor = db.rawQuery("select * from " + table_name + " where ServerId=?", new String[]{entity.getServerId() + ""});
+        Cursor cursor = mdb.rawQuery("select * from " + table_name + " where ServerId=?", new String[]{entity.getServerId() + ""});
         int count = cursor.getCount();
         System.out.println(entity.getMessage() + " cursor : " + count);
         if (count > 0) return 1;
         cursor.close();
-//        db.execSQL("INSERT OR REPLACE INTO "+table_name+" (ServerId,Status ," +
-//                "Type , Message ,CreateTime , SendType , Metadata ," +
-//                " SenderId )" +
-//                  "VALUES ("+entity.getServerId()+","+entity.getStatus()+","+entity.getType()+","+entity.getMessage()
-//                +","+entity.getCreateTime()+","+entity.getSendType()+","+entity.getMetadata()+","+entity.getSenderId()+")");
 
         ContentValues values = new ContentValues();
         values.put("ServerId", entity.getServerId());
@@ -124,22 +133,11 @@ public class MessageDB {
         values.put("SendType", entity.getSendType());
         values.put("Metadata", entity.getMetadata());
         values.put("SenderId", entity.getSenderId());
-        db.insert(table_name, null, values);
-
-//        ContentValues values = new ContentValues();
-//        values.put("ServerId", entity.getServerId());
-//        values.put("Status", entity.getStatus());
-//        values.put("Type", entity.getType());
-//        values.put("Message", entity.getMessage());
-//        values.put("CreateTime", entity.getCreateTime());
-//        values.put("SendType", entity.getSendType());
-//        values.put("Metadata", entity.getMetadata());
-//        values.put("SenderId", entity.getSenderId());
-//        long localid = db.replace(table_name,null,values);
-//        System.out.println("localid : "+localid);
+        mdb.insert(table_name, null, values);
         IMClient.getInstance().setLastMsg(entity.getSenderId() + "", entity.getServerId());
         add2Conversion(Integer.parseInt(Friend_Id), entity.getCreateTime(), table_name, entity.getServerId());
         add2Friend(Integer.parseInt(Friend_Id));
+        closeDB();
         return 0;
     }
 
@@ -149,37 +147,48 @@ public class MessageDB {
     }
 
     public synchronized void addAll2Friend(FriendBean friend) {
-
-        db.execSQL("CREATE table IF NOT EXISTS "
+        mdb=getDB();
+        mdb.execSQL("CREATE table IF NOT EXISTS "
                 + fri_table_name
                 + " (Friend_Id INTEGER PRIMARY KEY,NickName TEXT, Avatar TEXT, AvatarSmall TEXT," +
                 " ShortPY TEXT, FullPY TEXT, Singature TEXT,Memo TEXT,Sex INTEGER  ,Type INTEGER)");
-        db.execSQL("create index if not exists index_Fri_Friend_Id on " + fri_table_name + "(Friend_Id)");
+        mdb.execSQL("create index if not exists index_Fri_Friend_Id on " + fri_table_name + "(Friend_Id)");
         System.out.println("fri_table_name:" + fri_table_name);
         ContentValues values = new ContentValues();
         values.put("Friend_Id", friend.getUserId());
-        db.replace(fri_table_name, null, values);
+        mdb.replace(fri_table_name, null, values);
+        closeDB();
     }
 
     public List<MessageBean> getAllMsg(String Friend_Id, int pager) {
+        mdb=getDB();
         String table_name = "chat_" + CryptUtils.getMD5String(Friend_Id);
         List<MessageBean> list = new LinkedList<MessageBean>();
         int num = 100 * (pager + 1);
         // 滚动到顶端自动加载数据
-        db.execSQL("CREATE table IF NOT EXISTS "
+        mdb.execSQL("CREATE table IF NOT EXISTS "
                 + table_name
                 + " (LocalId INTEGER PRIMARY KEY AUTOINCREMENT,ServerId INTEGER,Status INTEGER," +
                 "Type INTEGER, Message TEXT,CreateTime INTEGER, SendType INTEGER, Metadata TEXT," +
                 "SenderId INTEGER)");
-        Cursor c = db.rawQuery("SELECT * from " + table_name
+        Cursor c = mdb.rawQuery("SELECT * from " + table_name
                 + " ORDER BY LocalId DESC LIMIT " + num, null);
         c.moveToLast();
         while (c.moveToPrevious()) {
             list.add(Curson2Message(c));
         }
+        // updateReadStatus(Friend_Id);
         c.close();
-        // Collections.reverse(list);// 前后反转一下消息记录
+        closeDB();
         return list;
+    }
+
+    public synchronized void updateReadStatus(String Friend_Id) {
+        mdb=getDB();
+        ContentValues values = new ContentValues();
+        values.put("IsRead", 1+"");
+        mdb.update(con_table_name, values," Friend_Id=? AND IsRead=? ", new String[]{Friend_Id,0+""});
+        closeDB();
     }
 
     public MessageBean Curson2Message(Cursor c) {
@@ -197,66 +206,77 @@ public class MessageDB {
     }
 
     public synchronized void add2Conversion(int Friend_Id, long lastTime, String hash, int last_rec_msgId) {
-        db.execSQL("create index if not exists index_Con_Friend_Id on " + con_table_name + "(Friend_Id)");
-        db.execSQL("CREATE table IF NOT EXISTS "
+        mdb=getDB();
+        mdb.execSQL("create index if not exists index_Con_Friend_Id on " + con_table_name + "(Friend_Id)");
+        mdb.execSQL("CREATE table IF NOT EXISTS "
                 + con_table_name
-                + " (Friend_Id INTEGER PRIMARY KEY,lastTime INTEGER,HASH TEXT,last_rec_msgId INTEGER)");
+                + " (Friend_Id INTEGER PRIMARY KEY,lastTime INTEGER,HASH TEXT,last_rec_msgId INTEGER, IsRead INTEGER)");
         ContentValues values = new ContentValues();
         values.put("Friend_Id", Friend_Id);
         values.put("lastTime", lastTime);
         values.put("HASH", hash);
         values.put("last_rec_msgId", last_rec_msgId);
-        db.replace(con_table_name, null, values);
+        values.put("IsRead", 0+"");
+        mdb.replace(con_table_name, null, values);
+        closeDB();
     }
 
     public List<ConversationBean> getConversationList() {
+        mdb=getDB();
         List<ConversationBean> list = new ArrayList<ConversationBean>();
-        db.execSQL("CREATE table IF NOT EXISTS "
+        mdb.execSQL("CREATE table IF NOT EXISTS "
                 + con_table_name
-                + " (Friend_Id INTEGER PRIMARY KEY,lastTime INTEGER,HASH TEXT,last_rec_msgId INTEGER,status INTEGER,conversation TEXT)");
-        db.execSQL("create index if not exists index_Con_Friend_Id on " + con_table_name + "(Friend_Id)");
-        Cursor c = db.rawQuery("SELECT * FROM " + con_table_name, null);
+                + " (Friend_Id INTEGER PRIMARY KEY,lastTime INTEGER,HASH TEXT,last_rec_msgId INTEGER,status INTEGER,conversation TEXT,IsRead INTEGER)");
+        mdb.execSQL("create index if not exists index_Con_Friend_Id on " + con_table_name + "(Friend_Id)");
+        Cursor c = mdb.rawQuery("SELECT * FROM " + con_table_name, null);
         while (c.moveToNext()) {
             long time = c.getLong(CONVERSATION_INDEX_lastTime);
             int friend_id = c.getInt(CONVERSATION_INDEX_Friend_Id);
             String table = c.getString(CONVERSATION_INDEX_HASH);
             int lastmsgId = c.getInt(CONVERSATION_INDEX_last_rec_msgId);
+            int isRead = c.getInt(CONVERSATION_INDEX_isRead);
             IMClient.getInstance().setLastMsg(friend_id + "", lastmsgId);
-            Cursor cursor = db.rawQuery("SELECT * FROM " + table + " order by ServerId desc limit 1", null);
+            Cursor cursor = mdb.rawQuery("SELECT * FROM " + table + " order by ServerId desc limit 1", null);
             cursor.moveToLast();
             String lastmessage = cursor.getString(4);
-            list.add(new ConversationBean(friend_id, time, lastmessage, lastmsgId));
+            list.add(new ConversationBean(friend_id, time, lastmessage, lastmsgId, isRead));
             cursor.close();
         }
         c.close();
+        closeDB();
         return list;
     }
 
     public synchronized void updateMsg(String fri_ID, long LocalId, String msgId, String conversation, long timestamp, int status) {
+        mdb=getDB();
         String table_name = "chat_" + CryptUtils.getMD5String(fri_ID);
         ContentValues values = new ContentValues();
         values.put("ServerId", msgId);
         //values.put("conversation",conversation);
         values.put("CreateTime", timestamp);
         values.put("Status", status);
-        db.update(table_name, values, "LocalId=?", new String[]{LocalId + ""});
+        mdb.update(table_name, values, "LocalId=?", new String[]{LocalId + ""});
         IMClient.getInstance().setLastMsg(fri_ID, Integer.parseInt(msgId));
         updateConversation(fri_ID, conversation);
+        closeDB();
     }
 
     public synchronized void updateConversation(String fri_ID, String conversation) {
-
+        mdb=getDB();
         ContentValues values = new ContentValues();
         values.put("conversation", conversation);
-        db.update(con_table_name, values, "Friend_Id=?", new String[]{fri_ID});
+        mdb.update(con_table_name, values, "Friend_Id=?", new String[]{fri_ID});
+        closeDB();
     }
 
     public void saveMsgs(List<MessageBean> list) {
-        db.beginTransaction();
+        mdb=getDB();
+        mdb.beginTransaction();
         for (MessageBean msg : list) {
             saveMsg(msg.getSenderId() + "", msg);
         }
-        db.endTransaction();
+        mdb.endTransaction();
+        closeDB();
     }
 
     public void test_Insert() {

@@ -1,8 +1,10 @@
 package com.lv.im;
 
 import android.os.Handler;
+import android.util.Log;
 
 import com.lv.Listener.DequeueListener;
+import com.lv.Utils.Config;
 import com.lv.bean.Message;
 import com.lv.Listener.FetchListener;
 
@@ -70,9 +72,13 @@ public class LazyQueue {
     }
 
     public void begin() {
-        System.out.println("isRunning " + isRunning);
+        if (Config.isDebug){
+            Log.i(Config.TAG,"isRunning " + isRunning);
+        }
         if (isRunning) {
-            System.out.println("return");
+            if (Config.isDebug){
+                Log.i(Config.TAG,"return " );
+            }
             return;
         }
         isRunning = true;
@@ -101,20 +107,28 @@ public class LazyQueue {
             SortList list = (SortList) entry.getValue();
             //for (int i = 0; i < list.size(); i++) {
                 while (list.size()>0){
-                System.out.println("size :"+ list.size());
+                    if (Config.isDebug){
+                        Log.i(Config.TAG,"size :"+ list.size());
+                    }
                 try {
                     Message message = list.deleteFirst();
                     if (IMClient.getInstance().isBLOCK()){
-                        System.out.println("status: block");
-                        System.out.println("dequeue block "+message.getContents());
+                        if (Config.isDebug){
+                            Log.i(Config.TAG,"status: block");
+                            Log.i(Config.TAG,"dequeue block "+message.getContents());
+                        }
                         add2Temp(message.getSenderId(), message);
                     }
                     else {
                         if (checkOrder(message)) {
-                            System.out.println("dequeue 正序 "+message.getContents());
+                            if (Config.isDebug){
+                                Log.i(Config.TAG,"dequeue 正序 "+message.getContents());
+                            }
                             listenr.onDequeueMsg(message);
                         } else {
-                            System.out.println("dequeue 乱序 "+message.getContents());
+                            if (Config.isDebug){
+                                Log.i(Config.TAG,"dequeue 乱序 "+message.getContents());
+                            }
                             add2Temp(message.getSenderId(), message);
                             IMClient.getInstance().setBLOCK(true);
                             IMClient.getInstance().fetchNewMsg(flistener);
@@ -125,13 +139,13 @@ public class LazyQueue {
                 }
             }
         }
-        System.out.println("Dequeue()");
-        //isRunning = false;
+        if (Config.isDebug){
+            Log.i(Config.TAG,"Dequeue() ");
+        }
     }
     FetchListener flistener=new FetchListener() {
         @Override
         public void OnMsgArrive(List<Message> list) {
-            System.out.println("OnMsgArrive");
             for (Message msg:list){
                 add2Temp(msg.getSenderId(),msg);
             }
@@ -143,11 +157,12 @@ public class LazyQueue {
         while (iter.hasNext()) {
             Map.Entry entry = (Map.Entry) iter.next();
             SortList list = (SortList) entry.getValue();
-        //    for (int i = 0; i < list.size(); i++) {
                 while (list.size()>0){
                 try {
                     Message message=list.deleteFirst();
-                    System.out.println("list size : "+list.size()+" tempDequeue block "+message.getContents());
+                    if (Config.isDebug){
+                        Log.i(Config.TAG,"list size : "+list.size()+" tempDequeue block "+message.getContents());
+                    }
                     if (message!=null) listenr.onDequeueMsg(message);
 //                    android.os.Message m= android.os.Message.obtain();
 //                    m.what=1;
@@ -158,7 +173,9 @@ public class LazyQueue {
                 }
             }
         }
-        System.out.println("TempDequeue()");
+        if (Config.isDebug){
+            Log.i(Config.TAG,"TempDequeue()");
+        }
         IMClient.getInstance().setBLOCK(false);
     }
     public void addMsg(long FriendId, Message messageBean) {
@@ -167,7 +184,6 @@ public class LazyQueue {
             LazyMap.put(FriendId, new SortList());
         }
         LazyMap.get(FriendId).insert(messageBean);
-        System.out.println("list.insert(messageBean);");
         begin();
     }
     public void add2Temp(long FriendId, Message messageBean) {
@@ -176,19 +192,26 @@ public class LazyQueue {
             TempMap.put(FriendId, new SortList());
         }
         TempMap.get(FriendId).insert(messageBean);
-        System.out.println("Temp.insert(messageBean);");
     }
     private boolean checkOrder(Message messageBean) {
         int lastid = IMClient.getInstance().getLastMsg(messageBean.getSenderId() + "");
-        System.out.println("lastid  " + lastid + " messageBean: " + messageBean.getMsgId());
+        if (Config.isDebug){
+            Log.i(Config.TAG,"lastid  " + lastid + " messageBean: " + messageBean.getMsgId());
+        }
         if (lastid == -1) {
-            System.out.println("checkOrder:first msg ");
+            if (Config.isDebug){
+                Log.i(Config.TAG,"checkOrder:first msg ");
+            }
             return true;
         } else if (messageBean.getMsgId() - 1 == lastid) {
-            System.out.println("checkOrder:正序 ");
+            if (Config.isDebug){
+                Log.i(Config.TAG,"checkOrder:正序 ");
+            }
             return true;
         } else {
-            System.out.println("checkOrder:乱序 ");
+            if (Config.isDebug){
+                Log.i(Config.TAG,"checkOrder:乱序 ");
+            }
             return false;
         }
     }

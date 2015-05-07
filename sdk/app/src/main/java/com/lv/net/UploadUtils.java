@@ -1,6 +1,7 @@
 package com.lv.net;
 
 import android.graphics.Bitmap;
+import android.util.Log;
 
 import com.lv.Listener.UploadListener;
 import com.lv.Utils.Config;
@@ -50,7 +51,9 @@ public class UploadUtils {
         String imagepath1 = Config.imagepath + TimeUtils.getTimestamp() + "_image.jpeg";
         if (saveBitmapToJpegFile(bitmap, imagepath1))
             upload(imagepath1, sender, receive, msgType, localId, listener);
-        else System.out.println("文件出错");
+        else if (Config.isDebug){
+            Log.i(Config.TAG, "文件出错！ ");
+        }
         return imagepath1;
     }
 

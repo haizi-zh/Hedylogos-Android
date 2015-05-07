@@ -1,5 +1,7 @@
 package com.lv.net;
 
+import android.util.Log;
+
 import com.alibaba.fastjson.JSON;
 import com.loopj.android.http.RequestParams;
 import com.loopj.android.http.SyncHttpClient;
@@ -51,7 +53,9 @@ public class HttpUtils {
                     }
                     obj.put("userId", Long.parseLong(username));
                     obj.put("regId", cid);
-                    System.out.println("login:" + obj.toString());
+                    if (Config.isDebug){
+                        Log.i(Config.TAG,"login:" + obj.toString());
+                    }
                     HttpPost post = new HttpPost(Config.LOGIN_URL);
                     HttpResponse httpResponse = null;
                     StringEntity entity = new StringEntity(obj.toString(),
@@ -60,7 +64,9 @@ public class HttpUtils {
                     post.setEntity(entity);
                     httpResponse = new DefaultHttpClient().execute(post);
                     final int code = httpResponse.getStatusLine().getStatusCode();
-                    System.out.println("Status code:" + code);
+                    if (Config.isDebug){
+                        Log.i(Config.TAG,"Status code:" + code);
+                    }
                     if (code == 200) {
                         IMClient.getInstance().setCurrentUser(username);
                         IMClient.getInstance().initDB();
@@ -85,14 +91,18 @@ public class HttpUtils {
                 client.get(path, params, new TextHttpResponseHandler() {
                     @Override
                     public void onFailure(int i, Header[] headers, String s, Throwable throwable) {
-                        System.out.println("error code:" + i);
+                      if (Config.isDebug){
+                            Log.i(Config.TAG, "error code:" + i);
+                        }
                     }
 
                     @Override
                     public void onSuccess(int i, Header[] headers, String s) {
                         try {
                             System.out.println(Thread.currentThread());
-                            System.out.println("fetch:" + s);
+                            if (Config.isDebug){
+                                Log.i(Config.TAG,"fetch:" + s);
+                            }
                             JSONObject object = new JSONObject(s);
                             JSONArray array = object.getJSONArray("result");
                             List<Message> list = new ArrayList<Message>();
@@ -116,7 +126,9 @@ public class HttpUtils {
         try {
             obj.put("msgList", array);
             IMClient.getInstance().clearackList();
-            System.out.println("ack : " + obj.toString());
+            if (Config.isDebug){
+                Log.i(Config.TAG,"ack : " + obj.toString());
+            }
             IMClient.getInstance().clearackList();
         } catch (JSONException e) {
             e.printStackTrace();
@@ -134,9 +146,10 @@ public class HttpUtils {
                     httpResponse = new DefaultHttpClient().execute(post);
                     System.out.println("send status code:" + httpResponse.getStatusLine().getStatusCode());
                     HttpEntity res = httpResponse.getEntity();
-                    System.out.println("ack Result : " + EntityUtils.toString(res));
-                    System.out.println("list size:" + array.length());
-
+                    if (Config.isDebug){
+                        Log.i(Config.TAG,"ack Result : " + EntityUtils.toString(res));
+                        Log.i(Config.TAG,"list size:" + array.length());
+                    }
                 } catch (Exception e) {
                     e.printStackTrace();
                 }
@@ -179,14 +192,18 @@ public class HttpUtils {
                         e.printStackTrace();
                     }
                     long time=end - start;
-                    System.out.println("result " + result);
-                    System.out.println(url+" ping time:" + time);
+                    if (Config.isDebug){
+                        Log.i(Config.TAG,"result " + result);
+                        Log.i(Config.TAG,url+" ping time:" + time);
+                    }
                     if (time<temp){
                         temp=time;
                         fastest=url;
                     }
                 }
-                System.out.println("fastest url "+fastest);
+                if (Config.isDebug){
+                    Log.i(Config.TAG,"fastest url "+fastest);
+                }
             }
         });
 
@@ -219,7 +236,9 @@ public class HttpUtils {
                         String token = obj.getString("token");
                         listener.OnSuccess(key, token);
                     } else
-                        System.out.println("Tokenget Error :" + httpResponse.getStatusLine().getStatusCode());
+                    if (Config.isDebug){
+                        Log.i(Config.TAG,"Tokenget Error :" + httpResponse.getStatusLine().getStatusCode());
+                    }
                 } catch (Exception e) {
                     e.printStackTrace();
                 }

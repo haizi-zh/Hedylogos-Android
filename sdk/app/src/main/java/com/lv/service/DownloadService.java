@@ -7,6 +7,7 @@ import android.graphics.BitmapFactory;
 import android.os.AsyncTask;
 import android.os.Handler;
 import android.os.IBinder;
+import android.util.Log;
 
 import com.lv.Utils.Config;
 import com.lv.Utils.CryptUtils;
@@ -38,11 +39,15 @@ public class DownloadService extends Service {
                // task.start();
                 new DownloadTask1().execute(message);
                 downlaodMap.put(message.getUrl(),message);
-                System.out.println("开始下载！ "+message.getUrl());
+                if (Config.isDebug){
+                    Log.i(Config.TAG,"开始下载！ "+message.getUrl());
+                }
             }
             else {
                 notice(message);
-                System.out.println("已下载");
+                if (Config.isDebug){
+                    Log.i(Config.TAG,"已下载 ");
+                }
             }
         }
         return super.onStartCommand(intent, flags, startId);
@@ -72,7 +77,9 @@ public class DownloadService extends Service {
                 conn.setConnectTimeout(5000);
                 conn.setRequestMethod("GET");
                 int length = -1;
-                System.out.println("downlaod code: "+conn.getResponseCode());
+                if (Config.isDebug){
+                    Log.i(Config.TAG,"downlaod code: "+conn.getResponseCode());
+                }
                 if (conn.getResponseCode() == 200) {
                     length = conn.getContentLength();
                     if (length < 0) {
@@ -101,7 +108,9 @@ public class DownloadService extends Service {
                     if (file.exists()){
                         // file.delete();
                         notice(msg);
-                        System.out.println("已下载 ");
+                        if (Config.isDebug){
+                            Log.i(Config.TAG,"已下载");
+                        }
                         return null;
                     }
                     System.out.println(newfilename);
@@ -124,18 +133,18 @@ public class DownloadService extends Service {
                     bos.flush();
                     bos.close();
                     bm.recycle();
-                    System.out.println("下载完成！");
+                    if (Config.isDebug){
+                        Log.i(Config.TAG,"下载完成");
+                    }
                 }
-                //  android.os.Message m= android.os.Message.obtain();
-                //  m.obj=msg;
-                //  m.what=Config.DOWNLOAD_SUCCESS;
-                // handler.sendMessage(m);
                 notice(msg);
 
             } catch (Exception e) {
                 e.printStackTrace();
                 notice(msg);
-                System.out.println("下载失败！");
+                if (Config.isDebug){
+                    Log.i(Config.TAG,"下载失败");
+                }
             }finally {
                 try {
                     if (output != null) {
@@ -181,7 +190,9 @@ public class DownloadService extends Service {
                 conn.setConnectTimeout(5000);
                 conn.setRequestMethod("GET");
                 int length = -1;
-                System.out.println("downlaod code: "+conn.getResponseCode());
+                if (Config.isDebug){
+                    Log.i(Config.TAG,"downlaod code: "+conn.getResponseCode() );
+                }
                 if (conn.getResponseCode() == 200) {
                     length = conn.getContentLength();
                     if (length < 0) {

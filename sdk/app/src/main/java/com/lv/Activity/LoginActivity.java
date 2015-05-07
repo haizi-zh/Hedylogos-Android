@@ -4,6 +4,7 @@ import android.app.Activity;
 import android.app.ProgressDialog;
 import android.content.Intent;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.View;
 import android.view.Window;
 import android.widget.Button;
@@ -12,6 +13,7 @@ import android.widget.Toast;
 
 import com.lv.Listener.LoginSuccessListener;
 import com.lv.R;
+import com.lv.Utils.Config;
 import com.lv.im.IMClient;
 import com.lv.net.HttpUtils;
 
@@ -74,18 +76,15 @@ public class LoginActivity extends Activity implements View.OnClickListener{
         Intent intent =new Intent();
         switch (v.getId()){
             case R.id.user_login_button:
-                //getApplicationContext().
-                // SharedPreferences sharedPreferences = getSharedPreferences("userInfo", Context.MODE_PRIVATE);
-                //String qwe=sharedPreferences.getString("username","");
-                //login(login_username.getText().toString());
-                // System.out.println("username:"+qwe);
                 System.out.println("click");
                 dialog=ProgressDialog.show(LoginActivity.this,"","");
                 IMClient.getInstance().Login(login_username.getText().toString(),new LoginSuccessListener() {
                     @Override
                     public void OnSuccess() {
                         dialog.dismiss();
-                        System.out.println("登陆成功");
+                        if (Config.isDebug){
+                            Log.i(Config.TAG, "登陆成功 ");
+                        }
                         Intent intent =new Intent();
                         intent.setClass(LoginActivity.this,MainActivity.class);
                         startActivity(intent);

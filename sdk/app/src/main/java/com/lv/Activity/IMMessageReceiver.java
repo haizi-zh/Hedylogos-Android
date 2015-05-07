@@ -11,6 +11,7 @@ import android.util.Log;
 
 import com.alibaba.fastjson.JSON;
 import com.lv.R;
+import com.lv.Utils.Config;
 import com.lv.bean.Message;
 import com.lv.im.MessageReceiver;
 import com.lv.Listener.OnActivityMessageListener;
@@ -25,14 +26,15 @@ public class IMMessageReceiver extends MessageReceiver {
 
     @Override
     public void onMessageReceive(Context context, Message msg) {
-        System.out.println("IMMessageReceiver调用");
         OnActivityMessageListener listener =
                 sessionMessageDispatchers.get(PrivateConversationActivity.Activityid);
             msg.setSendType(0);
 
         System.out.println(msg.toString());
         if (listener == null) {
-            Log.d("IMMessageReceiver", "Activity inactive, about to send notification.");
+            if (Config.isDebug){
+                Log.i(Config.TAG, "Activity inactive, about to send notification. ");
+            }
             NotificationManager nm =
                     (NotificationManager) context.getSystemService(Context.NOTIFICATION_SERVICE);
             Intent resultIntent = new Intent(context, PrivateConversationActivity.class);

@@ -182,7 +182,6 @@ public class IMClient {
     }
 
     public void fetchNewMsg(FetchListener listener) {
-        System.out.println("fetchNewMsg IM");
         HttpUtils.FetchNewMsg(CurrentUser, listener);
 
     }

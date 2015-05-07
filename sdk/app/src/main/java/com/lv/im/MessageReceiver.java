@@ -57,7 +57,9 @@ LazyQueue queue=LazyQueue.getInstance();
     @Override
     public void onReceive(final Context context, Intent intent) {
         if ("DOWNLOAD_COMPLETE".equals(intent.getAction())){
-            System.out.println("newMediaMsg!");
+            if (Config.isDebug){
+                Log.i(Config.TAG,"newMediaMsg");
+            }
             Message message=(Message)intent.getSerializableExtra("newMsg");
             onMessageReceive(context,message);
         }
@@ -76,7 +78,9 @@ LazyQueue queue=LazyQueue.getInstance();
                 String data = null;
                 if (payload != null) {
                     data = new String(payload);
-                    System.out.println("data:"+data);
+                    if (Config.isDebug){
+                        Log.i(Config.TAG,"data:"+data);
+                    }
                     JsonValidator jsonValidator =new JsonValidator();
                     if (jsonValidator.validate(data)){
                          Message newmsg = JSON.parseObject(data, Message.class);
@@ -89,7 +93,9 @@ LazyQueue queue=LazyQueue.getInstance();
                 // 获取ClientID(CID)
                 String cid = bundle.getString("clientid");
                 IMClient.getInstance().setCid(cid);
-                System.out.println(IMClient.getInstance().getCid());
+                if (Config.isDebug){
+                    Log.i(Config.TAG,IMClient.getInstance().getCid());
+                }
                 onGetCid(context, cid);
                 break;
             case PushConsts.THIRDPART_FEEDBACK:
@@ -111,7 +117,9 @@ LazyQueue queue=LazyQueue.getInstance();
         listenr=new DequeueListener() {
             @Override
             public void onDequeueMsg(Message messageBean) {
-                System.out.println("onDequeueMsg");
+                if (Config.isDebug){
+                    Log.i(Config.TAG,"onDequeueMsg " );
+                }
                 messageBean.setSendType(1);
                 int result =IMClient.getInstance().saveReceiveMsg(messageBean);
                 System.out.println("result :"+result);
@@ -152,7 +160,9 @@ LazyQueue queue=LazyQueue.getInstance();
                             String iurl=null;
                             try {
                                 iurl =object.getString("thumb");
-                                System.out.println("url " + iurl);
+                                if (Config.isDebug){
+                                    Log.i(Config.TAG,"url " + iurl);
+                                }
                             } catch (JSONException e) {
                                 e.printStackTrace();
                             }

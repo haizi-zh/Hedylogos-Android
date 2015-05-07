@@ -3,6 +3,7 @@ package com.lv.Activity;
 import android.app.Activity;
 import android.content.Intent;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.View;
 import android.view.Window;
 import android.widget.AdapterView;
@@ -13,6 +14,7 @@ import android.widget.SimpleAdapter;
 
 import com.lv.Listener.OnActivityMessageListener;
 import com.lv.R;
+import com.lv.Utils.Config;
 import com.lv.Utils.TimeUtils;
 import com.lv.bean.ConversationBean;
 import com.lv.bean.Message;
@@ -63,7 +65,9 @@ public class MainActivity extends Activity implements View.OnClickListener ,OnAc
     @Override
     protected void onResume() {
         super.onResume();
-        System.out.println("CurrentUser " + IMClient.getInstance().getCurrentUser());
+        if (Config.isDebug){
+            Log.i(Config.TAG, "CurrentUser " + IMClient.getInstance().getCurrentUser());
+        }
         refresh();
     }
     private void refresh(){

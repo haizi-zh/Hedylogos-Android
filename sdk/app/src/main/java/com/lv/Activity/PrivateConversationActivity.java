@@ -11,6 +11,7 @@ import android.graphics.Color;
 import android.net.Uri;
 import android.os.Bundle;
 import android.text.TextUtils;
+import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.MotionEvent;
@@ -131,7 +132,9 @@ public class PrivateConversationActivity extends Activity
                 IMClient.getInstance().sendTextMessage(text, Integer.parseInt(CurrentFriend), new SendMsgListener() {
                     @Override
                     public void onSuccess() {
-                        System.out.println("fasongchenggong");
+                        if (Config.isDebug){
+                            Log.i(Config.TAG,"发送成功");
+                        }
                     }
 
                     @Override
@@ -180,8 +183,9 @@ public class PrivateConversationActivity extends Activity
     public void onResume() {
         super.onResume();
         CurrentFriend = getIntent().getStringExtra("friend_id");
-        System.out.println("C fri:" + CurrentFriend);
-
+        if (Config.isDebug){
+            Log.i(Config.TAG,"Current fri:" + CurrentFriend);
+        }
         int titleId = getResources().getIdentifier("action_bar_title", "id", "android");
         TextView tv1 = (TextView) findViewById(titleId);
         tv1.setTextColor(Color.BLACK);
@@ -252,17 +256,20 @@ public class PrivateConversationActivity extends Activity
                         e.printStackTrace();
                     }
                     MessageBean messageBean = new MessageBean("时长：" + time + "ms");
-                    System.out.println("时长： " + time + "ms");
+                    if (Config.isDebug){
+                        Log.i(Config.TAG,"时长： " + time + "ms");
+                    }
                     messageBean.setMetadata(path);
                     messageBean.setType(1);
                     messageBean.setSendType(0);
-                    //   db.saveMsg(CurrentFriend, messageBean);
                     msgs.add(messageBean);
                     adapter.notifyDataSetChanged();
                     IMClient.getInstance().sendAudioMessage(path,CurrentFriend,time,new UploadListener() {
                         @Override
                         public void onSucess(String fileUrl) {
-                            System.out.println("上传成功！");
+                            if (Config.isDebug){
+                                Log.i(Config.TAG,"上传成功");
+                            }
                         }
                         @Override
                         public void onError(int errorCode, String msg) {
@@ -297,12 +304,16 @@ public class PrivateConversationActivity extends Activity
                 IMClient.getInstance().sendImageMessage(uri.getPath(),bitmap, CurrentFriend, new UploadListener() {
                     @Override
                     public void onSucess(String fileUrl) {
-                        System.out.println("图片上传成功");
+                        if (Config.isDebug){
+                            Log.i(Config.TAG,"图片上传成功");
+                        }
                     }
 
                     @Override
                     public void onError(int errorCode, String msg) {
-                            System.out.println("errorCode :"+errorCode+" "+msg);
+                        if (Config.isDebug){
+                            Log.i(Config.TAG,"errorCode :"+errorCode+" "+msg);
+                        }
                     }
                     @Override
                     public void onProgress(int progress) {

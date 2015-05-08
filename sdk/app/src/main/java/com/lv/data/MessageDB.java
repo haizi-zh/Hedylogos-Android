@@ -186,7 +186,7 @@ public class MessageDB {
     public synchronized void updateReadStatus(String Friend_Id) {
         mdb=getDB();
         ContentValues values = new ContentValues();
-        values.put("IsRead", 1+"");
+        values.put("IsRead", 1);
         mdb.update(con_table_name, values," Friend_Id=? AND IsRead=? ", new String[]{Friend_Id,0+""});
         closeDB();
     }
@@ -257,14 +257,15 @@ public class MessageDB {
         values.put("Status", status);
         mdb.update(table_name, values, "LocalId=?", new String[]{LocalId + ""});
         IMClient.getInstance().setLastMsg(fri_ID, Integer.parseInt(msgId));
-        updateConversation(fri_ID, conversation);
+        updateConversation(fri_ID, conversation,Integer.parseInt(msgId));
         closeDB();
     }
 
-    public synchronized void updateConversation(String fri_ID, String conversation) {
+    public synchronized void updateConversation(String fri_ID, String conversation,int last_msgId) {
         mdb=getDB();
         ContentValues values = new ContentValues();
         values.put("conversation", conversation);
+        values.put("last_rec_msgId", last_msgId);
         mdb.update(con_table_name, values, "Friend_Id=?", new String[]{fri_ID});
         closeDB();
     }

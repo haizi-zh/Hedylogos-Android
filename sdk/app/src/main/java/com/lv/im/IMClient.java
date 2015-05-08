@@ -49,6 +49,7 @@ public class IMClient {
         user = new HashMap<String, String>();
         lastMsgMap = new HashMap<String, Integer>();
         acklist = new JSONArray();
+        HandleImMessage.getInstance();
     }
 
     //Handler handler=new Handler(){
@@ -240,6 +241,9 @@ public class IMClient {
             System.out.println(message.getMsgId());
         }
         db.saveMsgs(list1);
+    }
+
+    public void handleMessage(Message message){
 
     }
 }

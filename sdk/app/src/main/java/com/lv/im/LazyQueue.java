@@ -4,9 +4,9 @@ import android.os.Handler;
 import android.util.Log;
 
 import com.lv.Listener.DequeueListener;
+import com.lv.Listener.FetchListener;
 import com.lv.Utils.Config;
 import com.lv.bean.Message;
-import com.lv.Listener.FetchListener;
 
 import java.util.Date;
 import java.util.HashMap;
@@ -90,6 +90,7 @@ public class LazyQueue {
                 new DequeueThread().start();
             }
         }, new Date(System.currentTimeMillis() + max_time));
+
     }
 
     class DequeueThread extends Thread{

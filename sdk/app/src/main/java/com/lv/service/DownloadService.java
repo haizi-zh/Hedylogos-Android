@@ -12,6 +12,7 @@ import android.util.Log;
 import com.lv.Utils.Config;
 import com.lv.Utils.CryptUtils;
 import com.lv.bean.Message;
+import com.lv.im.HandleImMessage;
 import com.lv.im.IMClient;
 
 import java.io.BufferedOutputStream;
@@ -273,8 +274,12 @@ public class DownloadService extends Service {
         }
     }
     private void notice(Message msg){
-        Intent intent=new Intent("DOWNLOAD_COMPLETE");
-        intent.putExtra("newMsg",msg);
-        sendBroadcast(intent);
+        android.os.Message message= android.os.Message.obtain();
+        message.obj=msg;
+        message.what=Config.DOWNLOAD_SUCCESS;
+        HandleImMessage.handler.sendMessage(message);
+//        Intent intent=new Intent("DOWNLOAD_COMPLETE");
+//        intent.putExtra("newMsg", msg);
+//        sendBroadcast(intent);
     }
 }

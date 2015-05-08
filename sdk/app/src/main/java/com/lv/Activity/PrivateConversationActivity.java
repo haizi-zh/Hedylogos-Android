@@ -34,6 +34,7 @@ import com.lv.Utils.TimeUtils;
 import com.lv.bean.IMessage;
 import com.lv.bean.Message;
 import com.lv.bean.MessageBean;
+import com.lv.im.HandleImMessage;
 import com.lv.im.IMClient;
 import com.lv.Listener.OnActivityMessageListener;
 import com.lv.Listener.UploadListener;
@@ -47,7 +48,7 @@ public class PrivateConversationActivity extends Activity
         implements
         View.OnClickListener,
         OnActivityMessageListener ,
-        IMMessageReceiver.MessagerHandler{
+        HandleImMessage.MessagerHandler{
     public static final String DATA_EXTRA_SINGLE_DIALOG_TARGET = "single_target_peerId";
     public static final String Activityid = "PrivateConversationActivity";
     private ImageButton sendBtn;
@@ -169,8 +170,7 @@ public class PrivateConversationActivity extends Activity
     @Override
     public void onResume() {
         super.onResume();
-        IMMessageReceiver.ehList.add(this);
-        IMMessageReceiver.registerSessionListener(Activityid, this);
+        HandleImMessage.ehList.add(this);
         CurrentFriend = getIntent().getStringExtra("friend_id");
         IMClient.getInstance().updateReadStatus(CurrentFriend);
         if (Config.isDebug){
@@ -189,7 +189,6 @@ public class PrivateConversationActivity extends Activity
             Message notify = JSON.parseObject(targetPeerId, Message.class);
             MessageBean messageBean = Msg2Bean(notify);
             msgs.add(messageBean);
-            //  a.s
             adapter.notifyDataSetChanged();
             //  chatList.setSelection(adapter.getCount() - 1);
             messages.add(notify);
@@ -200,7 +199,7 @@ public class PrivateConversationActivity extends Activity
     @Override
     public void onPause() {
         super.onPause();
-        IMMessageReceiver.ehList.remove(this);
+        HandleImMessage.ehList.remove(this);
     }
 
     @Override

@@ -18,6 +18,7 @@ import com.lv.Utils.Config;
 import com.lv.Utils.TimeUtils;
 import com.lv.bean.ConversationBean;
 import com.lv.bean.Message;
+import com.lv.im.HandleImMessage;
 import com.lv.im.IMClient;
 
 import java.util.ArrayList;
@@ -25,7 +26,7 @@ import java.util.HashMap;
 import java.util.List;
 
 
-public class MainActivity extends Activity implements View.OnClickListener ,OnActivityMessageListener,IMMessageReceiver.MessagerHandler{
+public class MainActivity extends Activity implements View.OnClickListener ,OnActivityMessageListener,HandleImMessage.MessagerHandler{
     public static Button btn;
     ImageView img;
     Button test;
@@ -59,13 +60,12 @@ public class MainActivity extends Activity implements View.OnClickListener ,OnAc
                 startActivity(intent);
             }
         });
-        IMMessageReceiver.registerSessionListener("PrivateConversationActivity", this);
     }
 
     @Override
     protected void onResume() {
         super.onResume();
-        IMMessageReceiver.ehList.add(this);
+        HandleImMessage.ehList.add(this);
         if (Config.isDebug){
             Log.i(Config.TAG, "CurrentUser " + IMClient.getInstance().getCurrentUser());
         }
@@ -75,7 +75,7 @@ public class MainActivity extends Activity implements View.OnClickListener ,OnAc
     @Override
     protected void onDestroy() {
         super.onDestroy();
-        IMMessageReceiver.ehList.remove(this);
+        HandleImMessage.ehList.remove(this);
     }
 
     private void refresh(){

@@ -13,7 +13,7 @@ import com.lv.Utils.Config;
 import com.lv.Utils.CryptUtils;
 import com.lv.bean.Message;
 import com.lv.im.HandleImMessage;
-import com.lv.im.IMClient;
+import com.lv.user.User;
 
 import java.io.BufferedOutputStream;
 import java.io.File;
@@ -88,7 +88,7 @@ public class DownloadService extends Service {
                     }
                     File path = null;
                     File file= null;
-                    String user=CryptUtils.getMD5String(IMClient.getInstance().getCurrentUser());
+                    String user=CryptUtils.getMD5String(User.getUser().getCurrentUser());
                     String name=CryptUtils.getMD5String(msg.getUrl());
                     switch (msgType) {
                         case 1:
@@ -164,10 +164,6 @@ public class DownloadService extends Service {
         }
     }
 
-
-
-
-
     class DownloadTask extends Thread {
         private String url;
         private Message msg;
@@ -201,7 +197,7 @@ public class DownloadService extends Service {
                     }
                     File path = null;
                     File file= null;
-                    String user=CryptUtils.getMD5String(IMClient.getInstance().getCurrentUser());
+                    String user=CryptUtils.getMD5String(User.getUser().getCurrentUser());
                     String name=CryptUtils.getMD5String(msg.getUrl());
                     switch (msgType) {
                         case 1:
@@ -246,14 +242,11 @@ public class DownloadService extends Service {
                     bos.flush();
                     bos.close();
                     bm.recycle();
-                    System.out.println("下载完成！");
+                    if (Config.isDebug) {
+                        System.out.println("下载完成！");
+                    }
                 }
-              //  android.os.Message m= android.os.Message.obtain();
-              //  m.obj=msg;
-              //  m.what=Config.DOWNLOAD_SUCCESS;
-               // handler.sendMessage(m);
                 notice(msg);
-
             } catch (Exception e) {
                 e.printStackTrace();
                 notice(msg);
@@ -278,8 +271,5 @@ public class DownloadService extends Service {
         message.obj=msg;
         message.what=Config.DOWNLOAD_SUCCESS;
         HandleImMessage.handler.sendMessage(message);
-//        Intent intent=new Intent("DOWNLOAD_COMPLETE");
-//        intent.putExtra("newMsg", msg);
-//        sendBroadcast(intent);
     }
 }

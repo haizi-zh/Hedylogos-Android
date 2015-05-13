@@ -86,17 +86,15 @@ public class UploadUtils {
                                 JSONObject obj = response.getJSONObject("result");
                                 conversation = obj.get("conversation").toString();
                                 String msgId = obj.get("msgId").toString();
-                                System.out.println("timestamp" + obj.get("timestamp").toString());
                                 long timestamp = (Double.valueOf(obj.get("timestamp").toString())).longValue();
                                 IMClient.getInstance().setLastMsg(receive, Integer.parseInt(msgId));
                                 IMClient.getInstance().updateMessage(receive, localId, msgId, conversation, timestamp, Config.STATUS_SUCCESS);
-                                System.out.println("发送成功，消息更新！");
-
+                                if(Config.isDebug){
+                                    Log.i(Config.TAG,"发送成功，消息更新！");
+                                }
                             } catch (JSONException e) {
                                 e.printStackTrace();
                             }
-
-
                             if (listener != null) {
                                 listener.onSucess(null);
                             }

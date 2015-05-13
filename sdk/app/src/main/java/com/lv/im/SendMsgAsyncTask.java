@@ -30,7 +30,8 @@ public class SendMsgAsyncTask {
         this.c = c;
     }
 
-    public static void sendMessage(final String correntUser, final String currentFri, final IMessage msg, final long localId, final SendMsgListener listen) {
+    public static void sendMessage(final String correntUser, final String conversation,final String currentFri, final IMessage msg, final long localId, final SendMsgListener listen) {
+        msg.setConversation(conversation);
         final String str = JSON.toJSON(msg).toString();
         System.out.println("send_message:" + str);
         new Thread(new Runnable() {

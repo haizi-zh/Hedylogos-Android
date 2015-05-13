@@ -7,7 +7,6 @@ import com.loopj.android.http.RequestParams;
 import com.loopj.android.http.SyncHttpClient;
 import com.loopj.android.http.TextHttpResponseHandler;
 import com.lv.Listener.FetchListener;
-import com.lv.Listener.LoginSuccessListener;
 import com.lv.Utils.Config;
 import com.lv.bean.Message;
 import com.lv.im.IMClient;
@@ -36,52 +35,6 @@ import java.util.concurrent.Executors;
 public class HttpUtils {
     private static SyncHttpClient client = new SyncHttpClient();
     static ExecutorService exec = Executors.newFixedThreadPool(5);
-
-    public static void login(final String username, final LoginSuccessListener listen) {
-
-        exec.execute(new Runnable() {
-            @Override
-            public void run() {
-                JSONObject obj = new JSONObject();
-                try {
-                    String cid = null;
-                    while (true) {
-                        if (IMClient.getInstance().getCid() != null) {
-                            cid = IMClient.getInstance().getCid();
-                            break;
-                        }
-                    }
-                    obj.put("userId", Long.parseLong(username));
-                    obj.put("regId", cid);
-                    if (Config.isDebug){
-                        Log.i(Config.TAG,"login:" + obj.toString());
-                    }
-                    HttpPost post = new HttpPost(Config.LOGIN_URL);
-                    HttpResponse httpResponse = null;
-                    StringEntity entity = new StringEntity(obj.toString(),
-                            HTTP.UTF_8);
-                    entity.setContentType("application/json");
-                    post.setEntity(entity);
-                    DefaultHttpClient defaultHttpClient= new DefaultHttpClient();
-                    defaultHttpClient.getParams().setParameter("Timeout",5*1000);
-                    httpResponse = defaultHttpClient.execute(post);
-                    final int code = httpResponse.getStatusLine().getStatusCode();
-                    if (Config.isDebug){
-                        Log.i(Config.TAG,"Status code:" + code);
-                    }
-                    if (code == 200) {
-                        IMClient.getInstance().setCurrentUser(username);
-                        IMClient.getInstance().initDB();
-                        listen.OnSuccess();
-                    } else {
-                        listen.OnFalied(code);
-                    }
-                } catch (Exception e) {
-                    e.printStackTrace();
-                }
-            }
-        });
-    }
 
     public static void FetchNewMsg(String user, final FetchListener listener) {
         final String path = Config.FETCH_URL + user;

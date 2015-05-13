@@ -14,16 +14,19 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 
 /**
  * Created by q on 2015/5/8.
  */
-public class HandleImMessage  {
+public class HandleImMessage {
     private static HandleImMessage instance;
-    LazyQueue queue=LazyQueue.getInstance();
+    LazyQueue queue = LazyQueue.getInstance();
     Context c;
+    private static HashMap<MessagerHandler, String> openStateMap = new HashMap<MessagerHandler, String>();
+
     private HandleImMessage() {
-        MessageReceiver.registerListener(listener,"IM");
+        MessageReceiver.registerListener(listener, "IM");
         queue.setDequeueListenr(dequeueListener);
     }
 
@@ -33,25 +36,45 @@ public class HandleImMessage  {
         }
         return instance;
     }
-    public static ArrayList<MessagerHandler> ehList = new ArrayList<MessagerHandler>();
-    public static abstract interface MessagerHandler{
+
+    private static ArrayList<MessagerHandler> ehList = new ArrayList<MessagerHandler>();
+
+    public static abstract interface MessagerHandler {
         public void onMsgArrive(Message m);
     }
-   public static Handler handler=new Handler(){
+
+    public static void registerMessageListener(MessagerHandler listener) {
+        ehList.add(listener);
+    }
+
+    public static void unregisterMessageListener(MessagerHandler listener) {
+        ehList.remove(listener);
+    }
+
+    public static void registerMessageListener(MessagerHandler listener, String FriendId) {
+        ehList.add(listener);
+        openStateMap.put(listener, FriendId);
+    }
+
+    public static void unregisterMessageListener(MessagerHandler listener, String FriendId) {
+        ehList.remove(listener);
+        openStateMap.clear();
+    }
+
+    public static Handler handler = new Handler() {
         @Override
         public void handleMessage(android.os.Message message) {
-            switch (message.what){
+            switch (message.what) {
                 case Config.TEXT_MSG:
-                    Message newMessage= (Message)message.obj;
-                    for (MessagerHandler handler:ehList){
+                    Message newMessage = (Message) message.obj;
+                    for (MessagerHandler handler : ehList) {
                         handler.onMsgArrive(newMessage);
                     }
-                    System.out.println("msg"+newMessage.getContents());
                     break;
                 case Config.DOWNLOAD_SUCCESS:
                 case Config.DOWNLOAD_FILED:
-                    Message newMediaMessage= (Message)message.obj;
-                    for (MessagerHandler handler:ehList){
+                    Message newMediaMessage = (Message) message.obj;
+                    for (MessagerHandler handler : ehList) {
                         handler.onMsgArrive(newMediaMessage);
                     }
                     break;
@@ -59,76 +82,80 @@ public class HandleImMessage  {
         }
     };
 
-     MsgListener listener = new MsgListener() {
-         @Override
-         public void OnMessage(Context context, Message message) {
-             c=context;
-             queue.addMsg(message.getSenderId(), message);
-         }
-     };
-    DequeueListener dequeueListener=new DequeueListener() {
+    MsgListener listener = new MsgListener() {
+        @Override
+        public void OnMessage(Context context, Message message) {
+            c = context;
+            queue.addMsg(message.getSenderId(), message);
+        }
+    };
+    DequeueListener dequeueListener = new DequeueListener() {
         @Override
         public void onDequeueMsg(Message messageBean) {
-            if (Config.isDebug){
+            if (Config.isDebug) {
                 Log.i(Config.TAG, "onDequeueMsg ");
             }
             messageBean.setSendType(1);
-            int result =IMClient.getInstance().saveReceiveMsg(messageBean);
-            if (Config.isDebug){
-                Log.i(Config.TAG,"result :"+result);
+            int result = IMClient.getInstance().saveReceiveMsg(messageBean);
+            if (Config.isDebug) {
+                Log.i(Config.TAG, "result :" + result);
             }
-            if (result==0){
-                String content=messageBean.getContents();
-                JSONObject object=null;
-                switch (messageBean.getMsgType()){
+            if (result == 0) {
+                for (MessagerHandler handler : ehList) {
+                    if (openStateMap.containsKey(handler)) {
+                         IMClient.getInstance().updateReadStatus(openStateMap.get(handler));
+                    }
+                    else IMClient.getInstance().increaseUnRead(messageBean.getSenderId()+"");
+                }
+                String content = messageBean.getContents();
+                JSONObject object = null;
+                switch (messageBean.getMsgType()) {
                     case Config.TEXT_MSG:
-                        android.os.Message handlermsg= android.os.Message.obtain();
-                        handlermsg.obj=messageBean;
-                        handlermsg.what= Config.TEXT_MSG;
+                        android.os.Message handlermsg = android.os.Message.obtain();
+                        handlermsg.obj = messageBean;
+                        handlermsg.what = Config.TEXT_MSG;
                         handler.sendMessage(handlermsg);
                         break;
                     case Config.AUDIO_MSG:
                         try {
-                            object =new JSONObject(content);
+                            object = new JSONObject(content);
                         } catch (JSONException e) {
                             e.printStackTrace();
                         }
-                        Intent dlA_intent=new Intent("ACTION.IMSDK.STARTDOWNLOAD");
-                        String aurl=null;
+                        Intent dlA_intent = new Intent("ACTION.IMSDK.STARTDOWNLOAD");
+                        String aurl = null;
                         try {
-                            aurl =object.getString("url");
-                            System.out.println("url "+aurl);
+                            aurl = object.getString("url");
+                            System.out.println("url " + aurl);
                         } catch (JSONException e) {
                             e.printStackTrace();
                         }
                         messageBean.setUrl(aurl);
-                        dlA_intent.putExtra("msg",messageBean);
+                        dlA_intent.putExtra("msg", messageBean);
                         c.startService(dlA_intent);
                         break;
                     case Config.IMAGE_MSG:
                         try {
-                            object =new JSONObject(content);
+                            object = new JSONObject(content);
                         } catch (JSONException e) {
                             e.printStackTrace();
                         }
-                        String iurl=null;
+                        String iurl = null;
                         try {
-                            iurl =object.getString("thumb");
-                            if (Config.isDebug){
-                                Log.i(Config.TAG,"url " + iurl);
+                            iurl = object.getString("thumb");
+                            if (Config.isDebug) {
+                                Log.i(Config.TAG, "url " + iurl);
                             }
                         } catch (JSONException e) {
                             e.printStackTrace();
                         }
                         messageBean.setUrl(iurl);
-                        Intent dlI_intent=new Intent("ACTION.IMSDK.STARTDOWNLOAD");
-                        dlI_intent.putExtra("msg",messageBean);
+                        Intent dlI_intent = new Intent("ACTION.IMSDK.STARTDOWNLOAD");
+                        dlI_intent.putExtra("msg", messageBean);
                         c.startService(dlI_intent);
                         break;
                 }
             }
         }
     };
-
-
 }

@@ -6,10 +6,19 @@ package com.lv.bean;
 
 public class IMessage {
     private int sender;
-    private int receiver;
+    private String receiver;
     private int msgType;
     private String contents;
 
+    public String getConversation() {
+        return conversation;
+    }
+
+    public void setConversation(String conversation) {
+        this.conversation = conversation;
+    }
+
+    private String conversation;
 
     public int getSender() {
         return sender;
@@ -19,11 +28,11 @@ public class IMessage {
         this.sender = sender;
     }
 
-    public int getReceiver() {
+    public String getReceiver() {
         return receiver;
     }
 
-    public void setReceiver(int receiver) {
+    public void setReceiver(String receiver) {
         this.receiver = receiver;
     }
 
@@ -43,11 +52,10 @@ public class IMessage {
         this.contents = contents;
     }
 
-    public IMessage(int sender, int receiver, int msgType, String contents) {
+    public IMessage(int sender, String receiver, int msgType, String contents) {
         this.sender = sender;
         this.receiver = receiver;
         this.msgType = msgType;
         this.contents = contents;
-
     }
 }

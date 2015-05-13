@@ -9,13 +9,24 @@ public class ConversationBean {
     private String HASH;
     private int last_rev_msgId;
     private int isRead; //0:有未读  1：已读
+    private String conversation;
+    public String getConversation() {
+        return conversation;
+    }
 
-    public ConversationBean(int friendId, long lastChatTime, String HASH, int Last_rev_msgId, int isRead) {
+    public void setConversation(String conversation) {
+        this.conversation = conversation;
+    }
+
+
+
+    public ConversationBean(int friendId, long lastChatTime, String HASH, int Last_rev_msgId, int isRead,String conversation) {
         LastChatTime = lastChatTime;
         this.HASH = HASH;
         FriendId = friendId;
         last_rev_msgId = Last_rev_msgId;
         this.isRead = isRead;
+        this.conversation=conversation;
     }
 
     public int getFriendId() {

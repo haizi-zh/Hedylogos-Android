@@ -1,15 +1,15 @@
 <menu xmlns:android="http://schemas.android.com/apk/res/android" >
     <item
-        android:id="@+id/action_copy"
+        android:id="@+id/action_add"
         android:showAsAction="ifRoom|withText"
-        android:title="详细信息"/>
+        android:title="add"/>
     <item
-        android:id="@+id/action_cut"
+        android:id="@+id/action_info"
         android:showAsAction="ifRoom|withText"
-        android:title="群成员"/>
+        android:title="info"/>
     <item
-        android:id="@+id/action_discard"
+        android:id="@+id/action_member"
         android:showAsAction="ifRoom|withText"
-        android:title="更多"/>
+        android:title="member"/>
 
 </menu>

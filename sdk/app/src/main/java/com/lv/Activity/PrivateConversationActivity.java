@@ -3,7 +3,9 @@ package com.lv.Activity;
 
 import android.app.ActionBar;
 import android.app.Activity;
+import android.app.AlertDialog;
 import android.content.ContentResolver;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
@@ -26,7 +28,9 @@ import android.widget.Toast;
 
 import com.alibaba.fastjson.JSON;
 import com.lv.Audio.MediaRecordFunc;
+import com.lv.Listener.OnActivityMessageListener;
 import com.lv.Listener.SendMsgListener;
+import com.lv.Listener.UploadListener;
 import com.lv.R;
 import com.lv.Utils.CommonUtils;
 import com.lv.Utils.Config;
@@ -36,11 +40,12 @@ import com.lv.bean.Message;
 import com.lv.bean.MessageBean;
 import com.lv.im.HandleImMessage;
 import com.lv.im.IMClient;
-import com.lv.Listener.OnActivityMessageListener;
-import com.lv.Listener.UploadListener;
+import com.lv.user.GroupManager;
+import com.lv.user.User;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
 
@@ -50,7 +55,6 @@ public class PrivateConversationActivity extends Activity
         OnActivityMessageListener ,
         HandleImMessage.MessagerHandler{
     public static final String DATA_EXTRA_SINGLE_DIALOG_TARGET = "single_target_peerId";
-    public static final String Activityid = "PrivateConversationActivity";
     private ImageButton sendBtn;
     Button Audiomsg;
     Button ImageMsg;
@@ -62,6 +66,7 @@ public class PrivateConversationActivity extends Activity
     List<Message> messages = new LinkedList<Message>();
     static List<MessageBean> msgs = new LinkedList<MessageBean>();
     private String CurrentFriend;
+    private String conversation;
     SDKApplication application;
     Long time;
     ActionBar actionBar;
@@ -87,10 +92,36 @@ public class PrivateConversationActivity extends Activity
             case android.R.id.home:
                 this.finish();
                 break;
+            case R.id.action_add:
+                createAddDialog();
+                break;
+            case R.id.action_member:
+                GroupManager.getGroupManager().getGroupMembers(CurrentFriend);
+                break;
+            case R.id.action_info:
+                GroupManager.getGroupManager().getGroupInformation(CurrentFriend);
+                break;
             default:
               break;
         }
         return true;
+    }
+
+    private void createAddDialog() {
+        final EditText et=new EditText(this);
+        new AlertDialog.Builder(this).setTitle("请输入id").setIcon(
+                android.R.drawable.ic_dialog_info).setView(
+                et).setPositiveButton("确定", new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+                String id= et.getText().toString();
+                List<Long>list =new ArrayList<Long>();
+                list.add(Long.parseLong(id));
+                GroupManager.getGroupManager().addMembers(CurrentFriend,list,true);
+            }
+        })
+                .setNegativeButton("取消", null).show();
+
     }
 
     private void initview() {
@@ -124,7 +155,7 @@ public class PrivateConversationActivity extends Activity
                     return;
                 }
                 composeZone.getEditableText().clear();
-                IMClient.getInstance().sendTextMessage(text, Integer.parseInt(CurrentFriend), new SendMsgListener() {
+                IMClient.getInstance().sendTextMessage(text,CurrentFriend ,conversation, new SendMsgListener() {
                     @Override
                     public void onSuccess() {
                         if (Config.isDebug){
@@ -137,9 +168,8 @@ public class PrivateConversationActivity extends Activity
                         System.out.println("failed code : " + code);
                     }
                 });
-                IMessage message = new IMessage(Integer.parseInt(IMClient.getInstance().getCurrentUser()), Integer.parseInt(CurrentFriend), 0, text);
+                IMessage message = new IMessage(Integer.parseInt(User.getUser().getCurrentUser()), CurrentFriend, 0, text);
                 MessageBean messageBean = imessage2Bean(message);
-                System.out.println(message.toString());
                 msgs.add(messageBean);
                 adapter.notifyDataSetChanged();
                 break;
@@ -158,7 +188,7 @@ public class PrivateConversationActivity extends Activity
 
     private static MessageBean imessage2Bean(IMessage message) {
 
-        return new MessageBean(0, 0, message.getMsgType(), message.getContents(), TimeUtils.getTimestamp(), 0, null, 2);
+        return new MessageBean(0, 0, message.getMsgType(), message.getContents(), TimeUtils.getTimestamp(), 0, null,Long.parseLong(User.getUser().getCurrentUser()));
     }
 
     @Override
@@ -170,9 +200,10 @@ public class PrivateConversationActivity extends Activity
     @Override
     public void onResume() {
         super.onResume();
-        HandleImMessage.ehList.add(this);
         CurrentFriend = getIntent().getStringExtra("friend_id");
-        IMClient.getInstance().updateReadStatus(CurrentFriend);
+        conversation = getIntent().getStringExtra("conversation");
+        System.out.println("CurrentFriend "+CurrentFriend+" conversation"+conversation);
+        HandleImMessage.registerMessageListener(this,CurrentFriend);
         if (Config.isDebug){
             Log.i(Config.TAG,"Current fri:" + CurrentFriend);
         }
@@ -181,6 +212,7 @@ public class PrivateConversationActivity extends Activity
         tv1.setTextColor(Color.BLACK);
         tv1.setText("好友：" + CurrentFriend);
         msgs = IMClient.getInstance().getMessages(CurrentFriend, 5);
+        System.out.println("msg size : "+msgs.size());
         adapter = new ChatDataAdapter(this, msgs);
         chatList.setAdapter(adapter);
         //  chatList.setSelection(adapter.getCount() - 1);
@@ -199,7 +231,7 @@ public class PrivateConversationActivity extends Activity
     @Override
     public void onPause() {
         super.onPause();
-        HandleImMessage.ehList.remove(this);
+       HandleImMessage.unregisterMessageListener(this,CurrentFriend);
     }
 
     @Override

@@ -125,7 +125,7 @@
 
         <!-- 个推SDK配置结束 -->
         <receiver
-            android:name="com.lv.Activity.IMMessageReceiver"
+            android:name="com.lv.im.MessageReceiver"
             android:exported="false" >
             <intent-filter>
                 <action android:name="com.igexin.sdk.action.PSrYJWRPN765o211bIkFM3" />

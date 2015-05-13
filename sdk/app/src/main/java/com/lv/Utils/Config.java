@@ -6,6 +6,8 @@ import android.os.Environment;
  * Created by q on 2015/4/27.
  */
 public class Config {
+    public static final String HOST = "http://hedy.zephyre.me";
+    public static final String GET_GROUP = "http://hedy.zephyre.me/groups/";
     public static final String SEND_URL = "http://hedy.zephyre.me/chats";
     public static final String ACK_URL = "http://hedy.zephyre.me/chats/";
     public static final String MSG_DBNAME = "IM_SDK.db";

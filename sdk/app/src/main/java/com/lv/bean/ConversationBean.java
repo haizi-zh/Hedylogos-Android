@@ -10,6 +10,16 @@ public class ConversationBean {
     private int last_rev_msgId;
     private int isRead; //0:有未读  1：已读
     private String conversation;
+
+    public String getLastMessage() {
+        return lastMessage;
+    }
+
+    public void setLastMessage(String lastMessage) {
+        this.lastMessage = lastMessage;
+    }
+
+    private String lastMessage;
     public String getConversation() {
         return conversation;
     }
@@ -20,13 +30,14 @@ public class ConversationBean {
 
 
 
-    public ConversationBean(int friendId, long lastChatTime, String HASH, int Last_rev_msgId, int isRead,String conversation) {
+    public ConversationBean(int friendId, long lastChatTime, String HASH, int Last_rev_msgId, int isRead,String conversation,String lastMessage) {
         LastChatTime = lastChatTime;
         this.HASH = HASH;
         FriendId = friendId;
         last_rev_msgId = Last_rev_msgId;
         this.isRead = isRead;
         this.conversation=conversation;
+        this.lastMessage=lastMessage;
     }
 
     public int getFriendId() {

@@ -22,8 +22,8 @@ import java.util.TimerTask;
 public class LazyQueue {
     long max_time = 2000;
     private static LazyQueue instance;
-    static HashMap<Long, SortList> LazyMap = new HashMap<Long, SortList>();
-    static HashMap<Long, SortList> TempMap = new HashMap<Long, SortList>();
+    static HashMap<String, SortList> LazyMap = new HashMap<String, SortList>();
+    static HashMap<String, SortList> TempMap = new HashMap<String, SortList>();
     boolean isRunning;
     DequeueListener listenr;
     Timer timer;
@@ -118,7 +118,7 @@ public class LazyQueue {
                             Log.i(Config.TAG,"status: block");
                             Log.i(Config.TAG,"dequeue block "+message.getContents());
                         }
-                        add2Temp(message.getSenderId(), message);
+                        add2Temp(message.getConversation(), message);
                     }
                     else {
                         if (checkOrder(message)) {
@@ -130,7 +130,7 @@ public class LazyQueue {
                             if (Config.isDebug){
                                 Log.i(Config.TAG,"dequeue 乱序 "+message.getContents());
                             }
-                            add2Temp(message.getSenderId(), message);
+                            add2Temp(message.getConversation(), message);
                             IMClient.getInstance().setBLOCK(true);
                             IMClient.getInstance().fetchNewMsg(flistener);
                         }
@@ -148,7 +148,7 @@ public class LazyQueue {
         @Override
         public void OnMsgArrive(List<Message> list) {
             for (Message msg:list){
-                add2Temp(msg.getSenderId(),msg);
+                add2Temp(msg.getConversation(),msg);
             }
             TempDequeue();
         }
@@ -175,23 +175,23 @@ public class LazyQueue {
         }
         IMClient.getInstance().setBLOCK(false);
     }
-    public void addMsg(long FriendId, Message messageBean) {
+    public void addMsg(String conversation, Message messageBean) {
 
-        if (!LazyMap.containsKey(FriendId)) {
-            LazyMap.put(FriendId, new SortList());
+        if (!LazyMap.containsKey(conversation)) {
+            LazyMap.put(conversation, new SortList());
         }
-        LazyMap.get(FriendId).insert(messageBean);
+        LazyMap.get(conversation).insert(messageBean);
         begin();
     }
-    public void add2Temp(long FriendId, Message messageBean) {
+    public void add2Temp(String conversation, Message messageBean) {
 
-        if (!TempMap.containsKey(FriendId)) {
-            TempMap.put(FriendId, new SortList());
+        if (!TempMap.containsKey(conversation)) {
+            TempMap.put(conversation, new SortList());
         }
-        TempMap.get(FriendId).insert(messageBean);
+        TempMap.get(conversation).insert(messageBean);
     }
     private boolean checkOrder(Message messageBean) {
-        int lastid = IMClient.getInstance().getLastMsg(messageBean.getSenderId() + "");
+        int lastid = IMClient.getInstance().getLastMsg(messageBean.getConversation());
         if (Config.isDebug){
             Log.i(Config.TAG,"lastid  " + lastid + " messageBean: " + messageBean.getMsgId());
         }

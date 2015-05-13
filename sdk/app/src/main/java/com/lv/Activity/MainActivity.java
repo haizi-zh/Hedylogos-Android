@@ -15,7 +15,6 @@ import android.widget.ImageView;
 import android.widget.ListView;
 import android.widget.SimpleAdapter;
 
-import com.lv.Listener.OnActivityMessageListener;
 import com.lv.R;
 import com.lv.Utils.Config;
 import com.lv.Utils.TimeUtils;
@@ -32,7 +31,7 @@ import java.util.HashMap;
 import java.util.List;
 
 
-public class MainActivity extends Activity implements View.OnClickListener, OnActivityMessageListener, HandleImMessage.MessagerHandler {
+public class MainActivity extends Activity implements View.OnClickListener, HandleImMessage.MessagerHandler {
     public static Button btn;
     ImageView img;
     Button test;
@@ -95,7 +94,7 @@ public class MainActivity extends Activity implements View.OnClickListener, OnAc
             HashMap<String, Object> hashMap = new HashMap<String, Object>();
             hashMap.put("Friend_Id", list.get(n).getFriendId());
             hashMap.put("lastTime", TimeUtils.TimeStamp2Date(list.get(n).getLastChatTime()));
-            hashMap.put("lastMsg", list.get(n).getHASH());
+            hashMap.put("lastMsg", list.get(n).getLastMessage());
             hashMap.put("isRead", list.get(n).getIsRead());
             System.out.println( " list.get(n).getConversation() "+list.get(n).getConversation());
             hashMap.put("conversation", list.get(n).getConversation());
@@ -151,15 +150,6 @@ public class MainActivity extends Activity implements View.OnClickListener, OnAc
                 .setNegativeButton("取消", null).show();
 
 
-    }
-
-    @Override
-    public void onMessage(Message msg) {
-        refresh();
-    }
-
-    @Override
-    public void onMessage(String msg) {
     }
 
     @Override

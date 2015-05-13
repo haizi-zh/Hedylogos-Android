@@ -203,7 +203,7 @@ public class PrivateConversationActivity extends Activity
         CurrentFriend = getIntent().getStringExtra("friend_id");
         conversation = getIntent().getStringExtra("conversation");
         System.out.println("CurrentFriend "+CurrentFriend+" conversation"+conversation);
-        HandleImMessage.registerMessageListener(this,CurrentFriend);
+        HandleImMessage.registerMessageListener(this,conversation);
         if (Config.isDebug){
             Log.i(Config.TAG,"Current fri:" + CurrentFriend);
         }
@@ -231,12 +231,12 @@ public class PrivateConversationActivity extends Activity
     @Override
     public void onPause() {
         super.onPause();
-       HandleImMessage.unregisterMessageListener(this,CurrentFriend);
+       HandleImMessage.unregisterMessageListener(this,conversation);
     }
 
     @Override
     public void onMessage(Message msg) {
-        if (!CurrentFriend.equals(msg.getSenderId() + "")) {
+        if (!conversation.equals(msg.getConversation())) {
             MessageBean messageBean = Msg2Bean(msg);
             messageBean.setSendType(1);
             Toast.makeText(PrivateConversationActivity.this, "有新消息！", Toast.LENGTH_SHORT).show();

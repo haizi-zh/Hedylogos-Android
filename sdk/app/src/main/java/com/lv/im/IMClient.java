@@ -90,20 +90,20 @@ public class IMClient {
         this.isBLOCK = isBLOCK;
     }
 
-    public int getLastMsg(String fri_id) {
-        if (lastMsgMap.get(fri_id) != null)
-            return lastMsgMap.get(fri_id);
+    public int getLastMsg(String conversation) {
+        if (lastMsgMap.get(conversation) != null)
+            return lastMsgMap.get(conversation);
         else
             return -1;
     }
 
-    public void setLastMsg(String fri_Id, int msgId) {
-        if (!lastMsgMap.containsKey(fri_Id)) {
-            lastMsgMap.put(fri_Id, -1);
+    public void setLastMsg(String conversation, int msgId) {
+        if (!lastMsgMap.containsKey(conversation)) {
+            lastMsgMap.put(conversation, -1);
         }
-        int temp = lastMsgMap.get(fri_Id);
+        int temp = lastMsgMap.get(conversation);
         if (temp > msgId) return;
-        lastMsgMap.put(fri_Id, msgId);
+        lastMsgMap.put(conversation, msgId);
     }
     public String getCid() {
         return cidMap.get("cid");
@@ -118,20 +118,23 @@ public class IMClient {
 //            convercationList=db.getConversationList();
 //        }
 //        return convercationList;
-
-        return db.getConversationList();
+        convercationList=db.getConversationList();
+        return convercationList;
+    }
+    public  List<ConversationBean> getConversationListCache(){
+        return convercationList;
     }
 
     public void add2ConversationList(ConversationBean conversationBean) {
         convercationList.add(conversationBean);
     }
 
-    public void updateReadStatus(String FriendId) {
-        db.updateReadStatus(FriendId,0);
+    public void updateReadStatus(String conversation) {
+        db.updateReadStatus(conversation,0);
     }
 
-    public void increaseUnRead(String FriendId){
-        db.updateReadStatus(FriendId,1);
+    public void increaseUnRead(String conversation){
+        db.updateReadStatus(conversation,1);
     }
 
     public List<MessageBean> getMessages(String friendId, int page) {
@@ -202,7 +205,7 @@ public class IMClient {
             @Override
             public void OnMsgArrive(List<Message> list) {
                 for (Message msg : list) {
-                    LazyQueue.getInstance().add2Temp(msg.getSenderId(), msg);
+                    LazyQueue.getInstance().add2Temp(msg.getConversation(), msg);
                 }
                 LazyQueue.getInstance().TempDequeue();
             }
@@ -210,9 +213,9 @@ public class IMClient {
     }
 
     public int saveReceiveMsg(Message message) {
-        int result = db.saveReceiveMsg(message.getSenderId() + "", Msg2Bean(message));
+        int result = db.saveReceiveMsg(message.getSenderId() + "", Msg2Bean(message),message.getConversation());
         if (result == 0) {
-            setLastMsg(message.getSenderId() + "", message.getMsgId());
+            setLastMsg(message.getConversation(), message.getMsgId());
             add2ackList(message.getId());
         }
         return result;

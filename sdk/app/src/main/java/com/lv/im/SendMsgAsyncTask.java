@@ -33,7 +33,9 @@ public class SendMsgAsyncTask {
     public static void sendMessage(final String correntUser, final String conversation,final String currentFri, final IMessage msg, final long localId, final SendMsgListener listen) {
         msg.setConversation(conversation);
         final String str = JSON.toJSON(msg).toString();
-        System.out.println("send_message:" + str);
+        if (Config.isDebug){
+            Log.i(Config.TAG,"send_message:" + str);
+        }
         new Thread(new Runnable() {
             @Override
             public void run() {
@@ -60,7 +62,7 @@ public class SendMsgAsyncTask {
                         String conversation = obj.get("conversation").toString();
                         String msgId = obj.get("msgId").toString();
                         Long timestamp = Long.parseLong(obj.get("timestamp").toString());
-                        IMClient.getInstance().setLastMsg(currentFri, Integer.parseInt(msgId));
+                        IMClient.getInstance().setLastMsg(conversation, Integer.parseInt(msgId));
                         IMClient.getInstance().updateMessage(currentFri, localId, msgId, conversation, timestamp, Config.STATUS_SUCCESS);
                         if (Config.isDebug){
                             Log.i(Config.TAG,"发送成功，消息更新！");

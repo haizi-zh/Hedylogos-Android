@@ -23,7 +23,7 @@ public class HandleImMessage {
     private static HandleImMessage instance;
     LazyQueue queue = LazyQueue.getInstance();
     Context c;
-    private static HashMap<MessagerHandler, String> openStateMap = new HashMap<MessagerHandler, String>();
+    private static HashMap<MessagerHandler, String> openStateMap = new HashMap<>();
 
     private HandleImMessage() {
         MessageReceiver.registerListener(listener, "IM");
@@ -51,12 +51,12 @@ public class HandleImMessage {
         ehList.remove(listener);
     }
 
-    public static void registerMessageListener(MessagerHandler listener, String FriendId) {
+    public static void registerMessageListener(MessagerHandler listener, String conversation) {
         ehList.add(listener);
-        openStateMap.put(listener, FriendId);
+        openStateMap.put(listener, conversation);
     }
 
-    public static void unregisterMessageListener(MessagerHandler listener, String FriendId) {
+    public static void unregisterMessageListener(MessagerHandler listener, String conversation) {
         ehList.remove(listener);
         openStateMap.clear();
     }
@@ -86,7 +86,7 @@ public class HandleImMessage {
         @Override
         public void OnMessage(Context context, Message message) {
             c = context;
-            queue.addMsg(message.getSenderId(), message);
+            queue.addMsg(message.getConversation(), message);
         }
     };
     DequeueListener dequeueListener = new DequeueListener() {
@@ -105,7 +105,7 @@ public class HandleImMessage {
                     if (openStateMap.containsKey(handler)) {
                          IMClient.getInstance().updateReadStatus(openStateMap.get(handler));
                     }
-                    else IMClient.getInstance().increaseUnRead(messageBean.getSenderId()+"");
+                    else IMClient.getInstance().increaseUnRead(messageBean.getConversation());
                 }
                 String content = messageBean.getContents();
                 JSONObject object = null;

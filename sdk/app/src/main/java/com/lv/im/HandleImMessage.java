@@ -8,6 +8,7 @@ import android.util.Log;
 import com.lv.Listener.DequeueListener;
 import com.lv.Listener.MsgListener;
 import com.lv.Utils.Config;
+import com.lv.Utils.TimeUtils;
 import com.lv.bean.Message;
 
 import org.json.JSONException;
@@ -22,7 +23,8 @@ import java.util.HashMap;
 public class HandleImMessage {
     private static HandleImMessage instance;
     LazyQueue queue = LazyQueue.getInstance();
-    Context c;
+    private Context c;
+    private long lastTime;
     private static HashMap<MessagerHandler, String> openStateMap = new HashMap<>();
 
     private HandleImMessage() {
@@ -37,7 +39,7 @@ public class HandleImMessage {
         return instance;
     }
 
-    private static ArrayList<MessagerHandler> ehList = new ArrayList<MessagerHandler>();
+    private static ArrayList<MessagerHandler> ehList = new ArrayList<>();
 
     public static abstract interface MessagerHandler {
         public void onMsgArrive(Message m);
@@ -86,6 +88,9 @@ public class HandleImMessage {
         @Override
         public void OnMessage(Context context, Message message) {
             c = context;
+            /**
+             * 处理消息重组、丢失
+             */
             queue.addMsg(message.getConversation(), message);
         }
     };
@@ -94,6 +99,13 @@ public class HandleImMessage {
         public void onDequeueMsg(Message messageBean) {
             if (Config.isDebug) {
                 Log.i(Config.TAG, "onDequeueMsg ");
+            }
+
+            if (lastTime==0){
+                lastTime=messageBean.getTimestamp();
+            }
+            else if (messageBean.getTimestamp()<lastTime){
+                messageBean.setTimestamp(TimeUtils.getTimestamp());
             }
             messageBean.setSendType(1);
             int result = IMClient.getInstance().saveReceiveMsg(messageBean);
@@ -127,7 +139,7 @@ public class HandleImMessage {
                         try {
                             aurl = object.getString("url");
                             System.out.println("url " + aurl);
-                        } catch (JSONException e) {
+                        } catch (Exception e) {
                             e.printStackTrace();
                         }
                         messageBean.setUrl(aurl);

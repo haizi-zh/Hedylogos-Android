@@ -40,7 +40,7 @@ import com.lv.bean.Message;
 import com.lv.bean.MessageBean;
 import com.lv.im.HandleImMessage;
 import com.lv.im.IMClient;
-import com.lv.user.GroupManager;
+import com.lv.group.GroupManager;
 import com.lv.user.User;
 
 import java.io.File;

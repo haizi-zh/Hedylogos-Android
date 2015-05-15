@@ -1,4 +1,4 @@
-package com.lv.user;
+package com.lv.group;
 
 /**
  * Created by q on 2015/5/12.

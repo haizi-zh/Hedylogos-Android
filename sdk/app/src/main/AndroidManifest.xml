@@ -3,9 +3,11 @@
     package="com.lv"
     android:versionCode="1"
     android:versionName="1.0">
+
     <uses-sdk
         android:minSdkVersion="11"
         android:targetSdkVersion="19" />
+
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.READ_PHONE_STATE" />
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
@@ -15,13 +17,14 @@
     <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
     <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
     <uses-permission android:name="android.permission.VIBRATE" />
-    <uses-permission android:name="android.permission.GET_TASKS"/>
+    <uses-permission android:name="android.permission.GET_TASKS" />
 
     <!--<uses-permission android:name="getui.permission.GetuiService.第三方包名" />  -->
-    <uses-permission android:name="getui.permission.GetuiService.com.hedylogos" />
+    <uses-permission android:name="getui.permission.GetuiService.com.lv" />
     <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
     <uses-permission android:name="android.permission.RECORD_AUDIO" />
     <uses-permission android:name="android.permission.MOUNT_UNMOUNT_FILESYSTEMS" />
+
     <application
         android:allowBackup="true"
         android:icon="@mipmap/ic_launcher"
@@ -56,10 +59,9 @@
             android:name="com.igexin.sdk.PushService"
             android:process=":pushservice"
             android:exported="true"
-            android:label="NotificationCenter" >
-        </service>
+            android:label="NotificationCenter"></service>
 
-        <receiver android:name="com.igexin.sdk.PushReceiver" >
+        <receiver android:name="com.igexin.sdk.PushReceiver">
             <intent-filter>
                 <action android:name="android.intent.action.BOOT_COMPLETED" />
                 <action android:name="android.net.conn.CONNECTIVITY_CHANGE" />
@@ -76,7 +78,7 @@
         </receiver> -->
         <receiver
             android:name="com.igexin.sdk.PushManagerReceiver"
-            android:exported="false" >
+            android:exported="false">
             <intent-filter>
                 <action android:name="com.igexin.sdk.action.pushmanager" />
             </intent-filter>
@@ -88,10 +90,11 @@
             android:exported="false"
             android:process=":pushservice"
             android:taskAffinity="com.igexin.sdk.PushActivityTask"
-            android:theme="@android:style/Theme.Translucent.NoTitleBar" >
-        </activity>
+            android:theme="@android:style/Theme.Translucent.NoTitleBar"></activity>
 
-        <service android:name="com.igexin.download.DownloadService" android:process=":pushservice" />
+        <service
+            android:name="com.igexin.download.DownloadService"
+            android:process=":pushservice" />
         <receiver android:name="com.igexin.download.DownloadReceiver">
             <intent-filter>
                 <action android:name="android.net.conn.CONNECTIVITY_CHANGE" />
@@ -100,10 +103,11 @@
         <provider
             android:process=":pushservice"
             android:name="com.igexin.download.DownloadProvider"
-            android:authorities="downloads.com.lv"	/>
+            android:authorities="downloads.com.lv" />
         <!-- android:authorities="downloads.第三方包名" -->
 
-        <activity android:name="com.igexin.getuiext.activity.GetuiExtActivity"
+        <activity
+            android:name="com.igexin.getuiext.activity.GetuiExtActivity"
             android:configChanges="orientation|keyboard|keyboardHidden"
             android:excludeFromRecents="true"
             android:process=":pushservice"
@@ -111,7 +115,9 @@
             android:theme="@android:style/Theme.Translucent.NoTitleBar"
             android:exported="false" />
 
-        <receiver android:name="com.igexin.getuiext.service.PayloadReceiver" android:exported="false" >
+        <receiver
+            android:name="com.igexin.getuiext.service.PayloadReceiver"
+            android:exported="false">
             <intent-filter>
                 <!-- 这个com.igexin.sdk.action.7fjUl2Z3LH6xYy7NQK4ni4固定，不能修改  -->
                 <action android:name="com.igexin.sdk.action.7fjUl2Z3LH6xYy7NQK4ni4" />
@@ -121,30 +127,26 @@
             </intent-filter>
         </receiver>
 
-        <service android:name="com.igexin.getuiext.service.GetuiExtService" android:process=":pushservice" />
+        <service
+            android:name="com.igexin.getuiext.service.GetuiExtService"
+            android:process=":pushservice" />
 
         <!-- 个推SDK配置结束 -->
         <receiver
             android:name="com.lv.im.MessageReceiver"
-            android:exported="false" >
+            android:exported="false">
             <intent-filter>
                 <action android:name="com.igexin.sdk.action.PSrYJWRPN765o211bIkFM3" />
                 <action android:name="DOWNLOAD_COMPLETE" />
             </intent-filter>
         </receiver>
+
         <activity
             android:name="com.lv.Activity.PrivateConversationActivity"
-            android:launchMode="singleTask"
-            >
-        </activity>
-        <activity
-            android:name="com.lv.Activity.AEStest"
-            >
-        </activity>
-        <activity
-            android:name="com.lv.Activity.MainActivity"
-            >
-        </activity>
+            android:launchMode="singleTask"></activity>
+        <activity android:name="com.lv.Activity.AEStest"></activity>
+        <activity android:name="com.lv.Activity.MainActivity"></activity>
+
         <service android:name=".service.DownloadService">
             <intent-filter>
                 <action android:name="ACTION.IMSDK.STARTDOWNLOAD" />

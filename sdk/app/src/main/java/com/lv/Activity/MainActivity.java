@@ -22,8 +22,8 @@ import com.lv.bean.ConversationBean;
 import com.lv.bean.Message;
 import com.lv.im.HandleImMessage;
 import com.lv.im.IMClient;
-import com.lv.user.CreateSuccessListener;
-import com.lv.user.GroupManager;
+import com.lv.group.CreateSuccessListener;
+import com.lv.group.GroupManager;
 import com.lv.user.User;
 
 import java.util.ArrayList;
@@ -46,7 +46,7 @@ public class MainActivity extends Activity implements View.OnClickListener, Hand
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        IMClient.getInstance().initfetch();
+        IMClient.getInstance().initAckAndFetch();
         requestWindowFeature(Window.FEATURE_NO_TITLE);
         setContentView(R.layout.activity_main);
         btn = (Button) findViewById(R.id.btn);
@@ -109,10 +109,7 @@ public class MainActivity extends Activity implements View.OnClickListener, Hand
     public void onClick(View v) {
         switch (v.getId()) {
             case R.id.btn:
-                Intent intent = new Intent();
-                intent.setClass(MainActivity.this, PrivateConversationActivity.class);
-                intent.putExtra("friend_id", "3");
-                startActivity(intent);
+                addFriendDialog();
                 break;
             case R.id.btn_test:
                 createDialog();
@@ -120,6 +117,26 @@ public class MainActivity extends Activity implements View.OnClickListener, Hand
             default:
                 break;
         }
+    }
+    private void addFriendDialog() {
+        final EditText et=new EditText(this);
+        new AlertDialog.Builder(this).setTitle("请输入好友id").setIcon(
+                android.R.drawable.ic_dialog_info).setView(
+                et).setPositiveButton("确定", new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+                String friendId= et.getText().toString();
+                Intent intent = new Intent();
+                intent.setClass(MainActivity.this, PrivateConversationActivity.class);
+                intent.putExtra("friend_id", friendId);
+                intent.putExtra("conversation", "");
+                startActivity(intent);
+
+            }
+        })
+                .setNegativeButton("取消", null).show();
+
+
     }
 
     private void createDialog() {

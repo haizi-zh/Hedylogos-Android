@@ -6,6 +6,7 @@ import com.loopj.android.http.RequestParams;
 import com.loopj.android.http.SyncHttpClient;
 import com.loopj.android.http.TextHttpResponseHandler;
 import com.lv.Utils.Config;
+import com.lv.group.CreateSuccessListener;
 import com.lv.im.IMClient;
 
 import org.apache.http.Header;
@@ -35,9 +36,7 @@ public class HttpManager {
 
     public static void login(final String username, final LoginSuccessListener listen) {
 
-        exec.execute(new Runnable() {
-            @Override
-            public void run() {
+        exec.execute(()->{
                 JSONObject obj = new JSONObject();
                 try {
                     String cid = null;
@@ -67,6 +66,7 @@ public class HttpManager {
                     }
                     if (code == 200) {
                         User.getUser().setCurrentUser(username);
+                        UserDao.getInstance();
                         IMClient.getInstance().initDB();
                         listen.OnSuccess();
                     } else {
@@ -75,7 +75,6 @@ public class HttpManager {
                 } catch (Exception e) {
                     e.printStackTrace();
                 }
-            }
         });
     }
 
@@ -95,9 +94,7 @@ public class HttpManager {
             e.printStackTrace();
         }
 
-        exec.execute(new Runnable() {
-            @Override
-            public void run() {
+        exec.execute(()->{
                 HttpPost post = new HttpPost(Config.HOST + "/groups");
                 post.addHeader("UserId", 100002 + "");
                 HttpResponse httpResponse = null;
@@ -129,7 +126,6 @@ public class HttpManager {
                 } catch (Exception e) {
                     e.printStackTrace();
                 }
-            }
         });
     }
 

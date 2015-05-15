@@ -1,6 +1,5 @@
 package com.lv.im;
 
-import android.os.Handler;
 import android.util.Log;
 
 import com.lv.Listener.DequeueListener;
@@ -11,7 +10,6 @@ import com.lv.bean.Message;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Iterator;
-import java.util.List;
 import java.util.Map;
 import java.util.Timer;
 import java.util.TimerTask;
@@ -22,12 +20,11 @@ import java.util.TimerTask;
 public class LazyQueue {
     long max_time = 2000;
     private static LazyQueue instance;
-    static HashMap<String, SortList> LazyMap = new HashMap<String, SortList>();
-    static HashMap<String, SortList> TempMap = new HashMap<String, SortList>();
+    static HashMap<String, SortList> LazyMap = new HashMap<>();
+    static HashMap<String, SortList> TempMap = new HashMap<>();
     boolean isRunning;
-    DequeueListener listenr;
+    DequeueListener listener;
     Timer timer;
-    private Handler handler;
 
     private LazyQueue() {
 //        executeThread = new Thread(new Runnable() {
@@ -67,8 +64,8 @@ public class LazyQueue {
         return instance;
     }
 
-    public void setDequeueListenr(DequeueListener listenr) {
-        this.listenr = listenr;
+    public void setDequeueListenr(DequeueListener listener) {
+        this.listener = listener;
     }
 
     public void begin() {
@@ -125,14 +122,14 @@ public class LazyQueue {
                             if (Config.isDebug){
                                 Log.i(Config.TAG,"dequeue 正序 "+message.getContents());
                             }
-                            listenr.onDequeueMsg(message);
+                            listener.onDequeueMsg(message);
                         } else {
                             if (Config.isDebug){
                                 Log.i(Config.TAG,"dequeue 乱序 "+message.getContents());
                             }
                             add2Temp(message.getConversation(), message);
                             IMClient.getInstance().setBLOCK(true);
-                            IMClient.getInstance().fetchNewMsg(flistener);
+                            IMClient.getInstance().ackAndFetch(flistener);
                         }
                     }
                 } catch (Exception e) {
@@ -144,14 +141,11 @@ public class LazyQueue {
             Log.i(Config.TAG,"Dequeue() ");
         }
     }
-    FetchListener flistener=new FetchListener() {
-        @Override
-        public void OnMsgArrive(List<Message> list) {
+    FetchListener flistener=(list) ->{
             for (Message msg:list){
                 add2Temp(msg.getConversation(),msg);
             }
             TempDequeue();
-        }
     };
     public  void TempDequeue() {
         Iterator iter = TempMap.entrySet().iterator();
@@ -166,7 +160,7 @@ public class LazyQueue {
                                     "" + list.size() + "" +
                                     " tempDequeue block " + message.getContents());
                         }
-                        listenr.onDequeueMsg(message);
+                        listener.onDequeueMsg(message);
                     }
             }
         }

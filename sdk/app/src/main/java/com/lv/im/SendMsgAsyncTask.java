@@ -16,6 +16,7 @@ import org.apache.http.entity.StringEntity;
 import org.apache.http.impl.client.DefaultHttpClient;
 import org.apache.http.protocol.HTTP;
 import org.apache.http.util.EntityUtils;
+import org.json.JSONException;
 import org.json.JSONObject;
 
 /**
@@ -30,15 +31,23 @@ public class SendMsgAsyncTask {
         this.c = c;
     }
 
-    public static void sendMessage(final String correntUser, final String conversation,final String currentFri, final IMessage msg, final long localId, final SendMsgListener listen) {
-        msg.setConversation(conversation);
-        final String str = JSON.toJSON(msg).toString();
-        if (Config.isDebug){
-            Log.i(Config.TAG,"send_message:" + str);
+    public static void sendMessage(final String correntUser, final String conversation, final String currentFri, final IMessage msg, final long localId, final SendMsgListener listen) {
+        JSONObject object = new JSONObject();
+        try {
+            object.put("sender", msg.getSender());
+            if (conversation == null || "".equals(conversation)) {
+                object.put("receiver", Integer.parseInt(msg.getReceiver()));
+            } else object.put("conversation", conversation);
+            object.put("msgType", msg.getMsgType());
+            object.put("contents", msg.getContents());
+        } catch (JSONException e) {
+            e.printStackTrace();
         }
-        new Thread(new Runnable() {
-            @Override
-            public void run() {
+        final String str = object.toString();
+        if (Config.isDebug) {
+            Log.i(Config.TAG, "send_message:" + str);
+        }
+        new Thread(()->{
                 HttpPost post = new HttpPost(Config.SEND_URL);
                 HttpResponse httpResponse = null;
                 try {
@@ -48,37 +57,35 @@ public class SendMsgAsyncTask {
                     post.setEntity(entity);
                     httpResponse = new DefaultHttpClient().execute(post);
                     int code = httpResponse.getStatusLine().getStatusCode();
-                    if (Config.isDebug){
+                    if (Config.isDebug) {
                         Log.i(Config.TAG, "send status code:" + code);
                     }
                     if (code == 200) {
                         HttpEntity res = httpResponse.getEntity();
                         String result = EntityUtils.toString(res);
-                        if (Config.isDebug){
-                            Log.i(Config.TAG,result);
+                        if (Config.isDebug) {
+                            Log.i(Config.TAG, result);
                         }
-                        JSONObject object = new JSONObject(result);
-                        JSONObject obj = object.getJSONObject("result");
-                        String conversation = obj.get("conversation").toString();
+                        JSONObject object1 = new JSONObject(result);
+                        JSONObject obj = object1.getJSONObject("result");
+                        String conversation1 = obj.get("conversation").toString();
                         String msgId = obj.get("msgId").toString();
                         Long timestamp = Long.parseLong(obj.get("timestamp").toString());
-                        IMClient.getInstance().setLastMsg(conversation, Integer.parseInt(msgId));
-                        IMClient.getInstance().updateMessage(currentFri, localId, msgId, conversation, timestamp, Config.STATUS_SUCCESS);
-                        if (Config.isDebug){
-                            Log.i(Config.TAG,"发送成功，消息更新！");
+                        IMClient.getInstance().setLastMsg(conversation1, Integer.parseInt(msgId));
+                        IMClient.getInstance().updateMessage(currentFri, localId, msgId, conversation1, timestamp, Config.STATUS_SUCCESS);
+                        if (Config.isDebug) {
+                            Log.i(Config.TAG, "发送成功，消息更新！");
                         }
                         listen.onSuccess();
                     } else {
-                        if (Config.isDebug){
-                            Log.i(Config.TAG,"发送失败：code " + code);
+                        if (Config.isDebug) {
+                            Log.i(Config.TAG, "发送失败：code " + code);
                         }
                         listen.onFailed(code);
                     }
                 } catch (Exception e) {
                     e.printStackTrace();
                 }
-            }
-
         }).start();
     }
 
@@ -105,8 +112,8 @@ public class SendMsgAsyncTask {
                 post.setEntity(entity);
                 httpResponse = new DefaultHttpClient().execute(post);
                 int code = httpResponse.getStatusLine().getStatusCode();
-                if (Config.isDebug){
-                    Log.i(Config.TAG,"send status code:" + code);
+                if (Config.isDebug) {
+                    Log.i(Config.TAG, "send status code:" + code);
                 }
                 if (code == 200) {
                     HttpEntity res = httpResponse.getEntity();
@@ -119,13 +126,13 @@ public class SendMsgAsyncTask {
                     Long timestamp = Long.parseLong(obj.get("timestamp").toString());
                     IMClient.getInstance().setLastMsg(currentFri, Integer.parseInt(msgId));
                     IMClient.getInstance().updateMessage(currentFri, localId, msgId, conversation, timestamp, Config.STATUS_SUCCESS);
-                    if (Config.isDebug){
-                        Log.i(Config.TAG,"发送成功，消息更新！");
+                    if (Config.isDebug) {
+                        Log.i(Config.TAG, "发送成功，消息更新！");
                     }
                     listen.onSuccess();
                 } else {
-                    if (Config.isDebug){
-                        Log.i(Config.TAG,"发送失败：code " + code);
+                    if (Config.isDebug) {
+                        Log.i(Config.TAG, "发送失败：code " + code);
                     }
                     listen.onFailed(code);
                 }

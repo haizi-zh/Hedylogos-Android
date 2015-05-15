@@ -1,4 +1,7 @@
-package com.lv.user;
+package com.lv.group;
+
+import com.lv.user.HttpManager;
+import com.lv.user.UserDao;
 
 import java.util.List;
 
@@ -19,8 +22,8 @@ public class GroupManager {
     }
 
     public void createGroup(String groupName, String groupType, boolean isPublic, List<Long> groupMember,CreateSuccessListener listener) {
-       long row= UserDao.getInstance().addGroup2Friend(groupName,groupType,isPublic,null,groupMember);
-       HttpManager.createGroup(groupName, groupType, isPublic, null, groupMember, row,listener);
+       long row= UserDao.getInstance().addGroup2User(groupName,groupType,isPublic,null,groupMember);
+       HttpManager.createGroup(groupName, groupType, isPublic, null, groupMember, row, listener);
     }
 
 
@@ -42,6 +45,7 @@ public class GroupManager {
     }
 
     public void quitGroup(String groupId) {
+
     }
 
     public void getGroupInformation(String groupId) {

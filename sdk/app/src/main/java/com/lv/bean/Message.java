@@ -42,12 +42,29 @@ public class Message implements Serializable{
     private int sendType;
     private String Url;
     private String LoaclPath;
+    private long GroupId;
+    private String ChatType;//聊天类型
 
+    public long getGroupId() {
+        return GroupId;
+    }
+
+    public void setGroupId(long groupId) {
+        GroupId = groupId;
+    }
+
+    public String getChatType() {
+        return ChatType;
+    }
+
+    public void setChatType(String chatType) {
+        ChatType = chatType;
+    }
 
     public Message (){
     }
 
-    public Message(String id, String conversation, int msgId, int msgType, long senderId, String senderAvatar, String senderName, String contents, long timestamp, int sendType) {
+    public Message(String id, String conversation, int msgId, int msgType, long senderId, String senderAvatar, String senderName, String contents, long timestamp, int sendType,long groupId,String chatType) {
         this.id = id;
         this.conversation = conversation;
         this.msgId = msgId;
@@ -58,6 +75,8 @@ public class Message implements Serializable{
         this.contents = contents;
         this.timestamp = timestamp;
         this.sendType = sendType;
+        this.GroupId=groupId;
+        this.ChatType=chatType;
     }
 
     public String getId() {

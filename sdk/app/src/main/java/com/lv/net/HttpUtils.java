@@ -10,6 +10,7 @@ import com.lv.Listener.FetchListener;
 import com.lv.Utils.Config;
 import com.lv.bean.Message;
 import com.lv.im.IMClient;
+import com.lv.user.User;
 
 import org.apache.http.Header;
 import org.apache.http.HttpEntity;
@@ -23,7 +24,6 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
@@ -40,166 +40,165 @@ public class HttpUtils {
         final String path = Config.FETCH_URL + user;
         final RequestParams params = new RequestParams();
         params.put("userId", user);
-        exec.execute(new Runnable() {
-            @Override
-            public void run() {
-
-                client.get(path, params, new TextHttpResponseHandler() {
-                    @Override
-                    public void onFailure(int i, Header[] headers, String s, Throwable throwable) {
-                      if (Config.isDebug){
-                            Log.i(Config.TAG, "error code:" + i);
-                        }
+        exec.execute(() -> {
+            client.get(path, params, new TextHttpResponseHandler() {
+                @Override
+                public void onFailure(int i, Header[] headers, String s, Throwable throwable) {
+                    if (Config.isDebug) {
+                        Log.i(Config.TAG, "fetch error code:" + i + "   " + s);
+                        throwable.printStackTrace();
                     }
+                }
 
-                    @Override
-                    public void onSuccess(int i, Header[] headers, String s) {
-                        try {
-                            System.out.println(Thread.currentThread());
-                            if (Config.isDebug){
-                                Log.i(Config.TAG,"fetch:" + s);
-                            }
-                            JSONObject object = new JSONObject(s);
-                            JSONArray array = object.getJSONArray("result");
-                            List<Message> list = new ArrayList<Message>();
-                            for (int j = 0; j < array.length(); j++) {
-                                Message msg = JSON.parseObject(array.getJSONObject(j).toString(), Message.class);
-                                list.add(msg);
-                            }
-                            if (list.size()>0) {
-                                listener.OnMsgArrive(list);
-                            }
-                        } catch (JSONException e) {
-                            e.printStackTrace();
+                @Override
+                public void onSuccess(int i, Header[] headers, String s) {
+                    try {
+                        System.out.println(Thread.currentThread());
+                        if (Config.isDebug) {
+                            Log.i(Config.TAG, "fetch:" + s);
                         }
+                        JSONObject object = new JSONObject(s);
+                        JSONArray array = object.getJSONArray("result");
+                        List<Message> list = new ArrayList<>();
+                        for (int j = 0; j < array.length(); j++) {
+                            Message msg = JSON.parseObject(array.getJSONObject(j).toString(), Message.class);
+                            list.add(msg);
+                        }
+                        if (list.size() > 0) {
+                            listener.OnMsgArrive(list);
+                        }
+                    } catch (JSONException e) {
+                        e.printStackTrace();
                     }
-                });
-            }
+                }
+            });
         });
     }
 
-    public static void postack(final JSONArray array, String userid) {
-        final String url = Config.ACK_URL + userid + "/ack";
+    public static void postack(final JSONArray array, FetchListener listener) {
+        final String url = Config.ACK_URL + User.getUser().getCurrentUser() + "/ack";
         final JSONObject obj = new JSONObject();
         try {
             obj.put("msgList", array);
             IMClient.getInstance().clearackList();
-            if (Config.isDebug){
-                Log.i(Config.TAG,"ack : " + obj.toString());
+            if (Config.isDebug) {
+                Log.i(Config.TAG, "ack : " + obj.toString());
             }
             IMClient.getInstance().clearackList();
         } catch (JSONException e) {
             e.printStackTrace();
         }
-        exec.execute(new Runnable() {
-            @Override
-            public void run() {
-                HttpPost post = new HttpPost(url);
-                HttpResponse httpResponse = null;
-                try {
-                    StringEntity entity = new StringEntity(obj.toString(),
-                            HTTP.UTF_8);
-                    entity.setContentType("application/json");
-                    post.setEntity(entity);
-                    httpResponse = new DefaultHttpClient().execute(post);
-                    System.out.println("send status code:" + httpResponse.getStatusLine().getStatusCode());
+        exec.execute(() -> {
+            HttpPost post = new HttpPost(url);
+            HttpResponse httpResponse = null;
+            try {
+                StringEntity entity = new StringEntity(obj.toString(),
+                        HTTP.UTF_8);
+                entity.setContentType("application/json");
+                post.setEntity(entity);
+                httpResponse = new DefaultHttpClient().execute(post);
+                int statusCode = httpResponse.getStatusLine().getStatusCode();
+                System.out.println("ack status code:" + statusCode);
+                if (statusCode == 200) {
                     HttpEntity res = httpResponse.getEntity();
-                    if (Config.isDebug){
-                        Log.i(Config.TAG,"ack Result : " + EntityUtils.toString(res));
-                        Log.i(Config.TAG,"list size:" + array.length());
-                    }
-                } catch (Exception e) {
-                    e.printStackTrace();
-                }
-            }
+                    String s = EntityUtils.toString(res);
 
+                        JSONObject object = new JSONObject(s);
+                        JSONArray resultArray = object.getJSONArray("result");
+                        List<Message> list = new ArrayList<>();
+                        if (Config.isDebug) {
+                            Log.i(Config.TAG, "ack Result : " + s);
+                        }
+                        for (int j = 0; j < resultArray.length(); j++) {
+                            Message msg = JSON.parseObject(resultArray.getJSONObject(j).toString(), Message.class);
+                            list.add(msg);
+                        }
+                        if (list.size() > 0) {
+                            if (Config.isDebug) {
+                                Log.i(Config.TAG, "msg list : " + list.toString());
+                            }
+                            listener.OnMsgArrive(list);
+                        }
+                }
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
         });
 
     }
 
     public static void NetSpeedTest() {
-        exec.execute(new Runnable() {
-            @Override
-            public void run() {
-                List<String> urlList = new ArrayList<String>();
-                urlList.add("www.baidu.com");
-                urlList.add("www.sina.com.cn");
-                urlList.add("www.163.com");
-                Process process = null;
-                String result = "";
-                String fastest="";
-                long temp=9999;
-                for (String url : urlList) {
-                    long start = 0;
-                    long end = 0;
-                    try {
-                        start = System.currentTimeMillis();
-                        process = Runtime.getRuntime().exec("/system/bin/ping -c 1 "+url);
-                        int status = process.waitFor();
-                        if (status == 0) {
-                            result = "success";
-
-
-                        } else {
-                            result = Integer.toString(status);
-                        }
-                        end = System.currentTimeMillis();
-                    } catch (IOException e) {
-                        e.printStackTrace();
-                    } catch (InterruptedException e) {
-                        e.printStackTrace();
+        exec.execute(() -> {
+            List<String> urlList = new ArrayList<>();
+            urlList.add("www.baidu.com");
+            urlList.add("www.sina.com.cn");
+            urlList.add("www.163.com");
+            Process process = null;
+            String result = "";
+            String fastest = "";
+            long temp = 9999;
+            for (String url : urlList) {
+                long start = 0;
+                long end = 0;
+                try {
+                    start = System.currentTimeMillis();
+                    process = Runtime.getRuntime().exec("/system/bin/ping -c 1 " + url);
+                    int status = process.waitFor();
+                    if (status == 0) {
+                        result = "success";
+                    } else {
+                        result = Integer.toString(status);
                     }
-                    long time=end - start;
-                    if (Config.isDebug){
-                        Log.i(Config.TAG,"result " + result);
-                        Log.i(Config.TAG,url+" ping time:" + time);
-                    }
-                    if (time<temp){
-                        temp=time;
-                        fastest=url;
-                    }
+                    end = System.currentTimeMillis();
+                } catch (Exception e) {
+                    e.printStackTrace();
                 }
-                if (Config.isDebug){
-                    Log.i(Config.TAG,"fastest url "+fastest);
+                long time = end - start;
+                if (Config.isDebug) {
+                    Log.i(Config.TAG, "result " + result);
+                    Log.i(Config.TAG, url + " ping time:" + time);
                 }
+                if (time < temp) {
+                    temp = time;
+                    fastest = url;
+                }
+            }
+            if (Config.isDebug) {
+                Log.i(Config.TAG, "fastest url " + fastest);
             }
         });
 
 
     }
+
     public interface tokenget {
         public void OnSuccess(String key, String token);
     }
 
     public static void getToken(final tokenget listener) {
-        String token = null;
-        exec.execute(new Runnable() {
-            @Override
-            public void run() {
-                JSONObject object = new JSONObject();
-                try {
-                    object.put("action", 1);
-                    HttpPost post = new HttpPost("http://hedy.zephyre.me/upload/token-generator");
-                    HttpResponse httpResponse = null;
-                    StringEntity entity = new StringEntity(object.toString(),
-                            HTTP.UTF_8);
-                    entity.setContentType("application/json");
-                    post.setEntity(entity);
-                    httpResponse = new DefaultHttpClient().execute(post);
-                    if (httpResponse.getStatusLine().getStatusCode() == 200) {
-                        String result = EntityUtils.toString(httpResponse.getEntity());
-                        JSONObject res = new JSONObject(result);
-                        JSONObject obj = res.getJSONObject("result");
-                        String key = obj.getString("key");
-                        String token = obj.getString("token");
-                        listener.OnSuccess(key, token);
-                    } else
-                    if (Config.isDebug){
-                        Log.i(Config.TAG,"Tokenget Error :" + httpResponse.getStatusLine().getStatusCode());
-                    }
-                } catch (Exception e) {
-                    e.printStackTrace();
+        exec.execute(() -> {
+            JSONObject object = new JSONObject();
+            try {
+                object.put("action", 1);
+                HttpPost post = new HttpPost("http://hedy.zephyre.me/upload/token-generator");
+                HttpResponse httpResponse = null;
+                StringEntity entity = new StringEntity(object.toString(),
+                        HTTP.UTF_8);
+                entity.setContentType("application/json");
+                post.setEntity(entity);
+                httpResponse = new DefaultHttpClient().execute(post);
+                if (httpResponse.getStatusLine().getStatusCode() == 200) {
+                    String result = EntityUtils.toString(httpResponse.getEntity());
+                    JSONObject res = new JSONObject(result);
+                    JSONObject obj = res.getJSONObject("result");
+                    String key = obj.getString("key");
+                    String token = obj.getString("token");
+                    listener.OnSuccess(key, token);
+                } else if (Config.isDebug) {
+                    Log.i(Config.TAG, "Tokenget Error :" + httpResponse.getStatusLine().getStatusCode());
                 }
+            } catch (Exception e) {
+                e.printStackTrace();
             }
         });
     }

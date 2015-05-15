@@ -10,15 +10,15 @@ public class IMessage {
     private int msgType;
     private String contents;
 
-    public String getConversation() {
-        return conversation;
-    }
+//    public String getConversation() {
+//        return conversation;
+//    }
+//
+//    public void setConversation(String conversation) {
+//        this.conversation = conversation;
+//    }
 
-    public void setConversation(String conversation) {
-        this.conversation = conversation;
-    }
-
-    private String conversation;
+  //  private String conversation;
 
     public int getSender() {
         return sender;

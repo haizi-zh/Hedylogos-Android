@@ -13,6 +13,9 @@ import com.lv.Utils.Config;
 import com.lv.Utils.JsonValidator;
 import com.lv.bean.Message;
 
+import org.json.JSONException;
+import org.json.JSONObject;
+
 import java.util.ArrayList;
 import java.util.HashMap;
 
@@ -22,17 +25,22 @@ import java.util.HashMap;
  */
 public  class MessageReceiver extends BroadcastReceiver  {
 
-    public static HashMap<String,ArrayList<MsgListener>>routeMap=new HashMap<String,ArrayList<MsgListener>>();
+    public static HashMap<String,ArrayList<MsgListener>>routeMap=new HashMap<>();
 
+    /**
+     * 注册RouteKey
+     * @param listener 监听
+     * @param routeKey key值
+     */
     public static void registerListener(MsgListener listener,String routeKey){
         if (!routeMap.containsKey(routeKey)){
-            routeMap.put(routeKey,new ArrayList<MsgListener>());
+            routeMap.put(routeKey,new ArrayList<>());
         }
         routeMap.get(routeKey).add(listener);
     }
     @Override
     public void onReceive( Context context, Intent intent) {
-
+System.out.println(intent.getAction());
         Bundle bundle = intent.getExtras();
         switch (bundle.getInt("action")) {
             case PushConsts.GET_MSG_DATA:
@@ -45,11 +53,29 @@ public  class MessageReceiver extends BroadcastReceiver  {
                     }
                     JsonValidator jsonValidator =new JsonValidator();
                     if (jsonValidator.validate(data)){
-                         Message newmsg = JSON.parseObject(data, Message.class);
-                            newmsg.setSendType(1);
-                        String key="IM";
-                        for (MsgListener listener :routeMap.get(key)){
-                            listener.OnMessage(context,newmsg);
+                        try {
+                            JSONObject object=new JSONObject(data);
+                            /**
+                             * dispatch消息
+                             */
+                            String routeKey= object.getString("routeKey");
+                            switch (routeKey){
+                                case "IM":
+                                    if (Config.isDebug){
+                                        Log.i(Config.TAG,"routeKey :IM");
+                                    }
+                                    String m=object.getString("message");
+                                    Message newmsg = JSON.parseObject(m, Message.class);
+                                    newmsg.setSendType(1);
+                                    for (MsgListener listener :routeMap.get(routeKey)){
+                                        listener.OnMessage(context,newmsg);
+                                    }
+                                    break;
+                                default:
+                                    break;
+                            }
+                        } catch (JSONException e) {
+                            e.printStackTrace();
                         }
                    }
                 }

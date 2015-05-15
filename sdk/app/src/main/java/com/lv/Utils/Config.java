@@ -11,6 +11,7 @@ public class Config {
     public static final String SEND_URL = "http://hedy.zephyre.me/chats";
     public static final String ACK_URL = "http://hedy.zephyre.me/chats/";
     public static final String MSG_DBNAME = "IM_SDK.db";
+    public static final String USER_DBNAME = "USER.db";
     public static final String DB_PATH = "/data/data/com.lv/";
     public final static String AUDIO_AMR_FILENAME = "Audio.amr";
     public static final String LOGIN_URL="http://hedy.zephyre.me/users/login";

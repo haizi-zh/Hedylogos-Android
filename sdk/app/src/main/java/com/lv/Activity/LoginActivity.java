@@ -55,9 +55,8 @@ public class LoginActivity extends Activity implements View.OnClickListener {
         user_register_button = (Button) findViewById(R.id.user_register_button);
         user_login_button.setOnClickListener(this);
         user_register_button.setOnClickListener(this);
-        login_username.setOnFocusChangeListener(new View.OnFocusChangeListener() {
-            @Override
-            public void onFocusChange(View v, boolean hasFocus) {
+        login_username.setOnFocusChangeListener((v,hasFocus)->{
+           {
                 if (!hasFocus) {
                     String username = login_username.getText().toString().trim();
                     if (username.length() < 4) {
@@ -65,25 +64,19 @@ public class LoginActivity extends Activity implements View.OnClickListener {
                     }
                 }
             }
-
         });
-        login_password.setOnFocusChangeListener(new View.OnFocusChangeListener() {
-            @Override
-            public void onFocusChange(View v, boolean hasFocus) {
-                if (!hasFocus) {
-                    String password = login_password.getText().toString().trim();
-                    if (password.length() < 4) {
-                        Toast.makeText(LoginActivity.this, "密码不能小于4个字符", Toast.LENGTH_SHORT).show();
-                    }
+        login_password.setOnFocusChangeListener((v,hasFocus)->{
+            if (!hasFocus) {
+                String password = login_password.getText().toString().trim();
+                if (password.length() < 4) {
+                    Toast.makeText(LoginActivity.this, "密码不能小于4个字符", Toast.LENGTH_SHORT).show();
                 }
             }
-
         });
     }
 
     @Override
     public void onClick(View v) {
-        Intent intent = new Intent();
         switch (v.getId()) {
             case R.id.user_login_button:
                 System.out.println("click");

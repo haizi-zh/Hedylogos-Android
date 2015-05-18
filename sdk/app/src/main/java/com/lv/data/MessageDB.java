@@ -34,7 +34,7 @@ public class MessageDB {
     private static final int CONVERSATION_INDEX_Friend_Id = 0;
     private static final int CONVERSATION_INDEX_HASH = 2;
     private static final int CONVERSATION_INDEX_last_rec_msgId = 3;
-    private static final int CONVERSATION_INDEX_isRead = 6;
+    private static final int CONVERSATION_INDEX_isRead = 5;
 
     private static final int MESSAGE_INDEX_LocalId = 0;
     private static final int MESSAGE_INDEX_ServerId = 1;
@@ -82,6 +82,7 @@ public class MessageDB {
         if (mOpenCounter.decrementAndGet() == 0) {
             db.close();
         }
+        mdb=null;
         System.out.println("关闭数量" + mOpenCounter.get());
     }
 
@@ -110,24 +111,25 @@ public class MessageDB {
         return localid;
     }
 
-    public synchronized int saveReceiveMsg(String Friend_Id, MessageBean entity, String conversation,long groupId,String chatType) {
+    public synchronized int saveReceiveMsg(String Friend_Id, MessageBean entity, String conversation, long groupId, String chatType) {
         mdb = getDB();
         String table_name = null;
-        String chater=null;
+        String chater = null;
+        chatType="single";
         System.out.println("Friend_Id " + Friend_Id + " conversation " + conversation);
         /**
          * 单聊
          */
-        if ("".equals(chatType)){
-            table_name="chat_"+CryptUtils.getMD5String(entity.getSenderId()+"");
-            chater=entity.getSenderId()+"";
+        if ("single".equals(chatType)) {
+            table_name = "chat_" + CryptUtils.getMD5String(entity.getSenderId() + "");
+            chater = entity.getSenderId() + "";
         }
         /**
          * 群聊
          */
-        if ("".equals(chatType)){
-            table_name="chat_"+CryptUtils.getMD5String(groupId+"");
-            chater=groupId+"";
+        if ("".equals(chatType)) {
+            table_name = "chat_" + CryptUtils.getMD5String(groupId + "");
+            chater = groupId + "";
         }
 
         if (Config.isDebug) {
@@ -142,7 +144,6 @@ public class MessageDB {
 
         Cursor cursor = mdb.rawQuery("select * from " + table_name + " where ServerId=?", new String[]{entity.getServerId() + ""});
         int count = cursor.getCount();
-        System.out.println(entity.getMessage() + " cursor : " + count);
         if (count > 0) return 1;
         cursor.close();
         ContentValues values = new ContentValues();
@@ -156,30 +157,34 @@ public class MessageDB {
         values.put("SenderId", entity.getSenderId());
         mdb.insert(table_name, null, values);
         IMClient.getInstance().setLastMsg(conversation, entity.getServerId());
-        add2Conversion(Long.parseLong(chater),entity.getCreateTime(),table_name,entity.getServerId(),conversation);
+        add2Conversion(Long.parseLong(chater), entity.getCreateTime(), table_name, entity.getServerId(), conversation);
         closeDB();
         return 0;
     }
-
 
     public List<MessageBean> getAllMsg(String Friend_Id, int pager) {
         mdb = getDB();
         String table_name = "chat_" + CryptUtils.getMD5String(Friend_Id);
         List<MessageBean> list = new LinkedList<>();
-        int num = 100 * (pager + 1);
         // 滚动到顶端自动加载数据
+        int from = pager * 100;
+        int to = (pager + 1) * 100;
         mdb.execSQL("CREATE table IF NOT EXISTS "
                 + table_name
                 + " (LocalId INTEGER PRIMARY KEY AUTOINCREMENT,ServerId INTEGER,Status INTEGER," +
                 "Type INTEGER, Message TEXT,CreateTime INTEGER, SendType INTEGER, Metadata TEXT," +
                 "SenderId INTEGER)");
         Cursor c = mdb.rawQuery("SELECT * from " + table_name
-                + " ORDER BY LocalId DESC LIMIT " + num, null);
+                + " ORDER BY LocalId DESC LIMIT " + from + "," + to, null);
+        if (c.getCount() == 0)
+            return list;
         c.moveToLast();
+        if (c.getCount() > 0) {
+            list.add(Curson2Message(c));
+        }
         while (c.moveToPrevious()) {
             list.add(Curson2Message(c));
         }
-        //  list.add(Curson2Message(c));
         // updateReadStatus(Friend_Id);
         c.close();
         closeDB();
@@ -187,22 +192,24 @@ public class MessageDB {
     }
 
     public synchronized void updateReadStatus(String conversation, int num) {
-//        mdb = getDB();
-//        ContentValues values = new ContentValues();
-//        if (num == 0) {
-//            values.put("IsRead", num);
-//        } else {
-//            Cursor c = mdb.rawQuery("select IsRead from " + con_table_name + " where conversation='" + conversation + "'", null);
-//            while (c.moveToNext()) {
-//                int n = c.getInt(0);
-//                System.out.println("n " + n);
-//                num = n + 1;
-//                values.put("IsRead", num);
-//            }
-//            c.close();
-//        }
-//        mdb.update(con_table_name, values, " conversation=?", new String[]{conversation});
-//        closeDB();
+        mdb = getDB();
+        ContentValues values = new ContentValues();
+        if (num == 0) {
+            values.put("IsRead", num);
+        } else {
+            Cursor c = mdb.rawQuery("select IsRead from " + con_table_name + " where conversation='" + conversation + "'", null);
+            while (c.moveToNext()) {
+                int n = c.getInt(0);
+                if (Config.isDebug){
+                    Log.i(Config.TAG,"未读数量： " + n);
+                }
+                num = n + 1;
+                values.put("IsRead", num);
+            }
+            c.close();
+        }
+        mdb.update(con_table_name, values, " conversation=?", new String[]{conversation});
+        closeDB();
     }
 
     public MessageBean Curson2Message(Cursor c) {
@@ -259,13 +266,16 @@ public class MessageDB {
             int friend_id = c.getInt(CONVERSATION_INDEX_Friend_Id);
             String table = c.getString(CONVERSATION_INDEX_HASH);
             int lastmsgId = c.getInt(CONVERSATION_INDEX_last_rec_msgId);
-            int isRead = c.getInt(5);
+            int isRead = c.getInt(CONVERSATION_INDEX_isRead);
             String conversation = c.getString(c.getColumnIndex("conversation"));
-            if (conversation==null)conversation="0";
+            if (conversation == null) conversation = "0";
             IMClient.getInstance().setLastMsg(conversation, lastmsgId);
             Cursor cursor = mdb.rawQuery("SELECT Message FROM " + table + " order by ServerId desc limit 1", null);
-            cursor.moveToLast();
-            String lastMessage = cursor.getString(0);
+            String lastMessage=null;
+            if (cursor.getCount()>0) {
+                cursor.moveToLast();
+                lastMessage = cursor.getString(0);
+            }
             list.add(new ConversationBean(friend_id, time, table, lastmsgId, isRead, conversation, lastMessage));
             cursor.close();
         }
@@ -283,7 +293,6 @@ public class MessageDB {
         values.put("CreateTime", timestamp);
         values.put("Status", status);
         int num = mdb.update(table_name, values, "LocalId=?", new String[]{LocalId + ""});
-        System.out.println("updateMsg num " + num);
         updateConversation(fri_ID, conversation, Integer.parseInt(msgId));
         closeDB();
     }

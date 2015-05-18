@@ -5,6 +5,6 @@ package com.lv.user;
  */
 public interface LoginSuccessListener {
     public void OnSuccess();
-    public void OnFalied(int code);
+    public void OnFailed(int code);
 
 }

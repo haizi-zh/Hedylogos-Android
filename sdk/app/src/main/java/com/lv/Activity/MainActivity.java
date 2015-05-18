@@ -11,7 +11,6 @@ import android.view.Window;
 import android.widget.AdapterView;
 import android.widget.Button;
 import android.widget.EditText;
-import android.widget.ImageView;
 import android.widget.ListView;
 import android.widget.SimpleAdapter;
 
@@ -20,10 +19,10 @@ import com.lv.Utils.Config;
 import com.lv.Utils.TimeUtils;
 import com.lv.bean.ConversationBean;
 import com.lv.bean.Message;
-import com.lv.im.HandleImMessage;
-import com.lv.im.IMClient;
 import com.lv.group.CreateSuccessListener;
 import com.lv.group.GroupManager;
+import com.lv.im.HandleImMessage;
+import com.lv.im.IMClient;
 import com.lv.user.User;
 
 import java.util.ArrayList;
@@ -33,14 +32,11 @@ import java.util.List;
 
 public class MainActivity extends Activity implements View.OnClickListener, HandleImMessage.MessagerHandler {
     public static Button btn;
-    ImageView img;
     Button test;
     ListView lv;
     List<HashMap<String, Object>> data;
     SimpleAdapter adapter = null;
-    private String currentuser;
     private SDKApplication application;
-    static int i = 1;
     List<ConversationBean> list;
 
     @Override
@@ -55,10 +51,7 @@ public class MainActivity extends Activity implements View.OnClickListener, Hand
         test.setOnClickListener(this);
         btn.setOnClickListener(this);
         application = (SDKApplication) getApplication();
-        currentuser = (application.getCurrentUser());
-        lv.setOnItemClickListener(new AdapterView.OnItemClickListener() {
-            @Override
-            public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+        lv.setOnItemClickListener((AdapterView<?> parent, View view, int position, long id)->{
                 Intent intent = new Intent();
                 intent.setClass(MainActivity.this, PrivateConversationActivity.class);
                 intent.putExtra("friend_id", data.get(position).get("Friend_Id").toString());
@@ -68,7 +61,7 @@ public class MainActivity extends Activity implements View.OnClickListener, Hand
                 System.out.println("M fid" + data.get(position).get("Friend_Id").toString());
                 startActivity(intent);
             }
-        });
+        );
     }
 
     @Override
@@ -122,18 +115,15 @@ public class MainActivity extends Activity implements View.OnClickListener, Hand
         final EditText et=new EditText(this);
         new AlertDialog.Builder(this).setTitle("请输入好友id").setIcon(
                 android.R.drawable.ic_dialog_info).setView(
-                et).setPositiveButton("确定", new DialogInterface.OnClickListener() {
-            @Override
-            public void onClick(DialogInterface dialog, int which) {
+                et).setPositiveButton("确定",( dialog,  which)->{
                 String friendId= et.getText().toString();
                 Intent intent = new Intent();
                 intent.setClass(MainActivity.this, PrivateConversationActivity.class);
                 intent.putExtra("friend_id", friendId);
                 intent.putExtra("conversation", "");
                 startActivity(intent);
-
             }
-        })
+        )
                 .setNegativeButton("取消", null).show();
 
 
@@ -143,11 +133,13 @@ public class MainActivity extends Activity implements View.OnClickListener, Hand
         final EditText et=new EditText(this);
         new AlertDialog.Builder(this).setTitle("请输入群名称").setIcon(
                 android.R.drawable.ic_dialog_info).setView(
-                et).setPositiveButton("确定", new DialogInterface.OnClickListener() {
-            @Override
-            public void onClick(DialogInterface dialog, int which) {
+                et).setPositiveButton("确定", (DialogInterface dialog, int which)->{
                 String groupName= et.getText().toString();
-                GroupManager.getGroupManager().createGroup(groupName,null,true,null,new CreateSuccessListener() {
+                List<Long> list1=new ArrayList<Long>();
+                    list1.add(100001l);
+                    list1.add(100002l);
+                    list1.add(100000l);
+                GroupManager.getGroupManager().createGroup(groupName,null,true,list1,new CreateSuccessListener() {
                     @Override
                     public void OnSuccess(String groupId,String conversation) {
                         Intent intent = new Intent();
@@ -156,17 +148,14 @@ public class MainActivity extends Activity implements View.OnClickListener, Hand
                         intent.putExtra("conversation", conversation);
                         startActivity(intent);
                     }
-
                     @Override
                     public void OnFailed() {
 
                     }
                 });
             }
-        })
+        )
                 .setNegativeButton("取消", null).show();
-
-
     }
 
     @Override

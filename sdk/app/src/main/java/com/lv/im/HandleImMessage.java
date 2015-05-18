@@ -17,19 +17,19 @@ import org.json.JSONObject;
 import java.util.ArrayList;
 import java.util.HashMap;
 
-/**
- * Created by q on 2015/5/8.
- */
+import rx.Observable;
+
+
 public class HandleImMessage {
     private static HandleImMessage instance;
     LazyQueue queue = LazyQueue.getInstance();
     private Context c;
     private long lastTime;
     private static HashMap<MessagerHandler, String> openStateMap = new HashMap<>();
-
+    static Observable<Message> messageObservable;
     private HandleImMessage() {
         MessageReceiver.registerListener(listener, "IM");
-        queue.setDequeueListenr(dequeueListener);
+        queue.setDequeueListener(dequeueListener);
     }
 
     public static HandleImMessage getInstance() {
@@ -45,6 +45,10 @@ public class HandleImMessage {
         public void onMsgArrive(Message m);
     }
 
+    /**
+     * Activity注册消息listener
+     * @param listener listener
+     */
     public static void registerMessageListener(MessagerHandler listener) {
         ehList.add(listener);
     }
@@ -91,9 +95,23 @@ public class HandleImMessage {
             /**
              * 处理消息重组、丢失
              */
+//            messageObservable=Observable.just(message);
+//            messageObservable.map(msg->{
+//                queue.addMsg(message.getConversation(), msg);
+//                return null;
+//            }).map(new Func1<Object,Object>() {
+//                @Override
+//                public Object call(Object o) {
+//                    LazyQueue.getInstance().begin();
+//                    return null;
+//                }
+//            });
             queue.addMsg(message.getConversation(), message);
         }
     };
+    /**
+     * 消息处理完成，出队
+     */
     DequeueListener dequeueListener = new DequeueListener() {
         @Override
         public void onDequeueMsg(Message messageBean) {
@@ -137,8 +155,10 @@ public class HandleImMessage {
                         Intent dlA_intent = new Intent("ACTION.IMSDK.STARTDOWNLOAD");
                         String aurl = null;
                         try {
-                            aurl = object.getString("url");
-                            System.out.println("url " + aurl);
+                             aurl = object.getString("url");
+                            if (Config.isDebug){
+                                Log.i(Config.TAG,"url " + aurl);
+                            }
                         } catch (Exception e) {
                             e.printStackTrace();
                         }
@@ -154,7 +174,9 @@ public class HandleImMessage {
                         }
                         String iurl = null;
                         try {
-                            iurl = object.getString("thumb");
+                            if (object != null) {
+                                iurl = object.getString("thumb");
+                            }
                             if (Config.isDebug) {
                                 Log.i(Config.TAG, "url " + iurl);
                             }

@@ -99,6 +99,7 @@ private static final int AUDIO_MESSAGE=3;
                     holder.username.setText(m.getSenderId() + "");
                     holder.time.setText(TimeUtils.TimeStamp2Date(m.getCreateTime()));
                     holder.message.setText(m.getMessage());
+                    System.out.println(m.getMessage()+" getLocalId "+m.getLocalId());
              //   }
                 break;
             case 1:

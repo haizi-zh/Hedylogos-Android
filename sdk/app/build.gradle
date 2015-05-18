@@ -49,6 +49,9 @@ dependencies {
     compile files('libs/GetuiSdk2.4.1.0.jar')
     compile files('libs/json_simple-1.1.jar')
     compile files('libs/qiniu-android-sdk-7.0.3.jar')
+    compile files('libs/rxandroid-0.24.0.jar')
+    compile files('libs/rxjava-android-0.20.7.jar')
+    compile files('libs/rxjava-1.0.10.jar')
 }
 sourceSets {
     main {

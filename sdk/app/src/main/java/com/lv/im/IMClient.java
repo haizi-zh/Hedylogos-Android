@@ -36,17 +36,14 @@ public class IMClient {
     private JSONArray acklist;
     private HashMap<String, Integer> lastMsgMap;
     private volatile HashMap<String, String> cidMap;
-    private HashMap<String, String> user;
     private static final IMClient client = new IMClient();
     private MessageDB db;
-    private List<MessageBean> messageList;
     private List<ConversationBean> convercationList;
 
     private IMClient() {
-        convercationList = new ArrayList<ConversationBean>();
-        cidMap = new HashMap<String, String>();
-        user = new HashMap<String, String>();
-        lastMsgMap = new HashMap<String, Integer>();
+        convercationList = new ArrayList<>();
+        cidMap = new HashMap<>();
+        lastMsgMap = new HashMap<>();
         acklist = new JSONArray();
         HandleImMessage.getInstance();
     }
@@ -149,16 +146,42 @@ public class IMClient {
         return db.getAllMsg(friendId, page);
     }
 
-    public void sendTextMessage(String text, String friendId, String conversation, SendMsgListener listen) {
-        if (TextUtils.isEmpty(text)) return;
+    /**
+     * 发送文本消息
+     *
+     * @param text         消息内容
+     * @param friendId     friendId
+     * @param conversation 会话Id
+     * @param listen       listener
+     * @return 本地Id
+     */
+    public long sendTextMessage(String text, String friendId, String conversation, SendMsgListener listen, String chatType) {
+        if (TextUtils.isEmpty(text)) return -1;
         if ("0".equals(conversation)) conversation = null;
         IMessage message = new IMessage(Integer.parseInt(User.getUser().getCurrentUser()), friendId, Config.TEXT_MSG, text);
         MessageBean messageBean = imessage2Bean(message);
         long localId = db.saveMsg(friendId, messageBean);
         System.out.println("send  CurrentFriend " + friendId + " conversation" + conversation);
-        SendMsgAsyncTask.sendMessage(User.getUser().getCurrentUser(), conversation, friendId, message, localId, listen);
+        SendMsgAsyncTask.sendMessage(conversation, friendId, message, localId, listen, chatType);
+        return localId;
     }
 
+    public long sendSingleTextMessage(String text, String friendId, String conversation, SendMsgListener listen) {
+        return sendTextMessage(text, friendId, conversation, listen, "single");
+    }
+
+    public long sendGroupTextMessage(String text, String friendId, String conversation, SendMsgListener listen) {
+        return sendTextMessage(text, friendId, conversation, listen, "group");
+    }
+
+    /**
+     * 发送语音消息
+     *
+     * @param path     路径
+     * @param friendId friendId
+     * @param durtime  持续时间
+     * @param listener listener
+     */
     public void sendAudioMessage(String path, String friendId, long durtime, UploadListener listener) {
         if (TextUtils.isEmpty(path)) return;
         JSONObject object = new JSONObject();
@@ -168,6 +191,7 @@ public class IMClient {
         } catch (JSONException e) {
             e.printStackTrace();
         }
+
         IMessage message = new IMessage(Integer.parseInt(User.getUser().getCurrentUser()), friendId, Config.AUDIO_MSG, object.toString());
         MessageBean messageBean = imessage2Bean(message);
         long localId = db.saveMsg(friendId, messageBean);
@@ -175,6 +199,14 @@ public class IMClient {
 
     }
 
+    /**
+     * 发送图片消息
+     *
+     * @param path     路径
+     * @param bitmap   图片
+     * @param friendId friendId
+     * @param listener listener
+     */
     public void sendImageMessage(String path, Bitmap bitmap, String friendId, UploadListener listener) {
 
         IMessage message = new IMessage(Integer.parseInt(User.getUser().getCurrentUser()), friendId, Config.IMAGE_MSG, path);
@@ -211,6 +243,9 @@ public class IMClient {
         HttpUtils.FetchNewMsg(User.getUser().getCurrentUser(), listener);
     }
 
+    /**
+     * 初始化Fetch
+     */
     public void initAckAndFetch() {
         HttpUtils.postack(acklist, (list) -> {
             for (Message msg : list) {

@@ -87,14 +87,17 @@
     </content>
     <orderEntry type="jdk" jdkName="Android API 19 Platform" jdkType="Android SDK" />
     <orderEntry type="sourceFolder" forTests="false" />
-    <orderEntry type="library" exported="" name="android-support-v4" level="project" />
-    <orderEntry type="library" exported="" name="GetuiExt-2.0.3" level="project" />
     <orderEntry type="library" exported="" name="qiniu-android-sdk-7.0.3" level="project" />
-    <orderEntry type="library" exported="" name="json_simple-1.1" level="project" />
     <orderEntry type="library" exported="" name="GetuiSdk2.4.1.0" level="project" />
-    <orderEntry type="library" exported="" name="android-support-v7-appcompat" level="project" />
-    <orderEntry type="library" exported="" name="fastjson-1.2.5" level="project" />
+    <orderEntry type="library" exported="" name="android-support-v4" level="project" />
+    <orderEntry type="library" exported="" name="rxandroid-0.24.0" level="project" />
+    <orderEntry type="library" exported="" name="json_simple-1.1" level="project" />
     <orderEntry type="library" exported="" name="android-async-http-1.4.6" level="project" />
+    <orderEntry type="library" exported="" name="fastjson-1.2.5" level="project" />
+    <orderEntry type="library" exported="" name="rxjava-1.0.10" level="project" />
+    <orderEntry type="library" exported="" name="GetuiExt-2.0.3" level="project" />
+    <orderEntry type="library" exported="" name="rxjava-android-0.20.7" level="project" />
+    <orderEntry type="library" exported="" name="android-support-v7-appcompat" level="project" />
   </component>
 </module>
 

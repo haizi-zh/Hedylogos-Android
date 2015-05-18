@@ -5,9 +5,7 @@ import com.lv.user.UserDao;
 
 import java.util.List;
 
-/**
- * Created by q on 2015/5/11.
- */
+
 public class GroupManager {
     private static GroupManager groupManager;
 

@@ -5,7 +5,6 @@ import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.os.AsyncTask;
-import android.os.Handler;
 import android.os.IBinder;
 import android.util.Log;
 
@@ -18,9 +17,7 @@ import com.lv.user.User;
 import java.io.BufferedOutputStream;
 import java.io.File;
 import java.io.FileOutputStream;
-import java.io.IOException;
 import java.io.InputStream;
-import java.io.OutputStream;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.util.HashMap;
@@ -29,8 +26,7 @@ import java.util.HashMap;
  * Created by q on 2015/5/4.
  */
 public class DownloadService extends Service {
-    private Handler handler;
-    private HashMap<String, Message> downlaodMap=new HashMap<String, Message>();
+    private HashMap<String, Message> downlaodMap=new HashMap<>();
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
         if (Config.ACTION_START.equals(intent.getAction())) {
@@ -59,30 +55,29 @@ public class DownloadService extends Service {
         return null;
     }
 
-    class DownloadTask1 extends AsyncTask{
+    class DownloadTask1 extends AsyncTask<Object,Void,Void>{
         private String url;
         private Message msg;
         private int msgType;
         @Override
-        protected Object doInBackground(Object[] params) {
+        protected Void doInBackground(Object[] params) {
 
             msg= (Message) params[0];
             url= msg.getUrl();
             msgType=msg.getMsgType();
             HttpURLConnection conn = null;
-            OutputStream output = null;
+            //OutputStream output = null;
             String newfilename=null;
             try {
                 URL downloadUrl = new URL(url);
                 conn = (HttpURLConnection) downloadUrl.openConnection();
                 conn.setConnectTimeout(5000);
                 conn.setRequestMethod("GET");
-                int length = -1;
                 if (Config.isDebug){
                     Log.i(Config.TAG,"downlaod code: "+conn.getResponseCode());
                 }
                 if (conn.getResponseCode() == 200) {
-                    length = conn.getContentLength();
+                    int length = conn.getContentLength();
                     if (length < 0) {
                         return null;
                     }
@@ -147,17 +142,9 @@ public class DownloadService extends Service {
                     Log.i(Config.TAG,"下载失败");
                 }
             }finally {
-                try {
-                    if (output != null) {
-                        output.close();
-                    }
                     if (conn != null) {
                         conn.disconnect();
                     }
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
-
             }
 
             return null;
@@ -179,19 +166,18 @@ public class DownloadService extends Service {
         @Override
         public void run() {
             HttpURLConnection conn = null;
-            OutputStream output = null;
+          //  OutputStream output = null;
             String newfilename=null;
             try {
                 URL downloadUrl = new URL(url);
                 conn = (HttpURLConnection) downloadUrl.openConnection();
                 conn.setConnectTimeout(5000);
                 conn.setRequestMethod("GET");
-                int length = -1;
                 if (Config.isDebug){
                     Log.i(Config.TAG,"downlaod code: "+conn.getResponseCode() );
                 }
                 if (conn.getResponseCode() == 200) {
-                    length = conn.getContentLength();
+                  int length = conn.getContentLength();
                     if (length < 0) {
                         return;
                     }
@@ -223,9 +209,9 @@ public class DownloadService extends Service {
                    }
                     System.out.println(newfilename);
                     File newfile = new File(newfilename);
-                    newfile.createNewFile();
-                    InputStream input = null;
-                    input = conn.getInputStream();
+                    if (!newfile.createNewFile())
+                        Log.i(Config.TAG,"DownloadService failed to createFile!");
+                    InputStream input = conn.getInputStream();
 
 //                    if (newfilename != null) {
 //                        output = new FileOutputStream(newfile);
@@ -252,17 +238,10 @@ public class DownloadService extends Service {
                 notice(msg);
                 System.out.println("下载失败！");
             }finally {
-                try {
-                    if (output != null) {
-                        output.close();
-                    }
+                      //  output.close();
                     if (conn != null) {
                         conn.disconnect();
                     }
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
-
             }
         }
     }

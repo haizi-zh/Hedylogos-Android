@@ -20,27 +20,26 @@ import java.util.ArrayList;
 import java.util.HashMap;
 
 
-/**
- * Created by q on 2015/4/16.
- */
-public  class MessageReceiver extends BroadcastReceiver  {
+public class MessageReceiver extends BroadcastReceiver {
 
-    public static HashMap<String,ArrayList<MsgListener>>routeMap=new HashMap<>();
+    public static HashMap<String, ArrayList<MsgListener>> routeMap = new HashMap<>();
 
     /**
      * 注册RouteKey
+     *
      * @param listener 监听
      * @param routeKey key值
      */
-    public static void registerListener(MsgListener listener,String routeKey){
-        if (!routeMap.containsKey(routeKey)){
-            routeMap.put(routeKey,new ArrayList<>());
+    public static void registerListener(MsgListener listener, String routeKey) {
+        if (!routeMap.containsKey(routeKey)) {
+            routeMap.put(routeKey, new ArrayList<>());
         }
         routeMap.get(routeKey).add(listener);
     }
+
     @Override
-    public void onReceive( Context context, Intent intent) {
-System.out.println(intent.getAction());
+    public void onReceive(Context context, Intent intent) {
+        System.out.println(intent.getAction());
         Bundle bundle = intent.getExtras();
         switch (bundle.getInt("action")) {
             case PushConsts.GET_MSG_DATA:
@@ -48,27 +47,27 @@ System.out.println(intent.getAction());
                 String data = null;
                 if (payload != null) {
                     data = new String(payload);
-                    if (Config.isDebug){
-                        Log.i(Config.TAG,"data:"+data);
+                    if (Config.isDebug) {
+                        Log.i(Config.TAG, "data:" + data);
                     }
-                    JsonValidator jsonValidator =new JsonValidator();
-                    if (jsonValidator.validate(data)){
+                    JsonValidator jsonValidator = new JsonValidator();
+                    if (jsonValidator.validate(data)) {
                         try {
-                            JSONObject object=new JSONObject(data);
+                            JSONObject object = new JSONObject(data);
                             /**
-                             * dispatch消息
+                             * 分发消息
                              */
-                            String routeKey= object.getString("routeKey");
-                            switch (routeKey){
+                            String routeKey = object.getString("routeKey");
+                            switch (routeKey) {
                                 case "IM":
-                                    if (Config.isDebug){
-                                        Log.i(Config.TAG,"routeKey :IM");
+                                    if (Config.isDebug) {
+                                        Log.i(Config.TAG, "routeKey :IM");
                                     }
-                                    String m=object.getString("message");
+                                    String m = object.getString("message");
                                     Message newmsg = JSON.parseObject(m, Message.class);
                                     newmsg.setSendType(1);
-                                    for (MsgListener listener :routeMap.get(routeKey)){
-                                        listener.OnMessage(context,newmsg);
+                                    for (MsgListener listener : routeMap.get(routeKey)) {
+                                        listener.OnMessage(context, newmsg);
                                     }
                                     break;
                                 default:
@@ -77,14 +76,14 @@ System.out.println(intent.getAction());
                         } catch (JSONException e) {
                             e.printStackTrace();
                         }
-                   }
+                    }
                 }
                 break;
             case PushConsts.GET_CLIENTID:
                 String cid = bundle.getString("clientid");
                 IMClient.getInstance().setCid(cid);
-                if (Config.isDebug){
-                    Log.i(Config.TAG,IMClient.getInstance().getCid());
+                if (Config.isDebug) {
+                    Log.i(Config.TAG, IMClient.getInstance().getCid());
                 }
                 break;
             case PushConsts.THIRDPART_FEEDBACK:

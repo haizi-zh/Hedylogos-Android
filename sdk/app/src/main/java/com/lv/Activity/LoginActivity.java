@@ -12,13 +12,11 @@ import android.widget.EditText;
 import android.widget.Toast;
 
 import com.lv.R;
+import com.lv.Utils.CommonUtils;
 import com.lv.Utils.Config;
 import com.lv.im.IMClient;
 import com.lv.user.LoginSuccessListener;
 import com.lv.user.User;
-
-import java.util.ArrayList;
-import java.util.List;
 
 /**
  * Created by q on 2015/4/18.
@@ -29,7 +27,6 @@ public class LoginActivity extends Activity implements View.OnClickListener {
     private Button user_login_button;
     private Button user_register_button;
     private ProgressDialog dialog;
-    private SDKApplication sdkApplication;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -38,14 +35,6 @@ public class LoginActivity extends Activity implements View.OnClickListener {
         setContentView(R.layout.login_layout);
         IMClient.getInstance().init(this);
         initview();
-        List<Integer> list = new ArrayList<>();
-        list.add(1);
-        list.add(2);
-        list.add(3);
-        //GroupManager.getGroupManager().getGroupMembers("");
-       // GroupManager.getGroupManager().addMembers(null, null, true);
-        //GroupManager.getGroupManager().getUserGroupInfo("");
-        //GroupManager.getGroupManager().searchGroup("","");
     }
 
     private void initview() {
@@ -55,8 +44,8 @@ public class LoginActivity extends Activity implements View.OnClickListener {
         user_register_button = (Button) findViewById(R.id.user_register_button);
         user_login_button.setOnClickListener(this);
         user_register_button.setOnClickListener(this);
-        login_username.setOnFocusChangeListener((v,hasFocus)->{
-           {
+        login_username.setOnFocusChangeListener((v, hasFocus) -> {
+            {
                 if (!hasFocus) {
                     String username = login_username.getText().toString().trim();
                     if (username.length() < 4) {
@@ -65,7 +54,7 @@ public class LoginActivity extends Activity implements View.OnClickListener {
                 }
             }
         });
-        login_password.setOnFocusChangeListener((v,hasFocus)->{
+        login_password.setOnFocusChangeListener((v, hasFocus) -> {
             if (!hasFocus) {
                 String password = login_password.getText().toString().trim();
                 if (password.length() < 4) {
@@ -79,6 +68,7 @@ public class LoginActivity extends Activity implements View.OnClickListener {
     public void onClick(View v) {
         switch (v.getId()) {
             case R.id.user_login_button:
+                if (CommonUtils.isFastDoubleClick()) return;
                 System.out.println("click");
                 dialog = ProgressDialog.show(LoginActivity.this, "", "");
                 User.login(login_username.getText().toString(), new LoginSuccessListener() {
@@ -95,7 +85,7 @@ public class LoginActivity extends Activity implements View.OnClickListener {
                     }
 
                     @Override
-                    public void OnFalied(int code) {
+                    public void OnFailed(int code) {
                         dialog.dismiss();
                         Toast.makeText(LoginActivity.this, "登陆失败：" + code, Toast.LENGTH_LONG).show();
                     }
@@ -106,7 +96,5 @@ public class LoginActivity extends Activity implements View.OnClickListener {
             default:
                 break;
         }
-
     }
-
 }

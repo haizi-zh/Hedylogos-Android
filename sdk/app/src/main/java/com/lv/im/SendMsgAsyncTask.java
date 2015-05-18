@@ -31,9 +31,10 @@ public class SendMsgAsyncTask {
         this.c = c;
     }
 
-    public static void sendMessage(final String correntUser, final String conversation, final String currentFri, final IMessage msg, final long localId, final SendMsgListener listen) {
+    public static void sendMessage(final String conversation, final String currentFri, final IMessage msg, final long localId, final SendMsgListener listen,final String chatType) {
         JSONObject object = new JSONObject();
         try {
+            object.put("chatType",chatType);
             object.put("sender", msg.getSender());
             if (conversation == null || "".equals(conversation)) {
                 object.put("receiver", Integer.parseInt(msg.getReceiver()));

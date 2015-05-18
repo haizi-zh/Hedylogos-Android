@@ -5,7 +5,6 @@ import android.app.ActionBar;
 import android.app.Activity;
 import android.app.AlertDialog;
 import android.content.ContentResolver;
-import android.content.DialogInterface;
 import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
@@ -38,9 +37,9 @@ import com.lv.Utils.TimeUtils;
 import com.lv.bean.IMessage;
 import com.lv.bean.Message;
 import com.lv.bean.MessageBean;
+import com.lv.group.GroupManager;
 import com.lv.im.HandleImMessage;
 import com.lv.im.IMClient;
-import com.lv.group.GroupManager;
 import com.lv.user.User;
 
 import java.io.File;
@@ -63,8 +62,8 @@ public class PrivateConversationActivity extends Activity
     private EditText composeZone;
     static ListView chatList;
     static ChatDataAdapter adapter;
-    List<Message> messages = new LinkedList<Message>();
-    static List<MessageBean> msgs = new LinkedList<MessageBean>();
+    List<Message> messages = new LinkedList<>();
+    static List<MessageBean> msgs = new LinkedList<>();
     private String CurrentFriend;
     private String conversation;
     SDKApplication application;
@@ -111,17 +110,14 @@ public class PrivateConversationActivity extends Activity
         final EditText et=new EditText(this);
         new AlertDialog.Builder(this).setTitle("请输入id").setIcon(
                 android.R.drawable.ic_dialog_info).setView(
-                et).setPositiveButton("确定", new DialogInterface.OnClickListener() {
-            @Override
-            public void onClick(DialogInterface dialog, int which) {
+                et).setPositiveButton("确定",(dialog, which)-> {
                 String id= et.getText().toString();
-                List<Long>list =new ArrayList<Long>();
+                List<Long>list =new ArrayList<>();
                 list.add(Long.parseLong(id));
                 GroupManager.getGroupManager().addMembers(CurrentFriend,list,true);
             }
-        })
+        )
                 .setNegativeButton("取消", null).show();
-
     }
 
     private void initview() {
@@ -138,12 +134,7 @@ public class PrivateConversationActivity extends Activity
         Audiomsg.setOnClickListener(this);
         ImageMsg.setOnClickListener(this);
         record.setOnTouchListener(new MyClickListener());
-        record.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                record.setVisibility(View.GONE);
-            }
-        });
+        record.setOnClickListener(v->record.setVisibility(View.GONE));
     }
 
     @Override
@@ -155,14 +146,13 @@ public class PrivateConversationActivity extends Activity
                     return;
                 }
                 composeZone.getEditableText().clear();
-                IMClient.getInstance().sendTextMessage(text,CurrentFriend ,conversation, new SendMsgListener() {
+               long localId=IMClient.getInstance().sendGroupTextMessage(text,CurrentFriend ,conversation, new SendMsgListener(){
                     @Override
                     public void onSuccess() {
                         if (Config.isDebug){
                             Log.i(Config.TAG,"发送成功");
                         }
                     }
-
                     @Override
                     public void onFailed(int code) {
                         System.out.println("failed code : " + code);
@@ -170,6 +160,7 @@ public class PrivateConversationActivity extends Activity
                 });
                 IMessage message = new IMessage(Integer.parseInt(User.getUser().getCurrentUser()), CurrentFriend, 0, text);
                 MessageBean messageBean = imessage2Bean(message);
+                messageBean.setLocalId((int)localId);
                 msgs.add(messageBean);
                 adapter.notifyDataSetChanged();
                 break;
@@ -190,7 +181,6 @@ public class PrivateConversationActivity extends Activity
 
         return new MessageBean(0, 0, message.getMsgType(), message.getContents(), TimeUtils.getTimestamp(), 0, null,Long.parseLong(User.getUser().getCurrentUser()));
     }
-
     @Override
     public void onBackPressed() {
         super.onBackPressed();
@@ -211,11 +201,9 @@ public class PrivateConversationActivity extends Activity
         TextView tv1 = (TextView) findViewById(titleId);
         tv1.setTextColor(Color.BLACK);
         tv1.setText("好友：" + CurrentFriend);
-        msgs = IMClient.getInstance().getMessages(CurrentFriend, 5);
-        System.out.println("msg size : "+msgs.size());
+        msgs = IMClient.getInstance().getMessages(CurrentFriend, 0);
         adapter = new ChatDataAdapter(this, msgs);
         chatList.setAdapter(adapter);
-        //  chatList.setSelection(adapter.getCount() - 1);
         String targetPeerId = this.getIntent().getStringExtra(DATA_EXTRA_SINGLE_DIALOG_TARGET);
         if (targetPeerId != null) {
             Message notify = JSON.parseObject(targetPeerId, Message.class);

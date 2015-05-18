@@ -12,12 +12,25 @@ import java.io.RandomAccessFile;
  */
 public class CommonUtils {
     private Vibrator vibrator;
+    private static long mLastClickTime = 0;
     public static void Phonevibrator(Context context) {
         Vibrator vibrator = (Vibrator) context.getSystemService(Context.VIBRATOR_SERVICE);
         long[] pattern = {100, 10, 100, 1000};   // 停止 开启 停止 开启
         vibrator.vibrate(pattern, -1);
         // vibrator.cancel();
     }
+    public static boolean isFastDoubleClick() {
+        long time = System.currentTimeMillis();
+        long timeD = time - mLastClickTime;
+        if ( 0 < timeD && timeD < 1000) {
+            return true;
+        }
+
+        mLastClickTime = time;
+
+        return false;
+    }
+
     public static long getAmrDuration(File file) throws IOException {
         long duration = -1;
         int[] packedSize = { 12, 13, 15, 17, 19, 20, 26, 31, 5, 0, 0, 0, 0, 0, 0, 0 };

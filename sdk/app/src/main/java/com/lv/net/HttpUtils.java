@@ -195,7 +195,7 @@ public class HttpUtils {
                     String token = obj.getString("token");
                     listener.OnSuccess(key, token);
                 } else if (Config.isDebug) {
-                    Log.i(Config.TAG, "Tokenget Error :" + httpResponse.getStatusLine().getStatusCode());
+                    Log.i(Config.TAG, "TokenGet Error :" + httpResponse.getStatusLine().getStatusCode());
                 }
             } catch (Exception e) {
                 e.printStackTrace();

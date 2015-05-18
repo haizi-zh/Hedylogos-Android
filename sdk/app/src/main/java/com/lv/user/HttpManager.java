@@ -70,7 +70,7 @@ public class HttpManager {
                         IMClient.getInstance().initDB();
                         listen.OnSuccess();
                     } else {
-                        listen.OnFalied(code);
+                        listen.OnFailed(code);
                     }
                 } catch (Exception e) {
                     e.printStackTrace();
@@ -82,21 +82,22 @@ public class HttpManager {
         final JSONObject obj = new JSONObject();
         try {
             JSONArray array = new JSONArray();
-            array.put(1);
-            array.put(2);
-            //array.put(3);
+            for (long member:participants){
+                array.put(member);
+            }
             obj.put("name", name);
             obj.put("groupType", groupType);
             obj.put("isPublic", isPublic);
             obj.put("avatar", avatar);
-            // obj.put("participants",array);
+            obj.put("participants",array);
+            System.out.println(obj.toString());
         } catch (JSONException e) {
             e.printStackTrace();
         }
 
         exec.execute(()->{
                 HttpPost post = new HttpPost(Config.HOST + "/groups");
-                post.addHeader("UserId", 100002 + "");
+                post.addHeader("UserId",User.getUser().getCurrentUser()+ "");
                 HttpResponse httpResponse = null;
                 try {
                     System.out.println(obj.toString());
@@ -176,9 +177,7 @@ public class HttpManager {
 
     public static void editGroupMembers(final String GroupId, final JSONObject obj) {
 
-        exec.execute(new Runnable() {
-            @Override
-            public void run() {
+        exec.execute(()->{
                 HttpPost post = new HttpPost(Config.HOST + "/groups/" + GroupId);
                 post.addHeader("UserId", 100002 + "");
                 HttpResponse httpResponse = null;
@@ -200,7 +199,6 @@ public class HttpManager {
                 } catch (Exception e) {
                     e.printStackTrace();
                 }
-            }
         });
     }
 
@@ -210,19 +208,16 @@ public class HttpManager {
     }
 
     public static void getGroupInformation(String groupId) {
-        final String url = Config.GET_GROUP + 900078;
+        final String url = Config.GET_GROUP + groupId;
         getInformations(url, "");
     }
 
     private static void getInformations(final String url, String type) {
-        exec.execute(new Runnable() {
-            @Override
-            public void run() {
+        exec.execute(()->{
                 HttpGet get = new HttpGet(url);
-                get.addHeader("UserId", 100002 + "");
+                get.addHeader("UserId", User.getUser().getCurrentUser() + "");
                 try {
                     HttpResponse httpResponse = new DefaultHttpClient().execute(get);
-                    System.out.println("code " + httpResponse.getStatusLine().getStatusCode());
                     HttpEntity res = httpResponse.getEntity();
                     if (Config.isDebug) {
                         Log.i(Config.TAG, "group Info : " + EntityUtils.toString(res));
@@ -230,15 +225,12 @@ public class HttpManager {
                 } catch (IOException e) {
                     e.printStackTrace();
                 }
-            }
         });
     }
 
     public static void getUserGroupInfo(String userId) {
         final String url = Config.HOST + "/users/100001/groups";
-        exec.execute(new Runnable() {
-            @Override
-            public void run() {
+        exec.execute(()->{
                 HttpGet get = new HttpGet(url);
                 get.addHeader("UserId", 100001 + "");
                 try {
@@ -251,17 +243,13 @@ public class HttpManager {
                 } catch (IOException e) {
                     e.printStackTrace();
                 }
-            }
         });
     }
 
     public static void searchGroup(final String tag, final String value) {
         final String url = Config.HOST + "/groups/search";
 
-        exec.execute(new Runnable() {
-            @Override
-            public void run() {
-
+        exec.execute(()->{
                 RequestParams params = new RequestParams();
                 params.put(tag, value);
                // params.add("UserId",100001+"");
@@ -282,7 +270,6 @@ public class HttpManager {
                         }
                     }
                 });
-            }
         });
     }
 }

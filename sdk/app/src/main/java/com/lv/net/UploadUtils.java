@@ -25,11 +25,8 @@ import java.util.Random;
 
 public class UploadUtils {
 
-
-
     private UploadUtils() {
     }
-
     private static UploadUtils UploadUitls = null;
 
     private UploadManager uploadManager = new UploadManager();
@@ -63,7 +60,6 @@ public class UploadUtils {
 
     public void upload(final String filePath, final String sender, final String receive, final int msgType, final long localId, final UploadListener listener) {
         System.out.println("filePath:" + filePath);
-        final String fileUrlUUID = getFileUrlUUID();
         HttpUtils.getToken(new HttpUtils.tokenget() {
             @Override
             public void OnSuccess(String key, String token) {
@@ -73,7 +69,7 @@ public class UploadUtils {
                     }
                     return;
                 }
-                HashMap<String, String> pamas = new HashMap<String, String>();
+                HashMap<String, String> pamas = new HashMap<>();
                 pamas.put("x:sender", sender);
                 pamas.put("x:msgType", msgType + "");
                 pamas.put("x:receiver", receive);
@@ -100,6 +96,7 @@ public class UploadUtils {
                             }
                         } else {
                             if (listener != null) {
+                                if (info!=null)
                                 listener.onError(info.statusCode, info.error);
                             }
                         }

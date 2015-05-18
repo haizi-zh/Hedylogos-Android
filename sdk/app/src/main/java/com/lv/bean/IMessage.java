@@ -10,6 +10,16 @@ public class IMessage {
     private int msgType;
     private String contents;
 
+    public String getChatType() {
+        return chatType;
+    }
+
+    public void setChatType(String chatType) {
+        this.chatType = chatType;
+    }
+
+    private String chatType;
+
 //    public String getConversation() {
 //        return conversation;
 //    }

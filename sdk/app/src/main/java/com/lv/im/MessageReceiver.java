@@ -39,14 +39,12 @@ public class MessageReceiver extends BroadcastReceiver {
 
     @Override
     public void onReceive(Context context, Intent intent) {
-        System.out.println(intent.getAction());
         Bundle bundle = intent.getExtras();
         switch (bundle.getInt("action")) {
             case PushConsts.GET_MSG_DATA:
                 byte[] payload = bundle.getByteArray("payload");
-                String data = null;
                 if (payload != null) {
-                    data = new String(payload);
+                    String data = new String(payload);
                     if (Config.isDebug) {
                         Log.i(Config.TAG, "data:" + data);
                     }

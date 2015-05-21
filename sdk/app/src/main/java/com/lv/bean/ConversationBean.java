@@ -1,7 +1,13 @@
 package com.lv.bean;
 
 /**
- * Created by q on 2015/4/21.
+ * private int FriendId;
+ * private long LastChatTime;
+ * private String HASH;
+ * private int last_rev_msgId;
+ * private int isRead; //0:已读  num：数量
+ * private String conversation;
+ * private String lastMessage;
  */
 public class ConversationBean {
     private int FriendId;
@@ -10,6 +16,16 @@ public class ConversationBean {
     private int last_rev_msgId;
     private int isRead; //0:有未读  1：已读
     private String conversation;
+
+    public String getChatType() {
+        return chatType;
+    }
+
+    public void setChatType(String chatType) {
+        this.chatType = chatType;
+    }
+
+    private String chatType;
 
     public String getLastMessage() {
         return lastMessage;
@@ -30,7 +46,7 @@ public class ConversationBean {
 
 
 
-    public ConversationBean(int friendId, long lastChatTime, String HASH, int Last_rev_msgId, int isRead,String conversation,String lastMessage) {
+    public ConversationBean(int friendId, long lastChatTime, String HASH, int Last_rev_msgId, int isRead,String conversation,String lastMessage,String chatType) {
         LastChatTime = lastChatTime;
         this.HASH = HASH;
         FriendId = friendId;
@@ -38,6 +54,7 @@ public class ConversationBean {
         this.isRead = isRead;
         this.conversation=conversation;
         this.lastMessage=lastMessage;
+        this.chatType=chatType;
     }
 
     public int getFriendId() {

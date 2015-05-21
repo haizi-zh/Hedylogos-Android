@@ -6,6 +6,7 @@ import android.database.sqlite.SQLiteDatabase;
 
 import com.lv.Utils.Config;
 import com.lv.Utils.CryptUtils;
+import com.lv.data.MessageDB;
 
 import org.json.JSONException;
 import org.json.JSONObject;

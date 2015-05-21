@@ -55,10 +55,10 @@ public class MainActivity extends Activity implements View.OnClickListener, Hand
                 Intent intent = new Intent();
                 intent.setClass(MainActivity.this, PrivateConversationActivity.class);
                 intent.putExtra("friend_id", data.get(position).get("Friend_Id").toString());
+                intent.putExtra("chatType", data.get(position).get("chatType").toString());
                 if (data.get(position).get("conversation").toString()!=null) {
                     intent.putExtra("conversation", data.get(position).get("conversation").toString());
                 }
-                System.out.println("M fid" + data.get(position).get("Friend_Id").toString());
                 startActivity(intent);
             }
         );
@@ -84,16 +84,16 @@ public class MainActivity extends Activity implements View.OnClickListener, Hand
         list = IMClient.getInstance().getConversationList();
         data = new ArrayList<>();
         for (int n = 0; n < list.size(); n++) {
-            HashMap<String, Object> hashMap = new HashMap<String, Object>();
+            HashMap<String, Object> hashMap = new HashMap<>();
             hashMap.put("Friend_Id", list.get(n).getFriendId());
             hashMap.put("lastTime", TimeUtils.TimeStamp2Date(list.get(n).getLastChatTime()));
             hashMap.put("lastMsg", list.get(n).getLastMessage());
-            hashMap.put("isRead", list.get(n).getIsRead());
-            System.out.println( " list.get(n).getConversation() "+list.get(n).getConversation());
+            hashMap.put("IsRead", list.get(n).getIsRead());
             hashMap.put("conversation", list.get(n).getConversation());
+            hashMap.put("chatType", list.get(n).getChatType());
             data.add(hashMap);
         }
-        adapter = new SimpleAdapter(this, data, R.layout.test_list_item, new String[]{"Friend_Id", "lastTime", "lastMsg", "isRead"}, new int[]{R.id.tv1, R.id.tv2, R.id.tv3, R.id.tv4});
+        adapter = new SimpleAdapter(this, data, R.layout.test_list_item, new String[]{"Friend_Id", "lastTime", "lastMsg", "IsRead"}, new int[]{R.id.tv1, R.id.tv2, R.id.tv3, R.id.tv4});
         lv.setAdapter(adapter);
         adapter.notifyDataSetChanged();
     }
@@ -121,6 +121,7 @@ public class MainActivity extends Activity implements View.OnClickListener, Hand
                 intent.setClass(MainActivity.this, PrivateConversationActivity.class);
                 intent.putExtra("friend_id", friendId);
                 intent.putExtra("conversation", "");
+                intent.putExtra("chatType", "single");
                 startActivity(intent);
             }
         )
@@ -135,7 +136,7 @@ public class MainActivity extends Activity implements View.OnClickListener, Hand
                 android.R.drawable.ic_dialog_info).setView(
                 et).setPositiveButton("确定", (DialogInterface dialog, int which)->{
                 String groupName= et.getText().toString();
-                List<Long> list1=new ArrayList<Long>();
+                List<Long> list1=new ArrayList<>();
                     list1.add(100001l);
                     list1.add(100002l);
                     list1.add(100000l);
@@ -146,6 +147,7 @@ public class MainActivity extends Activity implements View.OnClickListener, Hand
                         intent.setClass(MainActivity.this, PrivateConversationActivity.class);
                         intent.putExtra("friend_id", groupId);
                         intent.putExtra("conversation", conversation);
+                        intent.putExtra("chatType", "group");
                         startActivity(intent);
                     }
                     @Override

@@ -26,7 +26,6 @@ public class HandleImMessage {
     private Context c;
     private long lastTime;
     private static HashMap<MessagerHandler, String> openStateMap = new HashMap<>();
-    static Observable<Message> messageObservable;
     private HandleImMessage() {
         MessageReceiver.registerListener(listener, "IM");
         queue.setDequeueListener(dequeueListener);
@@ -42,6 +41,10 @@ public class HandleImMessage {
     private static ArrayList<MessagerHandler> ehList = new ArrayList<>();
 
     public static abstract interface MessagerHandler {
+        /**
+         *
+         * @param m 收到的消息
+         */
         public void onMsgArrive(Message m);
     }
 
@@ -53,6 +56,10 @@ public class HandleImMessage {
         ehList.add(listener);
     }
 
+    /**
+     * 解除注册
+     * @param listener listener
+     */
     public static void unregisterMessageListener(MessagerHandler listener) {
         ehList.remove(listener);
     }
@@ -60,6 +67,8 @@ public class HandleImMessage {
     public static void registerMessageListener(MessagerHandler listener, String conversation) {
         ehList.add(listener);
         openStateMap.put(listener, conversation);
+        IMClient.getInstance().updateReadStatus(conversation);
+
     }
 
     public static void unregisterMessageListener(MessagerHandler listener, String conversation) {
@@ -95,17 +104,6 @@ public class HandleImMessage {
             /**
              * 处理消息重组、丢失
              */
-//            messageObservable=Observable.just(message);
-//            messageObservable.map(msg->{
-//                queue.addMsg(message.getConversation(), msg);
-//                return null;
-//            }).map(new Func1<Object,Object>() {
-//                @Override
-//                public Object call(Object o) {
-//                    LazyQueue.getInstance().begin();
-//                    return null;
-//                }
-//            });
             queue.addMsg(message.getConversation(), message);
         }
     };

@@ -26,6 +26,7 @@ import org.json.JSONObject;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 
 /**
@@ -38,7 +39,7 @@ public class IMClient {
     private volatile HashMap<String, String> cidMap;
     private static final IMClient client = new IMClient();
     private MessageDB db;
-    private List<ConversationBean> convercationList;
+    private static List<ConversationBean> convercationList;
 
     private IMClient() {
         convercationList = new ArrayList<>();
@@ -54,6 +55,7 @@ public class IMClient {
 
     public void initDB() {
         db = MessageDB.getInstance();
+        MessageDB.getInstance().init();
     }
 
     public void init(Context context) {
@@ -72,12 +74,12 @@ public class IMClient {
         acklist.put(id);
         System.out.println("ack list size:" + acklist.length());
         if (acklist.length() > 10) {
-            HttpUtils.FetchNewMsg(User.getUser().getCurrentUser(), (list) -> {
-                for (Message msg : list) {
-                    LazyQueue.getInstance().add2Temp(msg.getConversation(), msg);
-                }
-                LazyQueue.getInstance().TempDequeue();
-            });
+//            HttpUtils.FetchNewMsg(User.getUser().getCurrentUser(), (list) -> {
+//                for (Message msg : list) {
+//                    LazyQueue.getInstance().add2Temp(msg.getConversation(), msg);
+//                }
+//                LazyQueue.getInstance().TempDequeue();
+//            });
         }
     }
 
@@ -117,12 +119,16 @@ public class IMClient {
         cidMap.put("cid", cid);
     }
 
+    /**
+     *
+     * @return List<ConversationBean>
+     */
     public List<ConversationBean> getConversationList() {
 //        if (convercationList.size()==0){
 //            convercationList=db.getConversationList();
 //        }
-//        return convercationList;
-        convercationList = db.getConversationList();
+
+      convercationList = db.getConversationList();
         return convercationList;
     }
 
@@ -136,10 +142,12 @@ public class IMClient {
 
     public void updateReadStatus(String conversation) {
         db.updateReadStatus(conversation, 0);
+        System.out.println("updateReadStatus");
     }
 
     public void increaseUnRead(String conversation) {
         db.updateReadStatus(conversation, 1);
+        System.out.println("increaseUnRead");
     }
 
     public List<MessageBean> getMessages(String friendId, int page) {
@@ -153,24 +161,29 @@ public class IMClient {
      * @param friendId     friendId
      * @param conversation 会话Id
      * @param listen       listener
-     * @return 本地Id
+     * @return MessageBean
      */
-    public long sendTextMessage(String text, String friendId, String conversation, SendMsgListener listen, String chatType) {
-        if (TextUtils.isEmpty(text)) return -1;
+    public MessageBean sendTextMessage(String text, String friendId, String conversation, SendMsgListener listen, String chatType) {
+        if (TextUtils.isEmpty(text)) return null;
         if ("0".equals(conversation)) conversation = null;
         IMessage message = new IMessage(Integer.parseInt(User.getUser().getCurrentUser()), friendId, Config.TEXT_MSG, text);
         MessageBean messageBean = imessage2Bean(message);
-        long localId = db.saveMsg(friendId, messageBean);
+        long localId = db.saveMsg(friendId, messageBean,chatType);
         System.out.println("send  CurrentFriend " + friendId + " conversation" + conversation);
         SendMsgAsyncTask.sendMessage(conversation, friendId, message, localId, listen, chatType);
-        return localId;
+        return baseMessage(text,friendId,localId);
+    }
+    public MessageBean baseMessage(String text,String friendId,long localId){
+       MessageBean messageBean= new MessageBean(0,1,0,text,TimeUtils.getTimestamp(),0,null,Long.parseLong(friendId));
+        messageBean.setLocalId((int)localId);
+        return messageBean;
     }
 
-    public long sendSingleTextMessage(String text, String friendId, String conversation, SendMsgListener listen) {
+    public MessageBean sendSingleTextMessage(String text, String friendId, String conversation, SendMsgListener listen) {
         return sendTextMessage(text, friendId, conversation, listen, "single");
     }
 
-    public long sendGroupTextMessage(String text, String friendId, String conversation, SendMsgListener listen) {
+    public MessageBean sendGroupTextMessage(String text, String friendId, String conversation, SendMsgListener listen) {
         return sendTextMessage(text, friendId, conversation, listen, "group");
     }
 
@@ -181,8 +194,9 @@ public class IMClient {
      * @param friendId friendId
      * @param durtime  持续时间
      * @param listener listener
+     * @param chatTpe  聊天类型
      */
-    public void sendAudioMessage(String path, String friendId, long durtime, UploadListener listener) {
+    public void sendAudioMessage(String path, String friendId, long durtime, UploadListener listener,String chatTpe) {
         if (TextUtils.isEmpty(path)) return;
         JSONObject object = new JSONObject();
         try {
@@ -194,8 +208,8 @@ public class IMClient {
 
         IMessage message = new IMessage(Integer.parseInt(User.getUser().getCurrentUser()), friendId, Config.AUDIO_MSG, object.toString());
         MessageBean messageBean = imessage2Bean(message);
-        long localId = db.saveMsg(friendId, messageBean);
-        UploadUtils.getInstance().upload(path, User.getUser().getCurrentUser(), friendId, Config.AUDIO_MSG, localId, listener);
+        long localId = db.saveMsg(friendId, messageBean,chatTpe);
+        UploadUtils.getInstance().upload(path, User.getUser().getCurrentUser(), friendId, Config.AUDIO_MSG, localId, listener,chatTpe);
 
     }
 
@@ -207,12 +221,12 @@ public class IMClient {
      * @param friendId friendId
      * @param listener listener
      */
-    public void sendImageMessage(String path, Bitmap bitmap, String friendId, UploadListener listener) {
+    public void sendImageMessage(String path, Bitmap bitmap, String friendId, UploadListener listener,String chatTpe) {
 
         IMessage message = new IMessage(Integer.parseInt(User.getUser().getCurrentUser()), friendId, Config.IMAGE_MSG, path);
         MessageBean messageBean = imessage2Bean(message);
-        long localId = db.saveMsg(friendId, messageBean);
-        UploadUtils.getInstance().uploadImage(bitmap, User.getUser().getCurrentUser(), friendId, Config.IMAGE_MSG, localId, listener);
+        long localId = db.saveMsg(friendId, messageBean,chatTpe);
+        UploadUtils.getInstance().uploadImage(bitmap, User.getUser().getCurrentUser(), friendId, Config.IMAGE_MSG, localId, listener,chatTpe);
     }
 
     public void updateMessage(String fri_ID, long LocalId, String msgId, String conversation, long timestamp, int status) {
@@ -224,9 +238,9 @@ public class IMClient {
         return new MessageBean(0, Config.STATUS_SENDING, message.getMsgType(), message.getContents(), TimeUtils.getTimestamp(), Config.TYPE_SEND, null, Long.parseLong(User.getUser().getCurrentUser()));
     }
 
-    public void saveMessage(Message message) {
+    public void saveMessage(Message message,String chatTpe) {
         MessageBean newMsg = Msg2Bean(message);
-        db.saveMsg(newMsg.getSenderId() + "", newMsg);
+        db.saveMsg(newMsg.getSenderId() + "", newMsg,chatTpe);
         lastMsgMap.put(newMsg.getSenderId() + "", newMsg.getServerId());
         add2ackList(message.getId());
     }
@@ -240,7 +254,7 @@ public class IMClient {
     }
 
     public void fetchNewMsg(FetchListener listener) {
-        HttpUtils.FetchNewMsg(User.getUser().getCurrentUser(), listener);
+        //HttpUtils.FetchNewMsg(User.getUser().getCurrentUser(), listener);
     }
 
     /**
@@ -256,13 +270,13 @@ public class IMClient {
     }
 
     public void initFetch() {
-        System.out.println("fetchNewMsg IM");
-        HttpUtils.FetchNewMsg(User.getUser().getCurrentUser(), (list) -> {
-            for (Message msg : list) {
-                LazyQueue.getInstance().add2Temp(msg.getConversation(), msg);
-            }
-            LazyQueue.getInstance().TempDequeue();
-        });
+//        System.out.println("fetchNewMsg IM");
+//        HttpUtils.FetchNewMsg(User.getUser().getCurrentUser(), (list) -> {
+//            for (Message msg : list) {
+//                LazyQueue.getInstance().add2Temp(msg.getConversation(), msg);
+//            }
+//            LazyQueue.getInstance().TempDequeue();
+//        });
     }
 
     public int saveReceiveMsg(Message message) {
@@ -274,17 +288,17 @@ public class IMClient {
         return result;
     }
 
-    public void saveMessages(List<Message> list) {
-        List<MessageBean> list1 = new ArrayList<>();
-        for (Message message : list) {
-            list1.add(Msg2Bean(message));
-            System.out.println(message.getMsgId());
-        }
-        db.saveMsgs(list1);
-    }
+//    public void saveMessages(List<Message> list) {
+//        List<MessageBean> list1 = new ArrayList<>();
+//        for (Message message : list) {
+//            list1.add(Msg2Bean(message));
+//            System.out.println(message.getMsgId());
+//        }
+//        db.saveMsgs(list1);
+//    }
 
     public void addGroup2Conversation(String groupId, String conversation) {
-        db.add2Conversion(Long.parseLong(groupId), TimeUtils.getTimestamp(), "chat_" + CryptUtils.getMD5String(groupId), -1, conversation);
+        db.add2Conversion(Long.parseLong(groupId), TimeUtils.getTimestamp(), "chat_" + CryptUtils.getMD5String(groupId), -1, conversation,"group");
     }
 }
 

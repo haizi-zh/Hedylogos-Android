@@ -36,9 +36,10 @@ public class SendMsgAsyncTask {
         try {
             object.put("chatType",chatType);
             object.put("sender", msg.getSender());
-            if (conversation == null || "".equals(conversation)) {
-                object.put("receiver", Integer.parseInt(msg.getReceiver()));
-            } else object.put("conversation", conversation);
+            if (conversation != null &&! "".equals(conversation)) {
+                object.put("conversation", conversation);
+            }
+            object.put("receiver",Long.parseLong(currentFri));
             object.put("msgType", msg.getMsgType());
             object.put("contents", msg.getContents());
         } catch (JSONException e) {

@@ -66,6 +66,7 @@ public class PrivateConversationActivity extends Activity
     static List<MessageBean> msgs = new LinkedList<>();
     private String CurrentFriend;
     private String conversation;
+    private String chatType;
     SDKApplication application;
     Long time;
     ActionBar actionBar;
@@ -146,7 +147,7 @@ public class PrivateConversationActivity extends Activity
                     return;
                 }
                 composeZone.getEditableText().clear();
-               long localId=IMClient.getInstance().sendGroupTextMessage(text,CurrentFriend ,conversation, new SendMsgListener(){
+               MessageBean messageBean=IMClient.getInstance().sendTextMessage(text,CurrentFriend ,conversation, new SendMsgListener(){
                     @Override
                     public void onSuccess() {
                         if (Config.isDebug){
@@ -157,10 +158,10 @@ public class PrivateConversationActivity extends Activity
                     public void onFailed(int code) {
                         System.out.println("failed code : " + code);
                     }
-                });
-                IMessage message = new IMessage(Integer.parseInt(User.getUser().getCurrentUser()), CurrentFriend, 0, text);
-                MessageBean messageBean = imessage2Bean(message);
-                messageBean.setLocalId((int)localId);
+                },chatType);
+               // IMessage message = new IMessage(Integer.parseInt(User.getUser().getCurrentUser()), CurrentFriend, 0, text);
+              //  MessageBean messageBean = imessage2Bean(message);
+               // messageBean.setLocalId((int)localId);
                 msgs.add(messageBean);
                 adapter.notifyDataSetChanged();
                 break;
@@ -192,6 +193,7 @@ public class PrivateConversationActivity extends Activity
         super.onResume();
         CurrentFriend = getIntent().getStringExtra("friend_id");
         conversation = getIntent().getStringExtra("conversation");
+        chatType = getIntent().getStringExtra("chatType");
         System.out.println("CurrentFriend "+CurrentFriend+" conversation"+conversation);
         HandleImMessage.registerMessageListener(this,conversation);
         if (Config.isDebug){
@@ -224,17 +226,6 @@ public class PrivateConversationActivity extends Activity
 
     @Override
     public void onMessage(Message msg) {
-        if (!conversation.equals(msg.getConversation())) {
-            MessageBean messageBean = Msg2Bean(msg);
-            messageBean.setSendType(1);
-            Toast.makeText(PrivateConversationActivity.this, "有新消息！", Toast.LENGTH_SHORT).show();
-        } else {
-            MessageBean messageBean = Msg2Bean(msg);
-            messageBean.setSendType(1);
-            msgs.add(messageBean);
-            adapter.notifyDataSetChanged();
-            chatList.setSelection(adapter.getCount() - 1);
-        }
     }
 
     public static MessageBean Msg2Bean(Message msg) {
@@ -247,7 +238,7 @@ public class PrivateConversationActivity extends Activity
 
     @Override
     public void onMsgArrive(Message m) {
-        if (!CurrentFriend.equals(m.getSenderId() + "")) {
+        if (!conversation.equals(m.getConversation())) {
             MessageBean messageBean = Msg2Bean(m);
             messageBean.setSendType(1);
             Toast.makeText(PrivateConversationActivity.this, "有新消息！", Toast.LENGTH_SHORT).show();
@@ -299,7 +290,7 @@ public class PrivateConversationActivity extends Activity
                         public void onProgress(int progress) {
 
                         }
-                    });
+                    },chatType);
                     break;
 
                 case MotionEvent.ACTION_CANCEL:
@@ -339,7 +330,7 @@ public class PrivateConversationActivity extends Activity
                     @Override
                     public void onProgress(int progress) {
                     }
-                });
+                },chatType);
             } catch (Exception e) {
                 e.printStackTrace();
             }

@@ -42,12 +42,12 @@ public class UploadUtils {
         return PictureUtil.saveBitmapToJpegFile(bitmap, filePath, 75);
     }
 
-    public String uploadImage(Bitmap bitmap, String sender, String receive, int msgType, long localId, UploadListener listener) {
+    public String uploadImage(Bitmap bitmap, String sender, String receive, int msgType, long localId, UploadListener listener,String chatType) {
         File path = new File(Config.imagepath);
         if (!path.exists()) path.mkdirs();
         String imagepath1 = Config.imagepath + TimeUtils.getTimestamp() + "_image.jpeg";
         if (saveBitmapToJpegFile(bitmap, imagepath1))
-            upload(imagepath1, sender, receive, msgType, localId, listener);
+            upload(imagepath1, sender, receive, msgType, localId, listener,chatType);
         else if (Config.isDebug){
             Log.i(Config.TAG, "文件出错！ ");
         }
@@ -58,7 +58,7 @@ public class UploadUtils {
         // upload(file.getAbsolutePath(), listener);
     }
 
-    public void upload(final String filePath, final String sender, final String receive, final int msgType, final long localId, final UploadListener listener) {
+    public void upload(final String filePath, final String sender, final String receive, final int msgType, final long localId, final UploadListener listener,String chatType) {
         System.out.println("filePath:" + filePath);
         HttpUtils.getToken(new HttpUtils.tokenget() {
             @Override
@@ -71,6 +71,7 @@ public class UploadUtils {
                 }
                 HashMap<String, String> pamas = new HashMap<>();
                 pamas.put("x:sender", sender);
+                pamas.put("x:chatType", chatType);
                 pamas.put("x:msgType", msgType + "");
                 pamas.put("x:receiver", receive);
                 uploadManager.put(filePath, key, token, new UpCompletionHandler() {
